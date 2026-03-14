@@ -1,370 +1,316 @@
-// Navigation Handler
+const _0x4ab1bf = _0x4afd;
+(function (_0x34716d, _0x165786) {
+    const _0x3527e5 = _0x4afd, _0x29ba81 = _0x34716d();
+    while (!![]) {
+        try {
+            const _0x493a24 = parseInt(_0x3527e5(0x15a)) / 0x1 + parseInt(_0x3527e5(0x14b)) / 0x2 * (-parseInt(_0x3527e5(0x14d)) / 0x3) + parseInt(_0x3527e5(0x189)) / 0x4 + parseInt(_0x3527e5(0x15c)) / 0x5 + parseInt(_0x3527e5(0x176)) / 0x6 * (parseInt(_0x3527e5(0x153)) / 0x7) + -parseInt(_0x3527e5(0x180)) / 0x8 * (-parseInt(_0x3527e5(0x171)) / 0x9) + -parseInt(_0x3527e5(0x17d)) / 0xa * (parseInt(_0x3527e5(0x15d)) / 0xb);
+            if (_0x493a24 === _0x165786)
+                break;
+            else
+                _0x29ba81['push'](_0x29ba81['shift']());
+        } catch (_0x34ebbf) {
+            _0x29ba81['push'](_0x29ba81['shift']());
+        }
+    }
+}(_0x4ccf, 0xe4dc4));
 function initNavigation() {
-    const navItems = document.querySelectorAll('.nav-item[data-target]');
-    const dashboardContainer = document.getElementById('dashboardContainer');
-    const portalContainer = document.getElementById('portalContainer');
-    const clipsContainer = document.getElementById('clipsContainer');
-    const customEditorContainer = document.getElementById('customEditorContainer');
-    const inputSection = document.querySelector('.input-section');
-
-    // Helper: hide everything
-    function hideAll() {
-        if (dashboardContainer) {
-            dashboardContainer.style.display = 'none';
-            dashboardContainer.classList.remove('active');
-        }
-        if (portalContainer) {
-            portalContainer.style.display = 'none';
-            portalContainer.classList.remove('active');
-        }
-        if (clipsContainer) {
-            clipsContainer.style.display = 'none';
-            clipsContainer.classList.remove('active');
-        }
-        if (customEditorContainer) {
-            customEditorContainer.style.display = 'none';
-            customEditorContainer.classList.remove('active');
-        }
+    const _0x483fa5 = _0x4afd, _0x259409 = document[_0x483fa5(0x17f)](_0x483fa5(0x175)), _0x84b4d0 = document['getElementById'](_0x483fa5(0x13e)), _0x4545ab = document['getElementById'](_0x483fa5(0x156)), _0x124bb1 = document[_0x483fa5(0x17c)]('clipsContainer'), _0x142c7a = document[_0x483fa5(0x17c)](_0x483fa5(0x179)), _0x4db281 = document['querySelector'](_0x483fa5(0x158));
+    function _0x2673c6() {
+        const _0x57a5b9 = _0x483fa5;
+        _0x84b4d0 && (_0x84b4d0[_0x57a5b9(0x164)][_0x57a5b9(0x17a)] = _0x57a5b9(0x146), _0x84b4d0[_0x57a5b9(0x16b)][_0x57a5b9(0x16c)](_0x57a5b9(0x149))), _0x4545ab && (_0x4545ab[_0x57a5b9(0x164)][_0x57a5b9(0x17a)] = _0x57a5b9(0x146), _0x4545ab['classList'][_0x57a5b9(0x16c)](_0x57a5b9(0x149))), _0x124bb1 && (_0x124bb1[_0x57a5b9(0x164)][_0x57a5b9(0x17a)] = _0x57a5b9(0x146), _0x124bb1[_0x57a5b9(0x16b)][_0x57a5b9(0x16c)](_0x57a5b9(0x149))), _0x142c7a && (_0x142c7a['style'][_0x57a5b9(0x17a)] = _0x57a5b9(0x146), _0x142c7a[_0x57a5b9(0x16b)][_0x57a5b9(0x16c)](_0x57a5b9(0x149)));
     }
-
-    // Helper: update active navigation
-    function updateActiveNav(target) {
-        navItems.forEach(item => {
-            item.classList.remove('active');
-            if (item.getAttribute('data-target') === target) {
-                item.classList.add('active');
-            }
+    function _0x552932(_0x21e49c) {
+        _0x259409['forEach'](_0x13f266 => {
+            const _0x163d4d = _0x4afd;
+            _0x13f266[_0x163d4d(0x16b)]['remove'](_0x163d4d(0x149)), _0x13f266[_0x163d4d(0x166)]('data-target') === _0x21e49c && _0x13f266['classList'][_0x163d4d(0x140)](_0x163d4d(0x149));
         });
     }
-
-    // Set initial state: restore from localStorage or default to dashboard
-    hideAll();
-    
-    // Check if there's a saved navigation target
-    const savedTarget = localStorage.getItem('currentNavigationTarget');
-    let initialTarget = 'dashboard'; // Default fallback
-    
-    if (savedTarget && ['dashboard', 'portal', 'clips', 'custom'].includes(savedTarget)) {
-        initialTarget = savedTarget;
-    }
-    
-    // Show the initial/saved target
-    if (initialTarget === 'dashboard' && dashboardContainer) {
-        dashboardContainer.style.display = 'block';
-        dashboardContainer.classList.add('active');
-        updateActiveNav('Dashboard');
-        
-        // Trigger chart rendering when dashboard is initially shown
-        setTimeout(() => {
-            if (window.analyticsManager) {
-                window.analyticsManager.updateCharts();
+    _0x2673c6();
+    const _0x5240e8 = localStorage['getItem']('currentNavigationTarget');
+    let _0x2a3ddd = _0x483fa5(0x172);
+    _0x5240e8 && [
+        _0x483fa5(0x172),
+        _0x483fa5(0x173),
+        'clips',
+        'custom'
+    ][_0x483fa5(0x14a)](_0x5240e8) && (_0x2a3ddd = _0x5240e8);
+    if (_0x2a3ddd === _0x483fa5(0x172) && _0x84b4d0)
+        _0x84b4d0[_0x483fa5(0x164)][_0x483fa5(0x17a)] = _0x483fa5(0x186), _0x84b4d0['classList']['add'](_0x483fa5(0x149)), _0x552932(_0x483fa5(0x187)), setTimeout(() => {
+            const _0x50e4ce = _0x483fa5;
+            window[_0x50e4ce(0x142)] && window[_0x50e4ce(0x142)][_0x50e4ce(0x17e)]();
+        }, 0x64);
+    else {
+        if (_0x2a3ddd === _0x483fa5(0x173) && _0x4545ab)
+            _0x4545ab[_0x483fa5(0x164)][_0x483fa5(0x17a)] = _0x483fa5(0x186), _0x4545ab[_0x483fa5(0x16b)][_0x483fa5(0x140)](_0x483fa5(0x149)), _0x552932(_0x483fa5(0x150));
+        else {
+            if (_0x2a3ddd === _0x483fa5(0x160) && _0x124bb1)
+                _0x124bb1['style'][_0x483fa5(0x17a)] = 'block', _0x124bb1['classList'][_0x483fa5(0x140)](_0x483fa5(0x149)), _0x552932(_0x483fa5(0x161)), typeof window[_0x483fa5(0x183)] !== 'undefined' && window[_0x483fa5(0x183)] && !window[_0x483fa5(0x183)][_0x483fa5(0x170)] && window[_0x483fa5(0x183)][_0x483fa5(0x182)]();
+            else {
+                if (_0x2a3ddd === _0x483fa5(0x155) && _0x142c7a) {
+                    _0x142c7a[_0x483fa5(0x164)][_0x483fa5(0x17a)] = _0x483fa5(0x186), _0x142c7a[_0x483fa5(0x16b)][_0x483fa5(0x140)](_0x483fa5(0x149)), _0x552932('Custom');
+                    if (_0x4db281)
+                        _0x4db281[_0x483fa5(0x164)][_0x483fa5(0x17a)] = _0x483fa5(0x146);
+                } else {
+                    _0x84b4d0 && (_0x84b4d0[_0x483fa5(0x164)][_0x483fa5(0x17a)] = _0x483fa5(0x186), _0x84b4d0[_0x483fa5(0x16b)][_0x483fa5(0x140)]('active'));
+                    _0x552932('Dashboard');
+                    if (_0x4db281)
+                        _0x4db281[_0x483fa5(0x164)][_0x483fa5(0x17a)] = _0x483fa5(0x146);
+                }
             }
-        }, 100);
-    } else if (initialTarget === 'portal' && portalContainer) {
-        portalContainer.style.display = 'block';
-        portalContainer.classList.add('active');
-        updateActiveNav('Portal');
-    } else if (initialTarget === 'clips' && clipsContainer) {
-        clipsContainer.style.display = 'block';
-        clipsContainer.classList.add('active');
-        updateActiveNav('Clips');
-        // Initialize Clips Studio if needed
-        if (typeof window.clipsStudio !== 'undefined' && window.clipsStudio && !window.clipsStudio.initialized) {
-            window.clipsStudio.init();
         }
-    } else if (initialTarget === 'custom' && customEditorContainer) {
-        customEditorContainer.style.display = 'block';
-        customEditorContainer.classList.add('active');
-        updateActiveNav('Custom');
-        if (inputSection) inputSection.style.display = 'none';
-    } else {
-        // Default to dashboard if no target matches
-        if (dashboardContainer) {
-            dashboardContainer.style.display = 'block';
-            dashboardContainer.classList.add('active');
-        }
-        updateActiveNav('Dashboard');
-        if (inputSection) inputSection.style.display = 'none';
     }
-    
-    // Always hide input section
-    if (inputSection) {
-        inputSection.style.cssText = 'display: none !important; position: absolute !important; visibility: hidden !important; z-index: -10000 !important; pointer-events: none !important;';
-        inputSection.classList.remove('is-first-prompt');
-    }
-
-    navItems.forEach(item => {
-        item.addEventListener('click', (e) => {
-            e.preventDefault();
-            const rawTarget = item.getAttribute('data-target') || '';
-            const target = String(rawTarget).toLowerCase();
-
-            console.log('Navigation clicked:', rawTarget);
-
-            // Update navigation active states
-            updateActiveNav(rawTarget);
-
-            // Hide everything then show the requested container
-            hideAll();
-            // Always hide input section
-            if (inputSection) {
-                inputSection.style.cssText = 'display: none !important; position: absolute !important; visibility: hidden !important; z-index: -10000 !important; pointer-events: none !important;';
-                inputSection.classList.remove('is-first-prompt');
-            }
-
-            if (target === 'dashboard') {
-                localStorage.setItem('currentNavigationTarget', 'dashboard');
-                console.log('Switching to dashboard view');
-                if (dashboardContainer) {
-                    dashboardContainer.style.display = 'block';
-                    dashboardContainer.classList.add('active');
-                    
-                    // Trigger chart rendering when dashboard becomes visible
-                    if (window.analyticsManager) {
-                        setTimeout(() => {
-                            window.analyticsManager.updateCharts();
-                        }, 50);
-                    }
-                }
-                if (inputSection) {
-                    inputSection.style.display = 'none';
+    _0x4db281 && (_0x4db281[_0x483fa5(0x164)][_0x483fa5(0x141)] = 'display:\x20none\x20!important;\x20position:\x20absolute\x20!important;\x20visibility:\x20hidden\x20!important;\x20z-index:\x20-10000\x20!important;\x20pointer-events:\x20none\x20!important;', _0x4db281[_0x483fa5(0x16b)][_0x483fa5(0x16c)](_0x483fa5(0x13d)));
+    _0x259409[_0x483fa5(0x154)](_0x18f387 => {
+        const _0x32ce8d = _0x483fa5;
+        _0x18f387[_0x32ce8d(0x139)](_0x32ce8d(0x15e), _0x24a444 => {
+            const _0xf73a24 = _0x32ce8d;
+            _0x24a444[_0xf73a24(0x159)]();
+            const _0xc1aea0 = _0x18f387['getAttribute'](_0xf73a24(0x18a)) || '', _0x26ec59 = String(_0xc1aea0)[_0xf73a24(0x185)]();
+            console[_0xf73a24(0x17b)]('Navigation\x20clicked:', _0xc1aea0), _0x552932(_0xc1aea0), _0x2673c6();
+            _0x4db281 && (_0x4db281['style'][_0xf73a24(0x141)] = 'display:\x20none\x20!important;\x20position:\x20absolute\x20!important;\x20visibility:\x20hidden\x20!important;\x20z-index:\x20-10000\x20!important;\x20pointer-events:\x20none\x20!important;', _0x4db281['classList'][_0xf73a24(0x16c)](_0xf73a24(0x13d)));
+            if (_0x26ec59 === _0xf73a24(0x172)) {
+                localStorage['setItem'](_0xf73a24(0x174), _0xf73a24(0x172)), console[_0xf73a24(0x17b)](_0xf73a24(0x13f));
+                _0x84b4d0 && (_0x84b4d0['style'][_0xf73a24(0x17a)] = _0xf73a24(0x186), _0x84b4d0[_0xf73a24(0x16b)][_0xf73a24(0x140)]('active'), window['analyticsManager'] && setTimeout(() => {
+                    const _0xc5d148 = _0xf73a24;
+                    window[_0xc5d148(0x142)][_0xc5d148(0x17e)]();
+                }, 0x32));
+                if (_0x4db281) {
+                    _0x4db281[_0xf73a24(0x164)][_0xf73a24(0x17a)] = _0xf73a24(0x146);
                     try {
-                        if (typeof window.dockInputInstantly === 'function') window.dockInputInstantly(true);
-                    } catch (e) {
-                        console.error('Error docking input:', e);
+                        if (typeof window[_0xf73a24(0x178)] === _0xf73a24(0x152))
+                            window[_0xf73a24(0x178)](!![]);
+                    } catch (_0x251d55) {
+                        console['error'](_0xf73a24(0x16f), _0x251d55);
                     }
                 }
-            } else if (target === 'portal') {
-                localStorage.setItem('currentNavigationTarget', 'portal');
-                console.log('Switching to portal view');
-                if (portalContainer) {
-                    portalContainer.style.display = 'block';
-                    portalContainer.classList.add('active');
-                }
-                if (inputSection) {
-                    inputSection.style.cssText = 'display: none !important; position: absolute !important; visibility: hidden !important; z-index: -10000 !important; pointer-events: none !important;';
-                    inputSection.classList.remove('is-first-prompt');
-                    try {
-                        if (typeof window.dockInputInstantly === 'function') window.dockInputInstantly(true);
-                    } catch (e) {
-                        console.error('Error docking input:', e);
+            } else {
+                if (_0x26ec59 === _0xf73a24(0x173)) {
+                    localStorage[_0xf73a24(0x184)](_0xf73a24(0x174), _0xf73a24(0x173)), console[_0xf73a24(0x17b)](_0xf73a24(0x148));
+                    _0x4545ab && (_0x4545ab[_0xf73a24(0x164)][_0xf73a24(0x17a)] = _0xf73a24(0x186), _0x4545ab['classList'][_0xf73a24(0x140)](_0xf73a24(0x149)));
+                    if (_0x4db281) {
+                        _0x4db281[_0xf73a24(0x164)][_0xf73a24(0x141)] = _0xf73a24(0x151), _0x4db281[_0xf73a24(0x16b)][_0xf73a24(0x16c)](_0xf73a24(0x13d));
+                        try {
+                            if (typeof window['dockInputInstantly'] === _0xf73a24(0x152))
+                                window['dockInputInstantly'](!![]);
+                        } catch (_0x18abf7) {
+                            console['error'](_0xf73a24(0x16f), _0x18abf7);
+                        }
                     }
-                }
-            } else if (target === 'clips' || target === 'clips-studio' || target === 'clipscontainer') {
-                localStorage.setItem('currentNavigationTarget', 'clips');
-                console.log('Switching to clips view');
-                if (clipsContainer) {
-                    clipsContainer.style.display = 'block';
-                    clipsContainer.classList.add('active');
-                    
-                    // Initialize Clips Studio if it exists and hasn't been initialized
-                    if (typeof window.clipsStudio !== 'undefined' && window.clipsStudio && !window.clipsStudio.initialized) {
-                        window.clipsStudio.init();
-                    }
-                }
-                if (inputSection) {
-                    inputSection.style.cssText = 'display: none !important; position: absolute !important; visibility: hidden !important; z-index: -10000 !important; pointer-events: none !important;';
-                    inputSection.classList.remove('is-first-prompt');
-                    try {
-                        if (typeof window.dockInputInstantly === 'function') window.dockInputInstantly(true);
-                    } catch (e) {
-                        console.error('Error docking input:', e);
-                    }
-                }
-            } else if (target === 'custom-edit' || target === 'custom') {
-                localStorage.setItem('currentNavigationTarget', 'custom');
-                console.log('Switching to custom editor view');
-                if (customEditorContainer) {
-                    customEditorContainer.style.display = 'block';
-                    customEditorContainer.classList.add('active');
-                }
-                if (inputSection) {
-                    inputSection.style.cssText = 'display: none !important; position: absolute !important; visibility: hidden !important; z-index: -10000 !important; pointer-events: none !important;';
-                    inputSection.classList.remove('is-first-prompt');
-                    try {
-                        if (typeof window.dockInputInstantly === 'function') window.dockInputInstantly(true);
-                    } catch (e) {
-                        console.error('Error docking input:', e);
+                } else {
+                    if (_0x26ec59 === _0xf73a24(0x160) || _0x26ec59 === 'clips-studio' || _0x26ec59 === _0xf73a24(0x177)) {
+                        localStorage[_0xf73a24(0x184)]('currentNavigationTarget', _0xf73a24(0x160)), console[_0xf73a24(0x17b)]('Switching\x20to\x20clips\x20view');
+                        _0x124bb1 && (_0x124bb1[_0xf73a24(0x164)][_0xf73a24(0x17a)] = _0xf73a24(0x186), _0x124bb1[_0xf73a24(0x16b)][_0xf73a24(0x140)]('active'), typeof window[_0xf73a24(0x183)] !== _0xf73a24(0x162) && window[_0xf73a24(0x183)] && !window[_0xf73a24(0x183)]['initialized'] && window[_0xf73a24(0x183)][_0xf73a24(0x182)]());
+                        if (_0x4db281) {
+                            _0x4db281[_0xf73a24(0x164)][_0xf73a24(0x141)] = _0xf73a24(0x151), _0x4db281[_0xf73a24(0x16b)][_0xf73a24(0x16c)](_0xf73a24(0x13d));
+                            try {
+                                if (typeof window[_0xf73a24(0x178)] === _0xf73a24(0x152))
+                                    window[_0xf73a24(0x178)](!![]);
+                            } catch (_0xeb1c59) {
+                                console['error'](_0xf73a24(0x16f), _0xeb1c59);
+                            }
+                        }
+                    } else {
+                        if (_0x26ec59 === _0xf73a24(0x143) || _0x26ec59 === _0xf73a24(0x155)) {
+                            localStorage[_0xf73a24(0x184)](_0xf73a24(0x174), 'custom'), console[_0xf73a24(0x17b)](_0xf73a24(0x13c));
+                            _0x142c7a && (_0x142c7a[_0xf73a24(0x164)][_0xf73a24(0x17a)] = _0xf73a24(0x186), _0x142c7a[_0xf73a24(0x16b)][_0xf73a24(0x140)]('active'));
+                            if (_0x4db281) {
+                                _0x4db281[_0xf73a24(0x164)]['cssText'] = _0xf73a24(0x151), _0x4db281['classList'][_0xf73a24(0x16c)]('is-first-prompt');
+                                try {
+                                    if (typeof window[_0xf73a24(0x178)] === 'function')
+                                        window['dockInputInstantly'](!![]);
+                                } catch (_0xf759b0) {
+                                    console['error'](_0xf73a24(0x16f), _0xf759b0);
+                                }
+                            }
+                        }
                     }
                 }
             }
         });
     });
-
-    // Handle clips submenu toggle
-    const clipsToggle = document.getElementById('clips-toggle');
-    if (clipsToggle) {
-        clipsToggle.addEventListener('click', function(e) {
-            e.preventDefault();
-            e.stopPropagation();
-            const submenu = document.getElementById('clips-submenu');
-            const chevron = this.querySelector('.chevron-icon');
-            
-            if (submenu) submenu.classList.toggle('open');
-            if (chevron) chevron.classList.toggle('rotated');
-            
-            // If clicking the main clips item, navigate to clips
-            if (!submenu || !submenu.contains(e.target)) {
-                const clipsContainer = document.getElementById('clipsContainer');
-                const inputSection = document.querySelector('.input-section');
-                
-                // Hide other containers
-                document.querySelectorAll('.dashboard-container, .portal-container').forEach(container => {
-                    container.style.display = 'none';
-                    container.classList.remove('active');
+    const _0xc22724 = document[_0x483fa5(0x17c)](_0x483fa5(0x13b));
+    _0xc22724 && _0xc22724[_0x483fa5(0x139)](_0x483fa5(0x15e), function (_0xe06f66) {
+        const _0x198788 = _0x483fa5;
+        _0xe06f66[_0x198788(0x159)](), _0xe06f66['stopPropagation']();
+        const _0x460d43 = document[_0x198788(0x17c)](_0x198788(0x163)), _0xb3ca5f = this[_0x198788(0x165)](_0x198788(0x169));
+        if (_0x460d43)
+            _0x460d43[_0x198788(0x16b)]['toggle'](_0x198788(0x14f));
+        if (_0xb3ca5f)
+            _0xb3ca5f['classList'][_0x198788(0x138)]('rotated');
+        if (!_0x460d43 || !_0x460d43['contains'](_0xe06f66['target'])) {
+            const _0x27d308 = document[_0x198788(0x17c)](_0x198788(0x16d)), _0xccb3e5 = document['querySelector'](_0x198788(0x158));
+            document[_0x198788(0x17f)](_0x198788(0x16a))[_0x198788(0x154)](_0x4c1d90 => {
+                const _0x1c2bf7 = _0x198788;
+                _0x4c1d90['style'][_0x1c2bf7(0x17a)] = 'none', _0x4c1d90[_0x1c2bf7(0x16b)][_0x1c2bf7(0x16c)](_0x1c2bf7(0x149));
+            });
+            _0x27d308 && (_0x27d308[_0x198788(0x164)]['display'] = 'block', _0x27d308[_0x198788(0x16b)][_0x198788(0x140)](_0x198788(0x149)), typeof window[_0x198788(0x183)] !== _0x198788(0x162) && window[_0x198788(0x183)] && !window[_0x198788(0x183)][_0x198788(0x170)] && window[_0x198788(0x183)][_0x198788(0x182)]());
+            if (_0xccb3e5) {
+                _0xccb3e5[_0x198788(0x164)]['display'] = _0x198788(0x146);
+                try {
+                    if (typeof window[_0x198788(0x178)] === 'function')
+                        window[_0x198788(0x178)](!![]);
+                } catch (_0x21ded1) {
+                    console['error']('Error\x20docking\x20input:', _0x21ded1);
+                }
+            }
+            _0x552932(_0x198788(0x160));
+        }
+    });
+    const _0x405805 = document['querySelectorAll']('.clips-submenu\x20.nav-item');
+    _0x405805['forEach'](_0x4d3840 => {
+        const _0x59b7a8 = _0x483fa5;
+        _0x4d3840['addEventListener'](_0x59b7a8(0x15e), function (_0x22042a) {
+            const _0x272d1d = _0x59b7a8;
+            _0x22042a[_0x272d1d(0x159)]();
+            const _0x48d850 = this['getAttribute'](_0x272d1d(0x18a));
+            if (_0x48d850 === _0x272d1d(0x147)) {
+                const _0x3ff33a = document[_0x272d1d(0x17c)](_0x272d1d(0x16d)), _0x2690d7 = document[_0x272d1d(0x165)](_0x272d1d(0x158));
+                document[_0x272d1d(0x17f)](_0x272d1d(0x16a))[_0x272d1d(0x154)](_0x12ec56 => {
+                    const _0xc5c6c7 = _0x272d1d;
+                    _0x12ec56[_0xc5c6c7(0x164)]['display'] = _0xc5c6c7(0x146), _0x12ec56['classList']['remove']('active');
                 });
-                
-                // Show clips container
-                if (clipsContainer) {
-                    clipsContainer.style.display = 'block';
-                    clipsContainer.classList.add('active');
-                    
-                    // Initialize Clips Studio if needed
-                    if (typeof window.clipsStudio !== 'undefined' && window.clipsStudio && !window.clipsStudio.initialized) {
-                        window.clipsStudio.init();
-                    }
-                }
-                
-                // Hide input section
-                if (inputSection) {
-                    inputSection.style.display = 'none';
+                _0x3ff33a && (_0x3ff33a[_0x272d1d(0x164)][_0x272d1d(0x17a)] = _0x272d1d(0x186), _0x3ff33a[_0x272d1d(0x16b)][_0x272d1d(0x140)]('active'), typeof window[_0x272d1d(0x183)] !== _0x272d1d(0x162) && window[_0x272d1d(0x183)] && !window['clipsStudio'][_0x272d1d(0x170)] && window[_0x272d1d(0x183)][_0x272d1d(0x182)]());
+                if (_0x2690d7) {
+                    _0x2690d7[_0x272d1d(0x164)][_0x272d1d(0x17a)] = _0x272d1d(0x146);
                     try {
-                        if (typeof window.dockInputInstantly === 'function') window.dockInputInstantly(true);
-                    } catch (e) {
-                        console.error('Error docking input:', e);
+                        if (typeof window['dockInputInstantly'] === _0x272d1d(0x152))
+                            window[_0x272d1d(0x178)](!![]);
+                    } catch (_0x5447ca) {
+                        console['error'](_0x272d1d(0x16f), _0x5447ca);
                     }
                 }
-                
-                // Update active navigation
-                updateActiveNav('clips');
+                _0x552932(_0x272d1d(0x160));
+                const _0x16384e = document[_0x272d1d(0x17c)](_0x272d1d(0x163)), _0x5094cd = document['querySelector'](_0x272d1d(0x15f));
+                if (_0x16384e)
+                    _0x16384e[_0x272d1d(0x16b)][_0x272d1d(0x16c)](_0x272d1d(0x14f));
+                if (_0x5094cd)
+                    _0x5094cd[_0x272d1d(0x16b)][_0x272d1d(0x16c)](_0x272d1d(0x157));
             }
         });
-    }
-
-    // Handle clips submenu items
-    const clipsSubmenuItems = document.querySelectorAll('.clips-submenu .nav-item');
-    clipsSubmenuItems.forEach(item => {
-        item.addEventListener('click', function(e) {
-            e.preventDefault();
-            const target = this.getAttribute('data-target');
-            
-            if (target === 'clips-studio') {
-                const clipsContainer = document.getElementById('clipsContainer');
-                const inputSection = document.querySelector('.input-section');
-                
-                // Hide other containers
-                document.querySelectorAll('.dashboard-container, .portal-container').forEach(container => {
-                    container.style.display = 'none';
-                    container.classList.remove('active');
-                });
-                
-                // Show clips container
-                if (clipsContainer) {
-                    clipsContainer.style.display = 'block';
-                    clipsContainer.classList.add('active');
-                    
-                    // Initialize Clips Studio if needed
-                    if (typeof window.clipsStudio !== 'undefined' && window.clipsStudio && !window.clipsStudio.initialized) {
-                        window.clipsStudio.init();
-                    }
-                }
-                
-                // Hide input section
-                if (inputSection) {
-                    inputSection.style.display = 'none';
-                    try {
-                        if (typeof window.dockInputInstantly === 'function') window.dockInputInstantly(true);
-                    } catch (e) {
-                        console.error('Error docking input:', e);
-                    }
-                }
-                
-                // Update active navigation
-                updateActiveNav('clips');
-                
-                // Close submenu
-                const submenu = document.getElementById('clips-submenu');
-                const chevron = document.querySelector('#clips-toggle .chevron-icon');
-                if (submenu) submenu.classList.remove('open');
-                if (chevron) chevron.classList.remove('rotated');
-            }
-        });
-    });
-
-    // Close submenus when clicking outside
-    document.addEventListener('click', function(e) {
-        const clipsToggle = document.getElementById('clips-toggle');
-        const clipsSubmenu = document.getElementById('clips-submenu');
-        
-        if (clipsSubmenu && clipsToggle && !clipsToggle.contains(e.target) && !clipsSubmenu.contains(e.target)) {
-            clipsSubmenu.classList.remove('open');
-            const chevron = clipsToggle.querySelector('.chevron-icon');
-            if (chevron) chevron.classList.remove('rotated');
+    }), document[_0x483fa5(0x139)]('click', function (_0x3f0dad) {
+        const _0x16f165 = _0x483fa5, _0x4fc3f9 = document[_0x16f165(0x17c)](_0x16f165(0x13b)), _0x4e8a08 = document[_0x16f165(0x17c)](_0x16f165(0x163));
+        if (_0x4e8a08 && _0x4fc3f9 && !_0x4fc3f9[_0x16f165(0x16e)](_0x3f0dad[_0x16f165(0x168)]) && !_0x4e8a08[_0x16f165(0x16e)](_0x3f0dad[_0x16f165(0x168)])) {
+            _0x4e8a08['classList'][_0x16f165(0x16c)]('open');
+            const _0x7d663 = _0x4fc3f9[_0x16f165(0x165)](_0x16f165(0x169));
+            if (_0x7d663)
+                _0x7d663[_0x16f165(0x16b)]['remove']('rotated');
         }
     });
-
-    // Handle Portal navigation specifically
-    const portalNavItem = document.querySelector('.nav-item[data-target="Portal"]');
-    if (portalNavItem) {
-        portalNavItem.addEventListener('click', function(e) {
-            e.preventDefault();
-            console.log('Portal clicked');
-            
-            // Get containers
-            const portalContainer = document.getElementById('portalContainer');
-            const dashboardContainer = document.getElementById('dashboardContainer');
-            const clipsContainer = document.getElementById('clipsContainer');
-            const inputSection = document.querySelector('.input-section');
-            
-            // Hide all containers
-            if (dashboardContainer) {
-                dashboardContainer.style.display = 'none';
-                dashboardContainer.classList.remove('active');
-            }
-            if (clipsContainer) {
-                clipsContainer.style.display = 'none';
-                clipsContainer.classList.remove('active');
-            }
-            if (inputSection) {
-                inputSection.style.display = 'none';
-            }
-            
-            // Show portal
-            if (portalContainer) {
-                portalContainer.style.display = 'block';
-                portalContainer.classList.add('active');
-            }
-            
-            // Update active nav
-            updateActiveNav('Portal');
-        });
-    }
-
-
-    // Handle sidebar toggle with keyboard shortcut
-    document.addEventListener('keydown', (e) => {
-        // Ctrl/Cmd + K to toggle sidebar
-        if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
-            e.preventDefault();
-            const sidebar = document.querySelector('.sidebar');
-            if (sidebar) {
-                sidebar.classList.toggle('expanded');
-                const isExpanded = sidebar.classList.contains('expanded');
-                localStorage.setItem('sidebarExpanded', isExpanded);
+    const _0x1d93ce = document[_0x483fa5(0x165)]('.nav-item[data-target=\x22Portal\x22]');
+    _0x1d93ce && _0x1d93ce['addEventListener'](_0x483fa5(0x15e), function (_0x5d377e) {
+        const _0x5443ce = _0x483fa5;
+        _0x5d377e[_0x5443ce(0x159)](), console[_0x5443ce(0x17b)](_0x5443ce(0x188));
+        const _0x39632e = document[_0x5443ce(0x17c)](_0x5443ce(0x156)), _0xcd1dda = document['getElementById'](_0x5443ce(0x13e)), _0x3f2f10 = document[_0x5443ce(0x17c)](_0x5443ce(0x16d)), _0x1ff16d = document[_0x5443ce(0x165)](_0x5443ce(0x158));
+        _0xcd1dda && (_0xcd1dda[_0x5443ce(0x164)][_0x5443ce(0x17a)] = _0x5443ce(0x146), _0xcd1dda['classList']['remove'](_0x5443ce(0x149))), _0x3f2f10 && (_0x3f2f10['style'][_0x5443ce(0x17a)] = 'none', _0x3f2f10[_0x5443ce(0x16b)]['remove']('active')), _0x1ff16d && (_0x1ff16d[_0x5443ce(0x164)][_0x5443ce(0x17a)] = _0x5443ce(0x146)), _0x39632e && (_0x39632e[_0x5443ce(0x164)][_0x5443ce(0x17a)] = _0x5443ce(0x186), _0x39632e['classList'][_0x5443ce(0x140)](_0x5443ce(0x149))), _0x552932('Portal');
+    }), document[_0x483fa5(0x139)]('keydown', _0x23d57f => {
+        const _0x3b5fce = _0x483fa5;
+        if ((_0x23d57f[_0x3b5fce(0x167)] || _0x23d57f['metaKey']) && _0x23d57f[_0x3b5fce(0x14c)] === 'k') {
+            _0x23d57f[_0x3b5fce(0x159)]();
+            const _0x4fde1a = document[_0x3b5fce(0x165)]('.sidebar');
+            if (_0x4fde1a) {
+                _0x4fde1a[_0x3b5fce(0x16b)][_0x3b5fce(0x138)](_0x3b5fce(0x181));
+                const _0xaef9cc = _0x4fde1a[_0x3b5fce(0x16b)][_0x3b5fce(0x16e)](_0x3b5fce(0x181));
+                localStorage[_0x3b5fce(0x184)](_0x3b5fce(0x15b), _0xaef9cc);
             }
         }
     });
 }
-
-// Initialize navigation when DOM is ready
-if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', initNavigation);
-} else {
-    // DOM already loaded
-    initNavigation();
+document[_0x4ab1bf(0x144)] === _0x4ab1bf(0x145) ? document['addEventListener'](_0x4ab1bf(0x13a), initNavigation) : initNavigation();
+function _0x4ccf() {
+    const _0x7dae03 = [
+        'classList',
+        'remove',
+        'clipsContainer',
+        'contains',
+        'Error\x20docking\x20input:',
+        'initialized',
+        '27KnjwsB',
+        'dashboard',
+        'portal',
+        'currentNavigationTarget',
+        '.nav-item[data-target]',
+        '9567846CDSyDZ',
+        'clipscontainer',
+        'dockInputInstantly',
+        'customEditorContainer',
+        'display',
+        'log',
+        'getElementById',
+        '2260ouiPPS',
+        'updateCharts',
+        'querySelectorAll',
+        '755192peSMfC',
+        'expanded',
+        'init',
+        'clipsStudio',
+        'setItem',
+        'toLowerCase',
+        'block',
+        'Dashboard',
+        'Portal\x20clicked',
+        '468444tOTFep',
+        'data-target',
+        'toggle',
+        'addEventListener',
+        'DOMContentLoaded',
+        'clips-toggle',
+        'Switching\x20to\x20custom\x20editor\x20view',
+        'is-first-prompt',
+        'dashboardContainer',
+        'Switching\x20to\x20dashboard\x20view',
+        'add',
+        'cssText',
+        'analyticsManager',
+        'custom-edit',
+        'readyState',
+        'loading',
+        'none',
+        'clips-studio',
+        'Switching\x20to\x20portal\x20view',
+        'active',
+        'includes',
+        '5100oucQwU',
+        'key',
+        '2037MPYMXd',
+        'exports',
+        'open',
+        'Portal',
+        'display:\x20none\x20!important;\x20position:\x20absolute\x20!important;\x20visibility:\x20hidden\x20!important;\x20z-index:\x20-10000\x20!important;\x20pointer-events:\x20none\x20!important;',
+        'function',
+        '7swQipi',
+        'forEach',
+        'custom',
+        'portalContainer',
+        'rotated',
+        '.input-section',
+        'preventDefault',
+        '1741309NZzzob',
+        'sidebarExpanded',
+        '9214030BiiFAU',
+        '141647oeMiCC',
+        'click',
+        '#clips-toggle\x20.chevron-icon',
+        'clips',
+        'Clips',
+        'undefined',
+        'clips-submenu',
+        'style',
+        'querySelector',
+        'getAttribute',
+        'ctrlKey',
+        'target',
+        '.chevron-icon',
+        '.dashboard-container,\x20.portal-container'
+    ];
+    _0x4ccf = function () {
+        return _0x7dae03;
+    };
+    return _0x4ccf();
 }
-
-// Export for use in other modules if needed
-if (typeof module !== 'undefined' && module.exports) {
-    module.exports = { initNavigation };
+function _0x4afd(_0x279f3e, _0x45fed8) {
+    _0x279f3e = _0x279f3e - 0x138;
+    const _0x4ccf95 = _0x4ccf();
+    let _0x4afdc9 = _0x4ccf95[_0x279f3e];
+    return _0x4afdc9;
 }
+typeof module !== _0x4ab1bf(0x162) && module[_0x4ab1bf(0x14e)] && (module['exports'] = { 'initNavigation': initNavigation });
