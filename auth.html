@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://cdn.paddle.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: https:; connect-src 'self' ws: http://localhost:5500 ws://localhost:5500 http://127.0.0.1:5500 ws://127.0.0.1:5500 https://cdn.jsdelivr.net https://cdn.socket.io https://cdnjs.cloudflare.com https://cdn.paddle.com https://checkout.paddle.com https://api.paddle.com https://api.solisai.video; frame-src https://checkout.paddle.com;">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta http-equiv="X-Content-Type-Options" content="nosniff">
+    <meta http-equiv="X-XSS-Protection" content="1; mode=block">
+    <meta http-equiv="Referrer-Policy" content="strict-origin-when-cross-origin">
+    <script src="/js/core/init.js"></script>
+    <title>Redirecting..</title>
+    <link rel="icon" href="/assets/solis.png" type="image/png">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, rgba(255, 245, 235, 0.7) 0%, rgba(255, 228, 209, 0.7) 100%);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            color: #2d2d2d;
+            overflow: hidden;
+            position: relative;
+        }
+
+        body::before {
+            content: '';
+            position: absolute;
+            width: 500px;
+            height: 500px;
+            background: radial-gradient(circle, rgba(255, 140, 66, 0.08) 0%, transparent 70%);
+            border-radius: 50%;
+            top: -200px;
+            right: -200px;
+            animation: float 8s ease-in-out infinite;
+        }
+
+        body::after {
+            content: '';
+            position: absolute;
+            width: 400px;
+            height: 400px;
+            background: radial-gradient(circle, rgba(255, 140, 66, 0.06) 0%, transparent 70%);
+            border-radius: 50%;
+            bottom: -150px;
+            left: -150px;
+            animation: float 10s ease-in-out infinite reverse;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translate(0, 0) scale(1); }
+            50% { transform: translate(30px, 30px) scale(1.1); }
+        }
+        
+        .success-container {
+            text-align: center;
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(25px);
+            -webkit-backdrop-filter: blur(25px);
+            padding: 60px 80px;
+            border-radius: 32px;
+            box-shadow: 0 20px 60px rgba(255, 140, 66, 0.15), 0 0 1px rgba(255, 140, 66, 0.15) inset, inset 1px 1px 1px rgba(255, 255, 255, 0.4);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            position: relative;
+            z-index: 10;
+            animation: containerFadeIn 0.8s ease-out;
+        }
+
+        @keyframes containerFadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        h1 {
+            margin-bottom: 16px;
+            font-weight: 700;
+            font-size: 32px;
+            color: #1a1a1a;
+            letter-spacing: -0.02em;
+            animation: textFadeIn 0.8s ease-out 0.3s both;
+        }
+        
+        p {
+            margin-bottom: 48px;
+            color: rgba(45, 45, 45, 0.6);
+            font-weight: 500;
+            font-size: 16px;
+            letter-spacing: 0.01em;
+            animation: textFadeIn 0.8s ease-out 0.4s both;
+        }
+
+        @keyframes textFadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .atom-container {
+            display: inline-block;
+            width: 180px;
+            height: 180px;
+            margin-bottom: 32px;
+            position: relative;
+            animation: atomAppear 1s ease-out;
+        }
+
+        @keyframes atomAppear {
+            from {
+                opacity: 0;
+                transform: scale(0.5);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+        
+        .atom-container svg {
+            width: 100%;
+            height: 100%;
+            filter: drop-shadow(0 0 20px rgba(255, 140, 66, 0.3));
+        }
+        
+        .nucleus {
+            animation: nucleusPulse 3s ease-in-out infinite;
+            transform-origin: center;
+        }
+        
+        .orbit {
+            transform-origin: 50px 50px;
+            stroke-dasharray: 300;
+            stroke-dashoffset: 300;
+        }
+
+        .orbit-1 {
+            animation: drawOrbit1 2s ease-out forwards, 
+                       rotateOrbit1 12s linear infinite 2s;
+        }
+
+        .orbit-2 {
+            animation: drawOrbit2 2s ease-out forwards, 
+                       rotateOrbit2 10s linear infinite 2s;
+        }
+
+        .electron {
+            animation: electronGlow 2s ease-in-out infinite;
+        }
+
+        .electron-1 {
+            offset-path: path('M 50 5 A 45 25 0 0 1 50 95 A 45 25 0 0 1 50 5');
+            animation: orbitElectron1 12s linear infinite 2s, electronGlow 2s ease-in-out infinite;
+        }
+
+        .electron-2 {
+            offset-path: path('M 50 5 A 45 25 0 0 1 50 95 A 45 25 0 0 1 50 5');
+            animation: orbitElectron2 10s linear infinite 2.3s, electronGlow 2s ease-in-out infinite 0.7s;
+        }
+        
+        @keyframes nucleusPulse {
+            0%, 100% { 
+                transform: scale(1);
+                opacity: 1;
+            }
+            50% { 
+                transform: scale(1.15);
+                opacity: 0.8;
+            }
+        }
+
+        @keyframes drawOrbit1 {
+            from {
+                stroke-dashoffset: 300;
+                transform: rotate(75deg);
+            }
+            to {
+                stroke-dashoffset: 0;
+                transform: rotate(75deg);
+            }
+        }
+
+        @keyframes drawOrbit2 {
+            from {
+                stroke-dashoffset: 300;
+                transform: rotate(-20deg);
+            }
+            to {
+                stroke-dashoffset: 0;
+                transform: rotate(-20deg);
+            }
+        }
+        
+        @keyframes rotateOrbit1 {
+            from { transform: rotate(75deg); }
+            to { transform: rotate(435deg); }
+        }
+
+        @keyframes rotateOrbit2 {
+            from { transform: rotate(-20deg); }
+            to { transform: rotate(340deg); }
+        }
+
+        @keyframes orbitElectron1 {
+            from { offset-distance: 0%; }
+            to { offset-distance: 100%; }
+        }
+
+        @keyframes orbitElectron2 {
+            from { offset-distance: 50%; }
+            to { offset-distance: 150%; }
+        }
+
+        @keyframes electronGlow {
+            0%, 100% { 
+                filter: drop-shadow(0 0 4px rgba(255, 140, 66, 0.8));
+            }
+            50% { 
+                filter: drop-shadow(0 0 8px rgba(255, 140, 66, 1));
+            }
+        }
+
+        .progress-bar {
+            width: 240px;
+            height: 3px;
+            background: rgba(255, 140, 66, 0.2);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border-radius: 2px;
+            margin: 0 auto;
+            overflow: hidden;
+            animation: textFadeIn 0.8s ease-out 0.5s both;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06), inset 1px 1px 1px rgba(255, 255, 255, 0.3);
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #ff8c42, #ff6b35);
+            border-radius: 2px;
+            animation: progressLoad 2s ease-out forwards;
+            box-shadow: 0 0 12px rgba(255, 140, 66, 0.5), 0 0 24px rgba(255, 140, 66, 0.3);
+        }
+
+        @keyframes progressLoad {
+            from { width: 0%; }
+            to { width: 100%; }
+        }
+
+        @media (max-width: 768px) {
+            .success-container {
+                padding: 40px 30px;
+                margin: 20px;
+            }
+
+            h1 {
+                font-size: 24px;
+            }
+
+            .atom-container {
+                width: 140px;
+                height: 140px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="success-container">
+        <div class="atom-container">
+            <svg width="100" height="100" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <!-- Nucleus/Core -->
+                <g class="nucleus">
+                    <circle cx="50" cy="50" r="8" fill="#ff8c42"/>
+                    <circle cx="50" cy="50" r="12" fill="#ff8c42" opacity="0.3"/>
+                </g>
+                
+                <!-- Electron Orbits (2 orbits) -->
+                <ellipse class="orbit orbit-1" rx="45" ry="25" cx="50" cy="50" 
+                        stroke="#ff8c42" stroke-width="2.5" fill="none" 
+                        stroke-linecap="round" opacity="0.7"/>
+                
+                <ellipse class="orbit orbit-2" rx="45" ry="25" cx="50" cy="50" 
+                        stroke="#ff8c42" stroke-width="2.5" fill="none" 
+                        stroke-linecap="round" opacity="0.7"/>
+                
+
+            </svg>
+        </div>
+        <h1>Authentication Successful</h1>
+        <p>Redirecting you to your workspace...</p>
+        <div class="progress-bar">
+            <div class="progress-fill"></div>
+        </div>
+    </div>
+
+    <script>
+        const APP_VERSION = '1.0.0';
+        async function initializeCSRFToken() {
+            try {
+                const response = await fetch(`${window.API_BASE_URL}/auth/csrf-token`, {
+                    method: 'GET',
+                    credentials: 'include'
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data.token) {
+                        const csrfMeta = document.querySelector('meta[name="csrf-token"]');
+                        if (csrfMeta) {
+                            csrfMeta.setAttribute('content', data.token);
+                            console.log('[OK] CSRF token initialized');
+                        }
+                    }
+                } else {
+                    console.warn('[WARNING] Failed to fetch CSRF token');
+                }
+            } catch (error) {
+                console.warn('[WARNING] CSRF token fetch error:', error);
+            }
+        }
+        
+        function getCSRFToken() {
+            const csrfMeta = document.querySelector('meta[name="csrf-token"]');
+            if (csrfMeta && csrfMeta.content && csrfMeta.content.length >= 32) {
+                return csrfMeta.content;
+            }
+            return null;
+        }
+        
+        async function secureFetch(url, options = {}) {
+            const defaultHeaders = { };
+            
+            if (options.method && ['POST', 'PUT', 'DELETE', 'PATCH'].includes(options.method.toUpperCase())) {
+                const csrfToken = getCSRFToken();
+                if (!csrfToken) {
+                    throw new Error('CSRF token not available - cannot make state-changing request');
+                }
+                defaultHeaders['X-CSRF-Token'] = csrfToken;
+            }
+            
+            return fetch(url, {
+                ...options,
+                credentials: 'include',
+                headers: {
+                    ...defaultHeaders,
+                    ...options.headers
+                }
+            });
+        }
+        
+        if (window.location.protocol === 'http:' && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
+            console.warn('⚠️ Warning: Connection is not secure. Use HTTPS in production.');
+        }
+        
+        // Initialize CSRF on page load
+        document.addEventListener('DOMContentLoaded', initializeCSRFToken);
+        
+        function isNewUser() {
+            const hasVisited = sessionStorage.getItem('solis_visited');
+            return !hasVisited;
+        }
+
+        function markUserAsVisited() {
+            sessionStorage.setItem('solis_visited', 'true');
+        }
+
+        function validateUserObject(userInfo) {
+            if (!userInfo || typeof userInfo !== 'object') {
+                throw new Error('Invalid user object');
+            }
+            
+            const allowedProps = ['id', 'email', 'name', 'role', 'picture', 'plan', 'auth_provider'];
+            const sanitized = {};
+            
+            for (const prop of allowedProps) {
+                if (prop in userInfo) {
+                    const value = userInfo[prop];
+                    if (typeof value === 'string' || typeof value === 'number') {
+                        sanitized[prop] = value;
+                    }
+                }
+            }
+            return sanitized;
+        }
+
+        function checkVersionUpdate() {
+            const lastVersion = sessionStorage.getItem('appVersion');
+            if (lastVersion && lastVersion !== APP_VERSION) {
+                sessionStorage.setItem('showVersionUpdate', 'true');
+            }
+            sessionStorage.setItem('appVersion', APP_VERSION);
+        }      
+        async function verifyAndRedirect() {
+            try {
+                const verifyUrl = `${window.API_BASE_URL}/auth/verify`;
+                console.log('🔍 Verifying session at:', verifyUrl);
+                const response = await secureFetch(verifyUrl, {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                console.log('📡 Verify response status:', response.status);
+                const data = await response.json();
+                console.log('📄 Verify response data:', data);
+                
+                if (response.ok) {
+                    if (!data || typeof data !== 'object' || !data.user) {
+                        throw new Error('Invalid API response format');
+                    }
+                    const userInfo = validateUserObject(data.user);
+                    sessionStorage.setItem('userId', String(userInfo.id));
+                    
+                    const newUser = isNewUser();
+                    markUserAsVisited();
+                    checkVersionUpdate();
+                    
+                    window.history.replaceState({}, document.title, window.location.pathname);
+                    console.log('✅ Session verified, redirecting to:', newUser ? 'welcome' : 'dashboard');
+                    
+                    const redirectUrl = newUser ? '/welcome.html' : '/dashboard.html';
+                    setTimeout(() => { window.location.href = redirectUrl; }, 100);
+                } else {
+                    console.log('❌ Session invalid (status ' + response.status + '), redirecting to login');
+                    console.log('Response:', data);
+                    setTimeout(() => { window.location.href = '/login.html'; }, 100);
+                }
+            } catch (error) {
+                console.error('❌ Error during verification:', error.message, error);
+                setTimeout(() => { window.location.href = '/login.html'; }, 100);
+            }
+        }
+        setTimeout(() => {
+            verifyAndRedirect();
+        }, 500);
+    </script>
+</body>
+</html>

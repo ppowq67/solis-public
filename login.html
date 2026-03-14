@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://cdn.paddle.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: https:; connect-src 'self' http://localhost:5500 ws://localhost:5500 http://127.0.0.1:5500 ws://127.0.0.1:5500 https://api.solisai.video; frame-src https://checkout.paddle.com;">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta http-equiv="X-Content-Type-Options" content="nosniff">
+    <meta http-equiv="X-XSS-Protection" content="1; mode=block">
+    <meta http-equiv="Referrer-Policy" content="strict-origin-when-cross-origin">
+    <script src="/js/core/init.js"></script>
+    <script src="/js/login.js"></script>
+    <title>Login | Solis AI</title>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,300;1,400&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --accent:       #ff9d42;
+            --accent-2:     #ff5133;
+            --purple:       #8b5cf6;
+            --bg-dark:      #080809;
+            --text-light:   rgba(255,255,255,0.88);
+            --text-dim:     rgba(255,255,255,0.38);
+            --text-primary: #111114;
+            --text-muted:   #9999a8;
+        }
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        html, body {
+            width: 100%; height: 100%;
+            overflow: hidden;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            -webkit-font-smoothing: antialiased;
+            text-rendering: optimizeLegibility;
+        }
+        .split { display: flex; width: 100%; height: 100vh; }
+        .left {
+            flex: 1.25;
+            background: var(--bg-dark);
+            position: relative;
+            display: flex; flex-direction: column; justify-content: space-between;
+            padding: 34px 60px 54px 60px;
+            overflow: hidden;
+        }
+        .left::after {
+            content: '';
+            position: absolute; inset: 0;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23g)' opacity='1'/%3E%3C/svg%3E");
+            opacity: 0.028; z-index: 1; pointer-events: none;
+        }
+        .orbs { position: absolute; inset: 0; z-index: 0; overflow: hidden; }
+        .orb { position: absolute; border-radius: 50%; filter: blur(100px); mix-blend-mode: screen; animation: drift linear infinite alternate; }
+        .orb-1 { width:600px;height:600px; background:radial-gradient(circle,rgba(255,145,55,0.48),transparent 68%); top:-200px;left:-160px; animation-duration:26s; }
+        .orb-2 { width:700px;height:700px; background:radial-gradient(circle,rgba(139,92,246,0.36),transparent 68%); bottom:-280px;right:-200px; animation-duration:32s;animation-delay:-12s; }
+        .orb-3 { width:420px;height:420px; background:radial-gradient(circle,rgba(255,81,51,0.28),transparent 68%); top:40%;left:30%; animation-duration:21s;animation-delay:-18s; }
+
+        @keyframes drift {
+            0%   { transform:translate(0,0) scale(1); }
+            33%  { transform:translate(65px,50px) scale(1.1); }
+            66%  { transform:translate(-45px,95px) scale(0.93); }
+            100% { transform:translate(0,0) scale(1); }
+        }
+        .left-nav { position:relative;z-index:10; display:flex;align-items:center; }
+
+        .logo-lockup { display:flex;align-items:center;gap:10px; text-decoration:none; }
+
+        .logo-name {
+            font-weight: 700; font-size: 18px; color: #fff;
+            letter-spacing: -0.015em;
+        }
+
+        .beta-tag {
+            font-size: 10px; font-weight: 700;
+            background: rgba(255,157,66,0.14);
+            border: 1px solid rgba(255,157,66,0.28);
+            color: var(--accent);
+            padding: 2px 9px; border-radius: 100px;
+            letter-spacing: 0.06em; text-transform: uppercase;
+        }
+        .hero { position:relative;z-index:10; max-width:560px; }
+
+        .eyebrow-pill {
+            display:inline-flex;align-items:center;gap:8px;
+            background:rgba(255,255,255,0.05);
+            border:1px solid rgba(255,255,255,0.1);
+            border-radius:100px; padding:6px 14px 6px 10px; margin-bottom:30px;
+        }
+
+        .eyebrow-dot {
+            width:7px;height:7px;border-radius:50%;
+            background:var(--accent); box-shadow:0 0 10px var(--accent);
+            animation:glow-pulse 2.2s ease-in-out infinite;
+        }
+        @keyframes glow-pulse {
+            0%,100% { box-shadow:0 0 6px var(--accent); }
+            50%      { box-shadow:0 0 18px var(--accent),0 0 32px rgba(255,157,66,0.3); }
+        }
+
+        .eyebrow-text { font-size:12px;font-weight:500;color:rgba(255,255,255,0.45);letter-spacing:0.025em; }
+
+        .hero h1 {
+            font-size: clamp(54px, 5.6vw, 76px);
+            font-weight: 800; line-height: 1.0;
+            letter-spacing: -0.04em; color: #fff;
+            margin-bottom: 22px;
+        }
+
+        .gradient-text {
+            display:inline;
+            background:linear-gradient(115deg,#ffaa44 0%,#ff5133 48%,#c026d3 100%);
+            -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text;
+        }
+
+        .hero p {
+            font-size:16px;line-height:1.72;
+            color:rgba(255,255,255,0.38);font-weight:400;
+            max-width:420px;margin-bottom:48px;
+        }
+        .proof-card {
+            display:inline-flex;align-items:center;gap:20px;
+            background:rgba(255,255,255,0.04);backdrop-filter:blur(28px);
+            border:1px solid rgba(255,255,255,0.08);border-radius:22px;padding:18px 24px;
+        }
+        .avatars { display:flex; }
+        .av {
+            width:40px;height:40px;border-radius:50%;border:2px solid #080809;
+            background-size:cover;background-position:center;
+            transition:transform 0.22s ease;flex-shrink:0;
+        }
+        .av+.av { margin-left:-11px; }
+        .av:hover { transform:translateY(-4px) scale(1.08);z-index:9!important; }
+        .proof-label { font-weight:700;font-size:14px;color:#fff;margin-bottom:4px; }
+        .stars { display:flex;gap:3px;margin-bottom:6px; }
+        .stars svg { width:12px;height:12px;color:#ff9d42; }
+        .proof-quote { font-size:12px;line-height:1.5;font-style:italic;color:rgba(255,255,255,0.3);max-width:270px; }
+        .left-stats { position:relative;z-index:10; display:flex;align-items:flex-end; }
+        .stat-item { padding-right:36px;margin-right:36px;border-right:1px solid rgba(255,255,255,0.07); }
+        .stat-item:last-child { border-right:none; }
+        .stat-num {
+            font-size:26px;font-weight:800;letter-spacing:-0.04em;
+            background:linear-gradient(90deg,#ffaa44,#ff5133);
+            -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+        }
+        .stat-label { font-size:12px;font-weight:400;color:rgba(255,255,255,0.25);margin-top:2px; }
+        .login-side {
+            flex: 0.75;
+            background: #f7f7f9;
+            display:flex;align-items:center;justify-content:center;
+            padding:48px 60px; position:relative;overflow:hidden;
+        }
+        .login-side::before {
+            content:''; position:absolute;
+            top:-140px;left:50%;transform:translateX(-50%);
+            width:500px;height:380px;
+            background:radial-gradient(ellipse,rgba(255,157,66,0.1),transparent 65%);
+            pointer-events:none; z-index:0;
+        }
+        .login-side::after {
+            content:''; position:absolute;inset:0;
+            background-image:radial-gradient(circle,rgba(0,0,0,0.09) 1px,transparent 1px);
+            background-size:24px 24px;
+            opacity:0.4; pointer-events:none; z-index:0;
+        }
+        .login-container { width:100%;max-width:370px;position:relative;z-index:1; }
+        .form-logo { display:flex;align-items:center;gap:9px;margin-bottom:36px; }
+        .form-logo-name { font-weight:700;font-size:17px;color:var(--text-primary);letter-spacing:-0.015em; }
+        .form-logo .beta-tag { background:rgba(255,157,66,0.1);border-color:rgba(255,157,66,0.22);color:#d96012; }
+        .ann-wrap { margin-bottom:28px; }
+        .ann {
+            display:inline-flex;align-items:center;
+            background:#fff;border:1px solid rgba(0,0,0,0.07);border-radius:100px;
+            padding:4px 16px 4px 4px;
+            box-shadow:0 1px 3px rgba(0,0,0,0.05),0 6px 20px rgba(232,96,28,0.09);
+            transition:transform 0.22s,box-shadow 0.22s;cursor:default;
+        }
+        .ann:hover { transform:translateY(-2px);box-shadow:0 2px 6px rgba(0,0,0,0.06),0 14px 36px rgba(232,96,28,0.15); }
+
+        .ann-badge {
+            display:flex;align-items:center;gap:7px;
+            background:linear-gradient(135deg,#ff8c42,#e8431c);color:#fff;
+            font-size:10px;font-weight:700;letter-spacing:0.07em;text-transform:uppercase;
+            padding:5px 12px;border-radius:100px;position:relative;overflow:hidden;flex-shrink:0;
+        }
+        .ann-badge::after {
+            content:'';position:absolute;top:0;left:-100%;width:55%;height:100%;
+            background:linear-gradient(90deg,transparent,rgba(255,255,255,0.24),transparent);
+            animation:shimmer 2.8s ease-in-out infinite;
+        }
+        @keyframes shimmer { 0%{left:-100%} 60%,100%{left:160%} }
+
+        .live-dot { position:relative;width:6px;height:6px;flex-shrink:0; }
+        .live-dot .core { position:absolute;inset:1px;border-radius:50%;background:#fff; }
+        .live-dot .ring { position:absolute;inset:0;border-radius:50%;border:1.5px solid rgba(255,255,255,0.55);animation:ripple 1.9s ease-out infinite; }
+        @keyframes ripple { 0%{transform:scale(1);opacity:.8} 100%{transform:scale(2.7);opacity:0} }
+
+        .ann-sep { width:1px;height:16px;background:rgba(0,0,0,0.07);margin:0 14px;flex-shrink:0; }
+        .ann-body { display:flex;align-items:center;gap:8px; }
+        .ann-text { font-size:13px;font-weight:500;color:#111;white-space:nowrap; }
+        .ann-text .hl { color:#d95c12;font-weight:700; }
+        .ann-date { font-size:11px;color:#b0b0bb;white-space:nowrap; }
+        .login-header { margin-bottom:28px; }
+        .login-header h2 {
+            font-size:28px;font-weight:800;letter-spacing:-0.035em;
+            color:var(--text-primary);margin-bottom:7px;line-height:1.18;
+        }
+        .login-header p { font-size:15px;font-weight:400;color:var(--text-muted);line-height:1.5; }
+        .auth-btn {
+            width:100%;padding:15px 20px;border-radius:14px;
+            border:1.5px solid #e2e2e8;background:#fff;
+            color:var(--text-primary);
+            font-family:'Plus Jakarta Sans',sans-serif;
+            font-size:15px;font-weight:600;
+            display:flex;align-items:center;justify-content:center;gap:11px;
+            cursor:pointer;
+            transition:all 0.22s cubic-bezier(0.16,1,0.3,1);
+            margin-bottom:10px;
+            box-shadow:0 1px 3px rgba(0,0,0,0.04);
+        }
+        .auth-btn:hover { border-color:#c8c8d4;transform:translateY(-2px);box-shadow:0 6px 22px rgba(0,0,0,0.08); }
+        .auth-btn:active { transform:scale(0.985);box-shadow:none; }
+        .auth-btn:disabled { opacity:.55;cursor:not-allowed;transform:none!important;box-shadow:none; }
+        .google-btn:hover { border-color:#c2d0f8;background:rgba(66,133,244,0.02); }
+        .youtube-btn:hover { border-color:#ffbcbc;background:rgba(255,0,0,0.02);cursor:no-drop; }
+        .auth-divider { display:flex;align-items:center;margin:18px 0;gap:12px; }
+        .auth-divider::before,.auth-divider::after { content:'';flex:1;height:1px;background:#e8e8f0; }
+        .auth-divider span { font-size:11px;font-weight:700;color:#c0c0cc;text-transform:uppercase;letter-spacing:0.1em; }
+        .terms { font-size:12px;color:#c0c0cc;text-align:center;line-height:1.65;margin-top:22px; }
+        .terms a { color:#9999aa;text-decoration:none;border-bottom:1px solid #e0e0ea;transition:color 0.2s,border-color 0.2s; }
+        .terms a:hover { color:var(--accent);border-color:var(--accent); }
+        @media (max-width:960px) {
+            .left { display:none; }
+            .split { height:auto;min-height:100vh; }
+            .login-side { flex:1;padding:32px 24px 48px;min-height:100vh; }
+            .login-container { max-width:100%; }
+        }
+        @media (max-width:480px) {
+            .login-side { padding:24px 16px 40px; }
+            .login-header h2 { font-size:24px; }
+            .auth-btn { font-size:14px;padding:14px 16px; }
+        }
+    </style>
+</head>
+<body>
+<div class="split">
+    <div class="left">
+        <div class="orbs">
+            <div class="orb orb-1"></div>
+            <div class="orb orb-2"></div>
+            <div class="orb orb-3"></div>
+        </div>
+
+        <nav class="left-nav">
+            <a href="#" class="logo-lockup">
+                <svg viewBox="0 0 100 100" fill="none" width="32" height="32">
+                    <circle cx="50" cy="50" r="11" fill="#ff9d42"/>
+                    <ellipse rx="44" ry="16" cx="50" cy="50" stroke="#ff9d42" stroke-width="6" transform="rotate(45 50 50)"/>
+                    <ellipse rx="44" ry="16" cx="50" cy="50" stroke="#ff9d42" stroke-width="6" transform="rotate(-45 50 50)"/>
+                </svg>
+                <span class="logo-name">Solis AI</span>
+                <span class="beta-tag">Beta</span>
+            </a>
+        </nav>
+
+        <div class="hero">
+            <div class="eyebrow-pill">
+                <div class="eyebrow-dot"></div>
+                <span class="eyebrow-text">AI-powered short-form creation</span>
+            </div>
+
+            <h1>Stop scrolling.<br><span class="gradient-text">Go viral.</span></h1>
+
+            <p>Every video has moments that demand attention. Solis discovers them, refines them, and turns them into clips that people actually stop for.</p>
+
+            <div class="proof-card">
+                <div class="avatars">
+                    <div class="av" style="background-image:url('https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?auto=format&fit=crop&q=80&w=100');z-index:5"></div>
+                    <div class="av" style="background-image:url('https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=100');z-index:4"></div>
+                    <div class="av" style="background-image:url('https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&q=80&w=100');z-index:3"></div>
+                    <div class="av" style="background-image:url('https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&q=80&w=100');z-index:2"></div>
+                    <div class="av" style="background-image:url('https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&q=80&w=100');z-index:1"></div>
+                </div>
+                <div class="proof-text">
+                    <div class="proof-label">Loved by creators</div>
+                    <div class="stars">
+                        <svg fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
+                        <svg fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
+                        <svg fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
+                        <svg fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
+                        <svg viewBox="0 0 20 20" fill="none"><defs><linearGradient id="hg" x1="0%" x2="100%"><stop offset="60%" stop-color="#ff9d42"/><stop offset="60%" stop-color="#d1d5db"/></linearGradient></defs><path fill="url(#hg)" d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
+                    </div>
+                    <div class="proof-quote">"Other tools overpromise. Solis is the comfy editor I wish I had earlier."</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="left-stats">
+            <div class="stat-item"><div class="stat-num">50+</div><div class="stat-label">Clips generated</div></div>
+            <div class="stat-item"><div class="stat-num">10+</div><div class="stat-label">Active creators</div></div>
+            <div class="stat-item"><div class="stat-num">97%</div><div class="stat-label">Satisfaction rate</div></div>
+        </div>
+    </div>
+
+    <div class="login-side">
+        <div class="login-container">
+            <div class="form-logo">
+                <svg viewBox="0 0 100 100" fill="none" width="28" height="28">
+                    <circle cx="50" cy="50" r="11" fill="#ff9d42"/>
+                    <ellipse rx="44" ry="16" cx="50" cy="50" stroke="#ff9d42" stroke-width="6" transform="rotate(45 50 50)"/>
+                    <ellipse rx="44" ry="16" cx="50" cy="50" stroke="#ff9d42" stroke-width="6" transform="rotate(-45 50 50)"/>
+                </svg>
+                <span class="form-logo-name">Solis AI</span>
+                <span class="beta-tag">beta</span>
+            </div>
+            <div class="ann-wrap">
+                <div class="ann">
+                    <div class="ann-badge">
+                        <div class="live-dot"><div class="ring"></div><div class="core"></div></div>
+                        Just launched
+                    </div>
+                    <div class="ann-sep"></div>
+                    <div class="ann-body">
+                        <span class="ann-text">we're new here 🚀</span>
+                        <span class="ann-date">March 14, 2026</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="login-header">
+                <h2>Welcome to the beta.</h2>
+                <p>Sign in to start turning long videos into viral clips.</p>
+            </div>
+
+            <button class="auth-btn google-btn" id="googleLoginBtn">
+                <svg width="19" height="19" viewBox="0 0 24 24">
+                    <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+                    <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+                    <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.28.81-.56z" fill="#FBBC05"/>
+                    <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+                </svg>
+                <span id="googleBtnText">Continue with Google</span>
+            </button>
+
+            <div class="auth-divider"><span>or</span></div>
+
+            <button class="auth-btn youtube-btn" id="youtubeLoginBtn" title="YouTube sign-in coming soon">
+                <svg width="19" height="19" viewBox="0 0 24 24" fill="#FF0000">
+                    <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
+                </svg>
+                <span id="youtubeBtnText">Continue with YouTube</span>
+            </button>
+
+            <p class="terms">
+                By signing in, you agree to our <a href="terms.html">Terms of Service</a> and <a href="privacy.html">Privacy Policy</a>
+            </p>
+
+        </div>
+    </div>
+</div>
+</body>
+</html>

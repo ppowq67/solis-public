@@ -1,0 +1,624 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self' ws: http://localhost:5500 ws://localhost:5500 http://127.0.0.1:5500 ws://127.0.0.1:5500 https://cdn.jsdelivr.net https://cdn.socket.io https://cdnjs.cloudflare.com https://cdn.paddle.com https://checkout.paddle.com https://api.paddle.com https://api.solisai.video;">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta http-equiv="X-Content-Type-Options" content="nosniff">
+    <meta http-equiv="X-Frame-Options" content="SAMEORIGIN">
+    <meta http-equiv="X-XSS-Protection" content="1; mode=block">
+    <meta http-equiv="Referrer-Policy" content="strict-origin-when-cross-origin">
+    <script src="/js/core/init.js"></script>
+    <title>Terms of Service | Solis AI</title>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        ::-webkit-scrollbar { width: 14px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(249, 115, 22, 0.6);
+            border-radius: 10px;
+            border: 3px solid transparent;
+            background-clip: content-box;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html { scroll-behavior: smooth; }
+
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: #ffffff;
+            color: #0f172a;
+        }
+
+        ::selection { background-color: #fed7aa; }
+        .header {
+            background: rgba(255,255,255,0.85);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid #f1f5f9;
+            position: fixed;
+            top: 0;
+            width: 100%;
+            z-index: 100;
+        }
+
+        nav {
+            height: 80px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 32px;
+            max-width: 80rem;
+            margin: 0 auto;
+        }
+
+        .nav-brand {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            text-decoration: none;
+        }
+
+        .nav-brand svg { width: 32px; height: 32px; }
+
+        .nav-brand span {
+            font-size: 20px;
+            font-weight: 800;
+            letter-spacing: -0.025em;
+            color: #0f172a;
+        }
+
+        .nav-links {
+            display: flex;
+            align-items: center;
+            gap: 32px;
+        }
+
+        .nav-links a {
+            font-size: 15px;
+            font-weight: 600;
+            color: #475569;
+            text-decoration: none;
+            transition: color 0.2s;
+        }
+
+        .nav-links a:hover { color: #ea580c; }
+
+        .btn-primary {
+            background: #000;
+            color: white;
+            border: none;
+            cursor: pointer;
+            padding: 10px 24px;
+            border-radius: 9999px;
+            font-size: 14px;
+            font-weight: bold;
+            text-decoration: none;
+            transition: all 0.3s;
+        }
+
+        .btn-primary:hover {
+            background: #f97316;
+            box-shadow: 0 10px 25px -5px rgba(249,115,22,0.4);
+        }
+
+        .tos-hero {
+            padding-top: 160px;
+            padding-bottom: 64px;
+            padding-left: 24px;
+            padding-right: 24px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .tos-hero::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 100%;
+            max-width: 56rem;
+            height: 340px;
+            background: #fef3c7;
+            filter: blur(120px);
+            border-radius: 50%;
+            z-index: -1;
+            opacity: 0.55;
+        }
+
+        .badge-orange {
+            background: rgba(249,115,22,0.1);
+            color: #ea580c;
+            padding: 6px 16px;
+            border-radius: 9999px;
+            font-size: 12px;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 0.15em;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 24px;
+        }
+
+        .tos-hero h1 {
+            font-size: 56px;
+            font-weight: 800;
+            letter-spacing: -0.035em;
+            line-height: 1.05;
+            margin-bottom: 16px;
+        }
+
+        @media (max-width: 640px) {
+            .tos-hero h1 { font-size: 36px; }
+        }
+
+        .gradient-text {
+            background: linear-gradient(90deg, #6366f1, #a855f7, #ec4899);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .tos-hero .subtitle {
+            font-size: 16px;
+            color: #94a3b8;
+            font-weight: 500;
+        }
+
+        .tos-wrapper {
+            max-width: 780px;
+            margin: 0 auto;
+            padding: 0 24px 120px;
+        }
+
+        .last-updated {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 10px 18px;
+            font-size: 13px;
+            font-weight: 600;
+            color: #64748b;
+            width: fit-content;
+            margin: 0 auto 48px;
+        }
+
+        .last-updated .dot {
+            width: 7px;
+            height: 7px;
+            background: #f97316;
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+
+        .toc {
+            background: #fff7ed;
+            border: 1px solid #ffedd5;
+            border-radius: 24px;
+            padding: 32px 36px;
+            margin-bottom: 56px;
+        }
+
+        .toc h2 {
+            font-size: 14px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.12em;
+            color: #ea580c;
+            margin-bottom: 20px;
+        }
+
+        .toc ol {
+            list-style: none;
+            counter-reset: toc-counter;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px 32px;
+        }
+
+        @media (max-width: 520px) {
+            .toc ol { grid-template-columns: 1fr; }
+        }
+
+        .toc ol li {
+            counter-increment: toc-counter;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .toc ol li::before {
+            content: counter(toc-counter, decimal-leading-zero);
+            font-size: 11px;
+            font-weight: 800;
+            color: #f97316;
+            min-width: 22px;
+        }
+
+        .toc ol li a {
+            font-size: 14px;
+            font-weight: 600;
+            color: #475569;
+            text-decoration: none;
+            transition: color 0.2s;
+        }
+
+        .toc ol li a:hover { color: #ea580c; }
+
+        .tos-section {
+            margin-bottom: 48px;
+            scroll-margin-top: 100px;
+        }
+
+        .section-header {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            margin-bottom: 20px;
+        }
+
+        .section-number {
+            width: 36px;
+            height: 36px;
+            background: #fff7ed;
+            border: 1px solid #ffedd5;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 13px;
+            font-weight: 900;
+            color: #ea580c;
+            flex-shrink: 0;
+        }
+
+        .tos-section h2 {
+            font-size: 22px;
+            font-weight: 800;
+            color: #0f172a;
+            letter-spacing: -0.02em;
+        }
+
+        .tos-section p {
+            font-size: 15.5px;
+            line-height: 1.75;
+            color: #475569;
+            font-weight: 500;
+            margin-bottom: 14px;
+        }
+
+        .tos-section p:last-child { margin-bottom: 0; }
+
+        .tos-list {
+            list-style: none;
+            margin: 12px 0;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .tos-list li {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            font-size: 15.5px;
+            font-weight: 500;
+            color: #475569;
+            line-height: 1.65;
+        }
+
+        .tos-list li::before {
+            content: '';
+            width: 6px;
+            height: 6px;
+            background: #f97316;
+            border-radius: 50%;
+            margin-top: 9px;
+            flex-shrink: 0;
+        }
+
+        .highlight-box {
+            background: linear-gradient(135deg, #fff7ed, #fef3c7);
+            border: 1px solid #fed7aa;
+            border-radius: 20px;
+            padding: 24px 28px;
+            margin: 20px 0;
+        }
+
+        .highlight-box p {
+            font-size: 15px;
+            color: #92400e;
+            font-weight: 600;
+            margin: 0;
+            line-height: 1.65;
+        }
+
+        .highlight-box .highlight-label {
+            font-size: 11px;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: 0.12em;
+            color: #f97316;
+            margin-bottom: 8px;
+        }
+
+        .contact-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: #0f172a;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 12px;
+            font-size: 14px;
+            font-weight: 700;
+            text-decoration: none;
+            margin-top: 8px;
+            transition: background 0.2s;
+        }
+
+        .contact-link:hover { background: #f97316; }
+        .section-divider {
+            height: 1px;
+            background: linear-gradient(90deg, transparent, #e2e8f0 30%, #e2e8f0 70%, transparent);
+            margin: 48px 0;
+        }
+
+        footer {
+            padding: 64px 24px;
+            border-top: 1px solid #f1f5f9;
+            background: #ffffff;
+        }
+
+        .footer-inner {
+            max-width: 780px;
+            margin: 0 auto;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 16px;
+        }
+
+        .footer-logo {
+            font-size: 18px;
+            font-weight: 800;
+            letter-spacing: -0.025em;
+            color: #0f172a;
+        }
+
+        .footer-copy {
+            font-size: 13px;
+            color: #94a3b8;
+            font-weight: 500;
+        }
+
+        .footer-links-row {
+            display: flex;
+            gap: 24px;
+        }
+
+        .footer-links-row a {
+            font-size: 13px;
+            font-weight: 600;
+            color: #94a3b8;
+            text-decoration: none;
+            transition: color 0.2s;
+        }
+
+        .footer-links-row a:hover { color: #ea580c; }
+
+        .tos-section {
+            opacity: 0;
+            transform: translateY(20px);
+            transition: opacity 0.5s ease, transform 0.5s ease;
+        }
+
+        .tos-section.visible {
+            opacity: 1;
+            transform: none;
+        }
+
+        .toc ol li a.active { color: #ea580c; }
+
+        @media (max-width: 640px) {
+            nav .nav-links { display: none; }
+        }
+    </style>
+</head>
+<body>
+
+<nav class="header">
+    <a class="nav-brand" href="homepage.html">
+        <svg viewBox="0 0 100 100" fill="none" stroke="currentColor">
+            <circle cx="50" cy="50" r="12" fill="#ea580c"/>
+            <ellipse rx="44" ry="18" cx="50" cy="50" stroke-width="6" stroke="#ea580c" transform="rotate(45 50 50)"/>
+            <ellipse rx="44" ry="18" cx="50" cy="50" stroke-width="6" stroke="#ea580c" transform="rotate(-45 50 50)"/>
+        </svg>
+        <span>Solis AI</span>
+    </a>
+    <div class="nav-links">
+        <a href="homepage.html#features">Features</a>
+        <a href="premium.html">Pricing</a>
+        <a href="homepage.html#faqs">FAQs</a>
+    </div>
+    <a class="btn-primary" href="login.html">Get Started</a>
+</nav>
+
+<div class="tos-hero">
+    <div class="badge-orange">
+        <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+        Legal
+    </div>
+    <h1>Terms of <span class="gradient-text">Service</span></h1>
+    <p class="subtitle">The rules of the road for using Solis AI.</p>
+</div>
+<div class="tos-wrapper">
+
+    <div class="last-updated">
+        <div class="dot"></div>
+        Last updated: February 2026
+    </div>
+
+    <div class="toc">
+        <h2>Contents</h2>
+        <ol>
+            <li><a href="#s1">What Solis AI Is</a></li>
+            <li><a href="#s2">Your Content & Responsibility</a></li>
+            <li><a href="#s3">Copyright & DMCA</a></li>
+            <li><a href="#s4">Service "As Is"</a></li>
+            <li><a href="#s5">Accounts, Payments & Limits</a></li>
+            <li><a href="#s6">Changes to Terms</a></li>
+            <li><a href="#s7">Governing Law</a></li>
+        </ol>
+    </div>
+    <div class="tos-section" id="intro">
+        <p>By using <strong>Solis AI</strong> (the "Service"), you agree to these Terms of Service. If you do not agree, please do not use the Service. These terms form a binding legal agreement between you and Solis AI.</p>
+    </div>
+
+    <div class="section-divider"></div>
+
+    <!-- 1 -->
+    <div class="tos-section" id="s1">
+        <div class="section-header">
+            <div class="section-number">01</div>
+            <h2>What Solis AI Is</h2>
+        </div>
+        <p>Solis AI is a tool that lets users upload a video URL (from YouTube, TikTok, Shorts, Reels, etc.), choose a template, customize text, style, and other elements however they want — then our AI automatically detects the best, most engaging moments and creates a polished short video ready for you to upload. We provide the platform and tools — we do not own, create, or endorse any user content.</p>
+    </div>
+
+    <div class="section-divider"></div>
+
+    <!-- 2 -->
+    <div class="tos-section" id="s2">
+        <div class="section-header">
+            <div class="section-number">02</div>
+            <h2>Your Content &amp; Responsibility</h2>
+        </div>
+        <p>You are entirely responsible for what you do with Solis AI. Specifically:</p>
+        <ul class="tos-list">
+            <li>You are solely responsible for all content you upload, paste (URLs), generate, or share using Solis AI.</li>
+            <li>You must only use content that you own, have full legal rights to, or that qualifies as fair use — for example, short clips used for commentary, criticism, parody, education, review, or transformative purposes under applicable copyright law.</li>
+            <li>We do not monitor, pre-screen, or take responsibility for user content.</li>
+            <li>If your content infringes copyright, trademarks, privacy rights, or any applicable law — that is entirely your responsibility. You agree to defend, indemnify, and hold Solis AI harmless from any claims, damages, or legal costs arising from your content.</li>
+            <li>We may remove content or terminate accounts if we receive valid legal notices (DMCA, court orders, etc.), but we have no obligation to actively police the Service.</li>
+        </ul>
+    </div>
+
+    <div class="section-divider"></div>
+
+    <!-- 3 -->
+    <div class="tos-section" id="s3">
+        <div class="section-header">
+            <div class="section-number">03</div>
+            <h2>Copyright &amp; DMCA</h2>
+        </div>
+        <p>If you believe content on Solis AI infringes your copyright, please send a valid DMCA takedown notice to us. Your notice must include all required elements: your signature, a description of the copyrighted work, the location of the infringing material, a good-faith statement, and your contact information.</p>
+        <div class="highlight-box">
+            <div class="highlight-label">DMCA Contact</div>
+            <p>Send copyright notices to our dedicated legal email address:</p>
+            <a class="contact-link" href="mailto:copyright@solisai.video">
+                <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+                copyright@solisai.video
+            </a>
+        </div>
+        <p>We will review all notices and remove infringing material if a notice is found to be valid. We reserve the right to terminate accounts of repeat infringers.</p>
+    </div>
+
+    <div class="section-divider"></div>
+
+    <!-- 4 -->
+    <div class="tos-section" id="s4">
+        <div class="section-header">
+            <div class="section-number">04</div>
+            <h2>Service "As Is"</h2>
+        </div>
+        <p>The Service is provided <strong>"as is"</strong> and <strong>"as available"</strong>. We make no warranties — express or implied — about availability, accuracy, reliability, or fitness for any particular purpose.</p>
+        <p>To the maximum extent permitted by law, Solis AI is not liable for any damages, lost profits, data loss, or legal consequences resulting from your use of the Service.</p>
+    </div>
+
+    <div class="section-divider"></div>
+
+    <!-- 5 -->
+    <div class="tos-section" id="s5">
+        <div class="section-header">
+            <div class="section-number">05</div>
+            <h2>Accounts, Payments &amp; Limits</h2>
+        </div>
+        <ul class="tos-list">
+            <li>You must be at least 13 years old to use Solis AI, or have parental permission if you are under 16.</li>
+            <li>Paid plans are processed via Paddle . Payments are non-refundable except where required by law.</li>
+            <li>We may suspend or terminate accounts for abuse, spam, fraud, or violations of these terms.</li>
+            <li>Usage limits (generations, searches, saved videos, etc.) are enforced per subscription tier. We reserve the right to change limits at any time with reasonable notice.</li>
+        </ul>
+    </div>
+
+    <div class="section-divider"></div>
+
+    <!-- 6 -->
+    <div class="tos-section" id="s6">
+        <div class="section-header">
+            <div class="section-number">06</div>
+            <h2>Changes to Terms</h2>
+        </div>
+        <p>We may update these Terms of Service from time to time. We will indicate the date of the latest revision at the top of this page. Your continued use of the Service after any changes constitutes your acceptance of the updated terms.</p>
+        <p>We encourage you to review this page periodically so you're always informed.</p>
+    </div>
+
+    <div class="section-divider"></div>
+
+    <!-- 7 -->
+    <div class="tos-section" id="s7">
+        <div class="section-header">
+            <div class="section-number">07</div>
+            <h2>Governing Law</h2>
+        </div>
+        <p>These Terms of Service are governed by the laws of <strong>Georgia (country)</strong>. Any disputes arising from or related to these terms or the Service will be resolved exclusively in the courts located in <strong>Batumi, Georgia</strong>.</p>
+        <p>If any provision of these terms is found to be unenforceable, the remaining provisions will continue in full force and effect.</p>
+    </div>
+
+</div>
+
+<footer>
+    <div class="footer-inner">
+        <div class="footer-logo">Solis AI</div>
+        <p class="footer-copy">© 2025 Solis AI. All rights reserved.</p>
+        <div class="footer-links-row">
+            <a href="homepage.html">Homepage</a>
+            <a href="privacy.html">Privacy Policy</a>
+        </div>
+    </div>
+</footer>
+
+<script>
+    const sections = document.querySelectorAll('.tos-section');
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(e => {
+            if (e.isIntersecting) {
+                e.target.classList.add('visible');
+            }
+        });
+    }, { threshold: 0.08 });
+
+    sections.forEach(s => observer.observe(s));
+    const tocLinks = document.querySelectorAll('.toc a');
+    const sectionEls = document.querySelectorAll('[id^="s"]');
+    const tocObserver = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                tocLinks.forEach(l => l.classList.remove('active'));
+                const active = document.querySelector(`.toc a[href="#${entry.target.id}"]`);
+                if (active) active.classList.add('active');
+            }
+        });
+    }, { rootMargin: '-30% 0px -60% 0px' });
+    sectionEls.forEach(s => tocObserver.observe(s));
+</script>
+</body>
+</html>

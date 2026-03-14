@@ -1,0 +1,1266 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://cdn.paddle.com https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://cdn.socket.io; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdnjs.cloudflare.com https://cdn.paddle.com https://cdn.tailwindcss.com; font-src https://fonts.gstatic.com https://cdnjs.cloudflare.com https://cdn.jsdelivr.net; img-src 'self' data: https:; connect-src 'self' ws: http://localhost:5500 ws://localhost:5500 http://127.0.0.1:5500 ws://127.0.0.1:5500 https://cdn.jsdelivr.net https://cdn.socket.io https://cdnjs.cloudflare.com https://cdn.paddle.com https://checkout.paddle.com https://api.paddle.com https://api.solisai.video; frame-src https://checkout.paddle.com https://buy.paddle.com;">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta http-equiv="X-Content-Type-Options" content="nosniff">
+    <meta http-equiv="X-XSS-Protection" content="1; mode=block"
+    <meta http-equiv="Referrer-Policy" content="strict-origin-when-cross-origin">
+    <script src="/js/core/init.js"></script>
+    <title>Solis AI - Premium</title>
+     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
+     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
+</head>
+<style>
+    ::-webkit-scrollbar {
+            width: 14px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: rgba(249, 115, 22, 0.6);
+            border-radius: 10px;
+            border: 3px solid transparent;
+            background-clip: content-box;
+            backdrop-filter: blur(10px);
+        }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: #ffffff;
+            color: #0f172a;
+        }
+        ::selection {
+            background-color: #fed7aa;
+        }
+         .header {
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid #f1f5f9;
+            position: fixed;
+            top: 0;
+            width: 100%;
+            z-index: 100;
+        }
+
+        .card {
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(8px);
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
+            padding: 16px;
+            border-radius: 16px;
+        }
+
+        @keyframes float {
+            0% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+            100% { transform: translateY(0px); }
+        }
+
+        .animate-float {
+            animation: float 4s ease-in-out infinite;
+        }
+
+        .animate-float-delayed {
+            animation: float 4s ease-in-out infinite;
+            animation-delay: 2s;
+        }
+        nav {
+            height: 80px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 24px;
+        }
+
+        nav.glass-header {
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid #f1f5f9;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            width: 100%;
+            z-index: 100;
+        }
+
+        .nav-container {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            width: 100%;
+            max-width: 80rem;
+            margin: 0 auto;
+        }
+
+        .nav-left {
+            display: flex;
+            align-items: center;
+            gap: 40px;
+        }
+
+        .nav-brand {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .nav-brand svg {
+            width: 32px;
+            height: 32px;
+        }
+
+        .nav-brand span {
+            font-size: 20px;
+            font-weight: 800;
+            letter-spacing: -0.025em;
+        }
+
+        .nav-links {
+            display: none;
+            align-items: center;
+            gap: 32px;
+            font-size: 15px;
+            font-weight: 600;
+            color: #475569;
+        }
+
+        .nav-links a {
+            text-decoration: none;
+            color: #475569;
+            transition: color 0.3s ease;
+        }
+
+        .nav-links a:hover {
+            color: #ea580c;
+        }
+
+        .nav-right {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .nav-login {
+            display: none;
+            font-size: 15px;
+            font-weight: 600;
+            color: #475569;
+            text-decoration: none;
+            padding: 0 16px;
+        }
+
+        .nav-login:hover {
+            color: #ea580c;
+        }
+
+        @media (min-width: 992px) {
+            .nav-links {
+                display: flex;
+            }
+            .nav-login {
+                display: block;
+            }
+        }
+        header {
+            padding-top: 160px;
+            padding-bottom: 96px;
+            padding-left: 24px;
+            padding-right: 24px;
+            position: relative;
+            overflow: hidden;
+            margin-top: 80px;
+        }
+
+        header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 100%;
+            max-width: 56rem;
+            height: 384px;
+            background: #fef3c7;
+            filter: blur(120px);
+            border-radius: 50%;
+            z-index: -10;
+            opacity: 0.6;
+        }
+
+        .hero-content {
+            text-align: center;
+        }
+
+         .btn-primary {
+            background: #000000;
+            color: white;
+            border: none;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            padding: 10px 24px;
+            border-radius: 9999px;
+            font-size: 14px;
+            font-weight: bold;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+            text-decoration: none;
+        }
+
+        .btn-primary:hover {
+            background: #f97316;
+            box-shadow: 0 10px 25px -5px rgba(249, 115, 22, 0.4);
+        }
+
+                .paddle-btn {
+            background-color: #000;
+            color: #fff;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            border: none;
+            cursor: pointer;
+            padding: 16px 24px;
+            border-radius: 16px;
+            font-weight: bold;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+            width: 100%;
+        }
+
+        .paddle-btn:hover {
+            background-color: #333;
+        }
+
+        .feature-card {
+            border: 1px solid #f1f5f9;
+            transition: all 0.3s ease;
+            padding: 40px;
+            border-radius: 40px;
+            background-color: #ffffff;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            height: 100%;
+        }
+
+        .feature-card:hover {
+            border-color: #ffedd5;
+            background-color: #fffaf5;
+        }
+
+
+        .pricing-card-highlight {
+            border: 2px solid #f97316;
+            position: relative;
+            padding: 40px;
+            border-radius: 40px;
+            background-color: #ffffff;
+            box-shadow: 0 20px 25px -5px rgba(249, 115, 22, 0.1);
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            height: 100%;
+            overflow: hidden;
+        }
+
+        @media (min-width: 768px) {
+            .pricing-card-highlight {
+                transform: scale(1.05);
+            }
+        }
+
+        .pricing-card-highlight::before {
+            content: 'Most Popular';
+            position: absolute;
+            top: 0;
+            right: 0;
+            background: #f97316;
+            color: white;
+            font-size: 10px;
+            font-weight: 900;
+            padding: 8px 24px;
+            border-radius: 0 40px 0 16px;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+        }
+
+        .badge-orange {
+            background: rgba(249, 115, 22, 0.1);
+            color: #ea580c;
+            padding: 6px 16px;
+            border-radius: 9999px;
+            font-size: 12px;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 0.15em;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .pricing-title {
+            font-size: 36px;
+            font-weight: 800;
+            margin-bottom: 16px;
+        }
+
+        @media (min-width: 768px) {
+            .pricing-title {
+                font-size: 48px;
+            }
+        }
+
+        .pricing-subtitle {
+            color: #64748b;
+            font-weight: 500;
+            font-size: 18px;
+        }
+
+        .pricing-header {
+            text-align: center;
+            margin-bottom: 64px;
+        }
+
+        #pricing {
+            padding: 80px 24px;
+            margin-top: 80px;
+        }
+
+        .max-w-7xl {
+            max-width: 80rem;
+            margin: 0 auto;
+        }
+
+        .pricing-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 32px;
+            align-items: stretch;
+        }
+
+        @media (min-width: 768px) {
+            .pricing-grid {
+                grid-template-columns: repeat(3, 1fr);
+                gap: 24px;
+            }
+        }
+
+        .plan-header {
+            margin-bottom: 24px;
+        }
+
+        .plan-name {
+            font-size: 24px;
+            font-weight: 800;
+            margin-bottom: 4px;
+        }
+
+        .plan-description {
+            color: #64748b;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .plan-price {
+            display: flex;
+            align-items: baseline;
+            gap: 4px;
+            margin-bottom: 32px;
+        }
+
+        .plan-price-amount {
+            font-size: 48px;
+            font-weight: 800;
+        }
+
+        .plan-price-period {
+            color: #94a3b8;
+            font-weight: bold;
+            font-size: 14px;
+        }
+
+        .plan-divider {
+            height: 1px;
+            background: #e2e8f0;
+            width: 100%;
+            margin-bottom: 32px;
+        }
+
+        .pricing-card-highlight .plan-divider {
+            background: #fef3c7;
+        }
+
+        .plan-features {
+            list-style: none;
+            margin-bottom: 40px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            flex-grow: 1;
+        }
+
+        .plan-features li {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 15px;
+            font-weight: 600;
+            color: #475569;
+        }
+
+        .plan-features svg {
+            width: 20px;
+            height: 20px;
+            flex-shrink: 0;
+            color: #f97316;
+            stroke: #f97316;
+        }
+
+        .plan-features li.disabled {
+            color: #cbd5e1;
+        }
+
+        .plan-features li.disabled svg {
+            color: #cbd5e1;
+            stroke: #cbd5e1;
+        }
+
+        .plan-features li.bold-feature {
+            font-weight: bold;
+            color: #0f172a;
+        }
+
+        .plan-features li.bold-orange {
+            font-weight: bold;
+            color: #ea580c;
+        }
+
+        .plan-button {
+            width: 100%;
+            padding: 16px 24px;
+            border-radius: 16px;
+            font-weight: bold;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+        }
+
+        .pricing-card-highlight .plan-button {
+            font-weight: 900;
+            padding: 20px 24px;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+        }
+
+        .pricing-card-highlight .plan-name {
+            color: #ea580c;
+        }
+
+        /* Loading Spinner */
+        .loading-overlay {
+            position: fixed;
+            top: 80px;
+            left: 0;
+            width: 100%;
+            height: calc(100% - 80px);
+            background: rgba(255, 255, 255, 0.95);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 50;
+            backdrop-filter: blur(8px);
+            transition: opacity 0.3s ease;
+        }
+
+        .loading-overlay.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 4px solid #f1f5f9;
+            border-top: 4px solid #000000;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .user-profile {
+            position: relative;
+        }
+
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            cursor: pointer;
+            object-fit: cover;
+            border: 2px solid #f1f5f9;
+            transition: all 0.3s ease;
+        }
+
+        .user-avatar:hover {
+            border-color: #ea580c;
+            transform: scale(1.05);
+        }
+
+        .user-dropdown {
+            position: absolute;
+            top: calc(100% + 12px);
+            right: 0;
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+            min-width: 240px;
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(-10px);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            z-index: 1000;
+            border: 1px solid #f1f5f9;
+        }
+
+        .user-dropdown.active {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+        }
+
+        .dropdown-header {
+            padding: 20px;
+            border-bottom: 1px solid #f1f5f9;
+        }
+
+        .dropdown-user-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+
+        .dropdown-avatar {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            object-fit: cover;
+        }
+
+        .dropdown-user-details h4 {
+            font-size: 15px;
+            font-weight: 700;
+            color: #0f172a;
+            margin-bottom: 2px;
+        }
+
+        .dropdown-user-details p {
+            font-size: 13px;
+            color: #64748b;
+        }
+
+        .dropdown-plan-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            background: linear-gradient(135deg, #f97316, #ea580c);
+            color: white;
+            border-radius: 8px;
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .dropdown-menu {
+            padding: 8px;
+        }
+
+        .dropdown-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 16px;
+            color: #475569;
+            text-decoration: none;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.2s ease;
+            cursor: pointer;
+        }
+
+        .dropdown-item:hover {
+            background: #fef3c7;
+            color: #ea580c;
+        }
+
+        .dropdown-item i {
+            width: 20px;
+            font-size: 16px;
+        }
+
+        .dropdown-divider {
+            height: 1px;
+            background: #f1f5f9;
+            margin: 8px 0;
+        }
+
+        .dropdown-item.logout {
+            color: #ef4444;
+        }
+
+        .dropdown-item.logout:hover {
+            background: #fee2e2;
+            color: #dc2626;
+        }
+</style>
+<body>
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="spinner"></div>
+    </div>
+
+    <nav class="glass-header">
+        <div class="nav-container">
+            <div class="nav-left">
+                <div class="nav-brand">
+                    <svg viewBox="0 0 100 100" fill="none" stroke="currentColor">
+                        <circle cx="50" cy="50" r="12" fill="currentColor" style="color: #ea580c;"></circle>
+                        <ellipse rx="44" ry="18" cx="50" cy="50" stroke-width="6" transform="rotate(45 50 50)" style="color: #ea580c;"></ellipse>
+                        <ellipse rx="44" ry="18" cx="50" cy="50" stroke-width="6" transform="rotate(-45 50 50)" style="color: #ea580c;"></ellipse>
+                    </svg>
+                    <span>Solis AI</span>
+                </div>
+                <div class="nav-links">
+                    <a href="#how-it-works">Features</a>
+                    <a href="premium.html">Pricing</a>
+                    <a href="#faqs">FAQs</a>
+                </div>
+            </div>
+            <div class="nav-right">
+                <a href="login.html" class="nav-login">Login</a>
+                <a class="btn-primary" href="login.html">Start Clipping</a>
+                
+                <div class="user-profile" id="userProfile" style="display: none;">
+                    <img src="https://ui-avatars.com/api/?name=User&background=ea580c&color=fff&bold=true" 
+                         alt="User Avatar" 
+                         class="user-avatar" 
+                         id="userAvatar"
+                         onclick="toggleDropdown()">
+                    
+                    <div class="user-dropdown" id="userDropdown">
+                        <div class="dropdown-header">
+                            <div class="dropdown-user-info">
+                                <img src="https://ui-avatars.com/api/?name=User&background=ea580c&color=fff&bold=true" 
+                                     alt="User Avatar" 
+                                     class="dropdown-avatar"
+                                     id="dropdownAvatar">
+                                <div class="dropdown-user-details">
+                                    <h4 id="userName">User Name</h4>
+                                    <p id="userEmail">user@email.com</p>
+                                </div>
+                            </div>
+                            <span class="dropdown-plan-badge" id="userPlan">Free Plan</span>
+                        </div>
+                        
+                        <div class="dropdown-menu">
+                            <a href="/dashboard.html" class="dropdown-item">
+                                <i class="fas fa-home"></i>
+                                <span>Dashboard</span>
+                            </a>
+                            <a href="/premium.html" class="dropdown-item">
+                                <i class="fas fa-crown"></i>
+                                <span>Upgrade Plan</span>
+                            </a>
+                            <a href="/dashboard.html" class="dropdown-item">
+                                <i class="fas fa-cog"></i>
+                                <span>Settings</span>
+                            </a>
+                            <div class="dropdown-divider"></div>
+                            <a onclick="handleLogout()" class="dropdown-item logout">
+                                <i class="fas fa-sign-out-alt"></i>
+                                <span>Logout</span>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <section id="pricing">
+        <div class="max-w-7xl">
+            <div class="pricing-header">
+                <h2 class="pricing-title">Pricing Plans</h2>
+                <p class="pricing-subtitle">Choose the plan that fits your creator journey.</p>
+            </div>
+            <div class="pricing-grid">
+
+                <!-- Basic Plan -->
+                <div class="feature-card">
+                    <div>
+                        <div class="plan-header">
+                            <h4 class="plan-name">Basic</h4>
+                            <p class="plan-description">Perfect for growth</p>
+                        </div>
+                        <div class="plan-price">
+                            <span class="plan-price-amount">$18.99</span>
+                            <span class="plan-price-period">/month</span>
+                        </div>
+                        <div class="plan-divider"></div>
+                        <ul class="plan-features">
+                            <li><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M5 13l4 4L19 7" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg> 5 generations/day</li>
+                            <li><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M5 13l4 4L19 7" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg> 10 saved videos max</li>
+                            <li><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M5 13l4 4L19 7" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg> Upload limit - 45 minutes</li>
+                            <li><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M5 13l4 4L19 7" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg> Fast generation</li>
+                            <li><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M5 13l4 4L19 7" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg> No watermark</li>
+                            <li><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M5 13l4 4L19 7" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg> PRO templates</li>
+                            <li><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M6 6L18 18M6 18L18 6" stroke-width="2.5" stroke-linecap="round"/></svg> No short-form upload</li>
+                            <li><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M6 6L18 18M6 18L18 6" stroke-width="2.5" stroke-linecap="round"/></svg> No overpainting</li>
+                        </ul>
+                    </div>
+                    <div>
+                        <button class="plan-button paddle-btn" onclick="openPaddleCheckout('pri_01kbavpdvztyny35d5jzbxdb3j', 'basic', event)">Unlock with Basic Plan</button>
+                    </div>
+                </div>
+
+                <!-- Prime Plan -->
+                <div class="pricing-card-highlight">
+                    <div>
+                        <div class="plan-header">
+                            <h4 class="plan-name">Prime</h4>
+                            <p class="plan-description">Most popular choice</p>
+                        </div>
+                        <div class="plan-price">
+                            <span class="plan-price-amount">$29.99</span>
+                            <span class="plan-price-period">/month</span>
+                        </div>
+                        <div class="plan-divider"></div>
+                        <ul class="plan-features">
+                            <li><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M5 13l4 4L19 7" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg> 10 generations/day</li>
+                            <li><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M5 13l4 4L19 7" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg> 50 Saved videos max</li>
+                            <li><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M5 13l4 4L19 7" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg> Upload limit - 120 minutes</li>
+                            <li><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M5 13l4 4L19 7" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg> Faster generation</li>
+                            <li><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M5 13l4 4L19 7" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg> No watermark</li>
+                            <li><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M5 13l4 4L19 7" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg> All templates</li>
+                            <li><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M5 13l4 4L19 7" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg> Short-form upload</li>
+                            <li><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M5 13l4 4L19 7" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg> Basic overpainting</li>
+                        </ul>
+                    </div>
+                    <div>
+                        <button class="plan-button btn-primary" onclick="openPaddleCheckout('pri_01kbds38r5h1ranax74yv92sps', 'prime', event)">Unlock with Prime Plan</button>
+                    </div>
+                </div>
+
+                <!-- Elite Plan -->
+                <div class="feature-card">
+                    <div>
+                        <div class="plan-header">
+                            <h4 class="plan-name">Elite</h4>
+                            <p class="plan-description">Everything + Priority</p>
+                        </div>
+                        <div class="plan-price">
+                            <span class="plan-price-amount">$49.99</span>
+                            <span class="plan-price-period">/month</span>
+                        </div>
+                        <div class="plan-divider"></div>
+                        <ul class="plan-features">
+                            <li><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M5 13l4 4L19 7" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg> 20+ generations/day</li>
+                            <li><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M5 13l4 4L19 7" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg> 100 saved videos max</li>
+                            <li><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M5 13l4 4L19 7" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg> Upload limit - 240 minutes</li>
+                            <li><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M5 13l4 4L19 7" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg> Fastest generation</li>
+                            <li><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M5 13l4 4L19 7" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg> No watermark</li>
+                            <li><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M5 13l4 4L19 7" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg> All templates</li>
+                            <li><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M5 13l4 4L19 7" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg> Short-form upload</li>
+                            <li><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M5 13l4 4L19 7" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg> Advanced overpainting</li>
+                            <li><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M5 13l4 4L19 7" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg> Priority queue</li>
+                        </ul>
+                    </div>
+                    <div>
+                        <button class="plan-button paddle-btn" onclick="openPaddleCheckout('pri_01kbjpgwz7v6pdn2jggt0zhq6k', 'elite', event)">Unlock with Elite Plan</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <script src="https://cdn.paddle.com/paddle/v2/paddle.js"></script>
+    <script src="/js/core/paddle-config.js"></script>
+    
+    <script>
+        window.addEventListener('load', function() {
+            setTimeout(function() {
+                document.getElementById('loadingOverlay').classList.add('hidden');
+            }, 500);
+        });
+
+        async function initPaddle() {
+            if (window.paddleInitialized) return;
+            
+            // Initialize PaddleManager (fetches config from backend)
+            const initialized = await window.paddleManager.init();
+            if (!initialized) {
+                console.error('❌ Failed to initialize Paddle');
+                setTimeout(initPaddle, 2000);
+                return;
+            }
+            
+            // Listen for checkout completion event
+            window.addEventListener('paddle:checkoutComplete', (event) => {
+                window.paymentSucceeded = true;
+                history.replaceState({}, document.title, window.location.pathname);
+                setTimeout(() => handleCheckoutSuccess(event.detail), 100);
+            });
+            
+            window.paddleInitialized = true;
+            console.log('✅ Paddle initialized successfully');
+        }
+
+        window.handleCheckoutSuccess = async function(checkoutData) {
+            const planName = window.pendingPlanUpgrade;
+            
+            if (!planName) {
+                console.error('[PAYMENT] No pending plan upgrade found');
+                return;
+            }
+
+            console.log('[PAYMENT] Checkout completed by Paddle, processing payment...');
+            
+            try {
+                // Get user info from authenticated session
+                const authResponse = await fetch('/api/auth/check', {
+                    method: 'GET',
+                    credentials: 'include'
+                });
+                
+                if (!authResponse.ok) {
+                    console.error('[PAYMENT] Not authenticated');
+                    alert('Error: You must be logged in. Please refresh and login again.');
+                    window.location.href = '/login.html';
+                    return;
+                }
+                
+                const authData = await authResponse.json();
+                if (!authData.authenticated || !authData.user) {
+                    console.error('[PAYMENT] Auth check returned invalid data');
+                    alert('Error: Session invalid. Please refresh and login again.');
+                    window.location.href = '/login.html';
+                    return;
+                }
+                
+                const user = authData.user;
+                
+                // Call backend to process payment (simulates webhook for local dev)
+                console.log('[PAYMENT] Calling backend to process payment...');
+                
+                const response = await fetch('/api/payment/process-local-payment', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    credentials: 'include',
+                    body: JSON.stringify({
+                        email: user.email,
+                        plan: planName
+                    })
+                });
+                
+                console.log(`[PAYMENT] Backend response: ${response.status}`);
+                
+                if (!response.ok) {
+                    const error = await response.json();
+                    console.error('[PAYMENT] Backend error:', error);
+                    alert(`Payment error: ${error.error}`);
+                    return;
+                }
+                
+                const result = await response.json();
+                console.log('[PAYMENT] Backend confirmed:', result);
+                
+                if (result.success) {
+                    console.log(`✅ [PAYMENT] Payment processed! Plan: ${result.plan}`);
+                    showPaymentSuccessModal(planName);
+                    setTimeout(() => {
+                        window.location.href = '/dashboard.html';
+                    }, 2000);
+                } else {
+                    alert('Payment processing failed. Please check your dashboard.');
+                }
+            } catch (error) {
+                console.error('[PAYMENT] Error processing payment:', error);
+                alert('Error processing payment. Please refresh and check your dashboard.');
+            }
+        }
+
+        window.openPaddleCheckout = function(priceId, planName, event) {
+            event.stopPropagation();
+            
+            if (!window.paddleInitialized) {
+                // Retry after waiting a moment for Paddle to init
+                setTimeout(() => {
+                    if (!window.paddleInitialized) {
+                        alert('Payment system is loading. Please try again in a moment.');
+                        return;
+                    }
+                    window.openPaddleCheckout(priceId, planName, event);
+                }, 500);
+                return;
+            }
+
+            const user = currentAuthenticatedUser;
+
+            if (!user) {
+                alert('Please sign in to upgrade your plan.');
+                window.location.href = '/login.html';
+                return;
+            }
+
+            // Use PaddleManager to open checkout (validates price ID with backend)
+            window.paddleManager.openCheckout(priceId, planName).catch((error) => {
+                console.error('❌ Error opening checkout:', error);
+                alert('Error opening checkout. Please try again.');
+            });
+        }
+
+        window.showPaymentSuccessModal = function(planName) {
+            const existingModal = document.getElementById('payment-success-modal');
+            if (existingModal) existingModal.remove();
+            
+            createConfetti();
+            
+            const modal = document.createElement('div');
+            modal.className = 'payment-success-modal';
+            modal.id = 'payment-success-modal';
+            modal.style.cssText = `
+                position: fixed;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                background: rgba(0, 0, 0, 0.7);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                z-index: 999999;
+                backdrop-filter: blur(6px);
+            `;
+            
+            const capitalizedPlan = planName.charAt(0).toUpperCase() + planName.slice(1);
+            
+            modal.innerHTML = `
+                <div style="
+                    background: white;
+                    border-radius: 32px;
+                    padding: 56px 48px;
+                    text-align: center;
+                    max-width: 480px;
+                    box-shadow: 0 25px 50px rgba(0,0,0,0.2);
+                    position: relative;
+                    border: 1px solid rgba(255,255,255,0.4);
+                    animation: modalSlideIn 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+                ">
+                    <button style="
+                        position: absolute;
+                        top: 24px;
+                        right: 24px;
+                        background: transparent;
+                        border: none;
+                        font-size: 1.5rem;
+                        color: #94a3b8;
+                        cursor: pointer;
+                        transition: color 0.2s ease;
+                        padding: 0;
+                        width: 32px;
+                        height: 32px;
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        font-family: 'Plus Jakarta Sans', sans-serif;
+                    " 
+                    onmouseover="this.style.color='#f97316';"
+                    onmouseout="this.style.color='#94a3b8';"
+                    onclick="document.getElementById('payment-success-modal').remove();">✕</button>
+                    
+                    <div style="
+                        width: 88px;
+                        height: 88px;
+                        border-radius: 50%;
+                        background: linear-gradient(135deg, #f97316, #ea580c);
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        margin: 0 auto 32px;
+                        font-size: 3rem;
+                        color: white;
+                        box-shadow: 0 12px 32px rgba(249, 115, 22, 0.35);
+                        animation: scaleIn 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+                    ">🎉</div>
+                    
+                    <h2 style="
+                        font-size: 1.875rem;
+                        font-weight: 800;
+                        color: #0f172a;
+                        margin-bottom: 12px;
+                        font-family: 'Plus Jakarta Sans', sans-serif;
+                        letter-spacing: -0.02em;
+                    ">Welcome aboard!</h2>
+                    
+                    <p style="
+                        font-size: 1.1rem;
+                        color: #ea580c;
+                        margin-bottom: 28px;
+                        font-weight: 700;
+                        letter-spacing: 0.5px;
+                    ">${capitalizedPlan} Plan Unlocked ✨</p>
+                    
+                    <div style="
+                        padding: 20px;
+                        background: linear-gradient(135deg, rgba(249, 115, 22, 0.08), rgba(234, 88, 12, 0.05));
+                        border-radius: 20px;
+                        margin-bottom: 28px;
+                        border: 1px solid rgba(249, 115, 22, 0.15);
+                    ">
+                        <p style="
+                            font-size: 0.9rem;
+                            color: #64748b;
+                            margin: 0;
+                            line-height: 1.6;
+                            font-weight: 500;
+                        ">Thank you for supporting Solis! You now have access to premium features and enhanced capabilities.</p>
+                    </div>
+                    
+                    <p style="
+                        font-size: 0.85rem;
+                        color: #94a3b8;
+                        margin: 0;
+                        font-weight: 500;
+                    ">Redirecting to dashboard...</p>
+                </div>
+                </div>
+            `;
+            
+            document.body.appendChild(modal);
+        }
+
+        function createConfetti() {
+            const colors = ['#FF9671', '#FFD4C4', '#FF7A50', '#FF6B9D', '#C44569', '#6DDCCF', '#4ECDC4', '#B8A9E5', '#EA580C', '#F97316'];
+            const confettiCount = 80;
+            const center = { x: window.innerWidth / 2, y: window.innerHeight / 2 };
+            
+            for (let i = 0; i < confettiCount; i++) {
+                const confetti = document.createElement('div');
+                const angle = (i / confettiCount) * Math.PI * 2;
+                const velocity = Math.random() * 8 + 6;
+                const size = Math.random() * 8 + 4;
+                const distance = 150;
+                const endX = Math.cos(angle) * distance * velocity;
+                const endY = Math.sin(angle) * distance * velocity + 100;
+                
+                confetti.style.cssText = `
+                    position: fixed;
+                    width: ${size}px;
+                    height: ${size}px;
+                    background-color: ${colors[Math.floor(Math.random() * colors.length)]};
+                    left: ${center.x}px;
+                    top: ${center.y}px;
+                    pointer-events: none;
+                    z-index: 99999;
+                    border-radius: 50%;
+                    animation: confetti-burst 2.5s ease-out forwards;
+                    --endX: ${endX}px;
+                    --endY: ${endY}px;
+                    animation-delay: ${Math.random() * 0.1}s;
+                `;
+                document.body.appendChild(confetti);
+                
+                setTimeout(() => confetti.remove(), 2700);
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            // Check authentication with backend via httpOnly cookie
+            checkAuthenticationAndInit();
+        });
+
+        // Global variable to store current user
+        let currentAuthenticatedUser = null;
+        let authCheckCache = null;
+        let authCheckCacheTime = 0;
+        const AUTH_CHECK_CACHE_DURATION = 60000; // 1 minute cache
+
+        async function checkAuthenticationAndInit() {
+            try {
+                // Use cached result if still valid
+                const now = Date.now();
+                if (authCheckCache !== null && (now - authCheckCacheTime) < AUTH_CHECK_CACHE_DURATION) {
+                    console.log('🔄 Using cached auth check result');
+                    if (authCheckCache.authenticated && authCheckCache.user) {
+                        currentAuthenticatedUser = authCheckCache.user;
+                        loadUserProfile(authCheckCache.user);
+                        setTimeout(initPaddle, 1000);
+                    } else {
+                        console.warn('⚠️ Cache says user NOT authenticated');
+                        showAuthError();
+                    }
+                    return;
+                }
+                
+                // Check with backend using httpOnly cookie authentication
+                console.log('📡 Fetching /api/auth/check...');
+                const response = await fetch('/api/auth/check', {
+                    method: 'GET',
+                    credentials: 'include'
+                });
+
+                console.log('📝 Auth check response status:', response.status);
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    console.log('✅ Auth response data:', data);
+                    
+                    // Cache the result
+                    authCheckCache = data;
+                    authCheckCacheTime = Date.now();
+                    
+                    if (data.authenticated && data.user) {
+                        // User is authenticated, store for later use
+                        console.log('✅ User authenticated:', data.user.email);
+                        currentAuthenticatedUser = data.user;
+                        // Load UI with user data
+                        loadUserProfile(data.user);
+                        // Delay paddle initialization to ensure script is loaded
+                        setTimeout(initPaddle, 1000);
+                        return;
+                    } else {
+                        console.warn('⚠️ Response OK but not authenticated');
+                    }
+                } else {
+                    console.error('❌ Auth check failed with status:', response.status);
+                    const errorText = await response.text();
+                    console.error('Response body:', errorText);
+                }
+
+                // Not authenticated, show error
+                showAuthError();
+            } catch (error) {
+                console.error('❌ Auth check exception:', error);
+                console.error('Error details:', error.message, error.stack);
+                showAuthError();
+            }
+        }
+
+        function showAuthError() {
+            console.error('🔴 AUTH ERROR: User not authenticated');
+            console.error('Check browser DevTools (F12) > Console for details');
+            // Temporarily disabled redirect for debugging - uncomment after fixing
+            // alert('Please sign in to upgrade your plan.');
+            // window.location.href = '/login.html';
+        }
+
+        function toggleDropdown() {
+            const dropdown = document.getElementById('userDropdown');
+            dropdown.classList.toggle('active');
+        }
+
+        document.addEventListener('click', function(event) {
+            const userProfile = document.getElementById('userProfile');
+            const dropdown = document.getElementById('userDropdown');
+            
+            if (userProfile && !userProfile.contains(event.target)) {
+                dropdown.classList.remove('active');
+            }
+        });
+
+        function loadUserProfile(user) {
+            // Use provided user data from authentication response
+            if (user && user.email) {
+                document.getElementById('userProfile').style.display = 'block';
+                document.querySelector('.nav-login').style.display = 'none';
+                document.querySelector('.btn-primary').style.display = 'none';
+                
+                const userName = user.username || user.name || user.email.split('@')[0] || 'User';
+                const userEmail = user.email || '';
+                const userPlan = user.plan || 'free';
+                
+                const avatarUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(userName)}&background=ea580c&color=fff&bold=true`;
+                
+                document.getElementById('userAvatar').src = avatarUrl;
+                document.getElementById('dropdownAvatar').src = avatarUrl;
+                document.getElementById('userName').textContent = userName;
+                document.getElementById('userEmail').textContent = userEmail;
+                
+                const planBadge = document.getElementById('userPlan');
+                const planName = userPlan.charAt(0).toUpperCase() + userPlan.slice(1);
+                planBadge.textContent = `${planName} Plan`;
+            } else {
+                document.getElementById('userProfile').style.display = 'none';
+                document.querySelector('.nav-login').style.display = 'block';
+                document.querySelector('.btn-primary').style.display = 'block';
+            }
+        }
+
+        function handleLogout() {
+            localStorage.removeItem('authToken');
+            localStorage.removeItem('currentUser');
+            sessionStorage.clear();
+            window.location.href = '/login.html';
+        }
+    </script>
+    
+    <style>
+        @keyframes modalSlideIn {
+            0% {
+                opacity: 0;
+                transform: scale(0.95) translateY(10px);
+            }
+            100% {
+                opacity: 1;
+                transform: scale(1) translateY(0);
+            }
+        }
+        
+        @keyframes scaleIn {
+            0% {
+                opacity: 0;
+                transform: scale(0);
+            }
+            100% {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+        
+        @keyframes confetti-burst {
+            0% {
+                transform: translate(0, 0) rotate(0deg) scale(1);
+                opacity: 1;
+            }
+            50% {
+                opacity: 1;
+            }
+            100% {
+                transform: translate(var(--endX), var(--endY)) rotate(720deg) scale(0);
+                opacity: 0;
+            }
+        }
+    </style>
+</body> 
+</html>

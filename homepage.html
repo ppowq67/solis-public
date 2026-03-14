@@ -1,0 +1,1252 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://cdn.socket.io; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdnjs.cloudflare.com https://cdn.tailwindcss.com; font-src https://fonts.gstatic.com https://cdnjs.cloudflare.com https://cdn.jsdelivr.net; img-src 'self' data: https:; connect-src 'self' ws: http://localhost:5500 ws://localhost:5500 http://127.0.0.1:5500 ws://127.0.0.1:5500 https://cdn.jsdelivr.net https://cdn.socket.io https://cdnjs.cloudflare.com https://cdn.paddle.com https://checkout.paddle.com https://api.paddle.com https://api.solisai.video;">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta http-equiv="X-Content-Type-Options" content="nosniff">
+    <meta http-equiv="X-XSS-Protection" content="1; mode=block">
+    <meta http-equiv="Referrer-Policy" content="strict-origin-when-cross-origin">
+    <script src="/js/core/init.js"></script>
+    <title>Solis AI | The #1 Video Repurposing Tool</title>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <style>
+
+        ::-webkit-scrollbar {
+            width: 14px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: rgba(249, 115, 22, 0.6);
+            border-radius: 10px;
+            border: 3px solid transparent;
+            background-clip: content-box;
+            backdrop-filter: blur(10px);
+        }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: #ffffff;
+            color: #0f172a;
+        }
+
+        ::selection {
+            background-color: #fed7aa;
+        }
+
+        .max-w-7xl {
+            max-width: 80rem;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .max-w-5xl {
+            max-width: 64rem;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .max-w-4xl {
+            max-width: 56rem;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .max-w-3xl {
+            max-width: 48rem;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .max-w-2xl {
+            max-width: 42rem;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .gradient-text {
+            background: linear-gradient(90deg, #6366f1, #a855f7, #ec4899);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .gradient-premium {
+            background: linear-gradient(90deg, #8b5cf6, #d946ef, #fb7185, #fde047);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            }
+            
+            .gradient-pro {
+            background: linear-gradient(135deg, #ff6b3d, #ff4500, #ff8c00);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            }
+
+        .btn-primary {
+            background: #000000;
+            color: white;
+            border: none;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            padding: 10px 24px;
+            border-radius: 9999px;
+            font-size: 14px;
+            font-weight: bold;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+            text-decoration: none;
+        }
+
+        .btn-primary:hover {
+            background: #f97316;
+            box-shadow: 0 10px 25px -5px rgba(249, 115, 22, 0.4);
+        }
+
+        .paddle-btn {
+            background-color: #000;
+            color: #fff;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            border: none;
+            cursor: pointer;
+            padding: 16px 24px;
+            border-radius: 16px;
+            font-weight: bold;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+            width: 100%;
+        }
+
+        .paddle-btn:hover {
+            background-color: #333;
+        }
+
+        .feature-card {
+            border: 1px solid #f1f5f9;
+            transition: all 0.3s ease;
+            padding: 40px;
+            border-radius: 40px;
+            background-color: #ffffff;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .feature-card:hover {
+            border-color: #ffedd5;
+            background-color: #fffaf5;
+        }
+
+
+       .pricing-card-highlight {
+            border: 2px solid #f97316;
+            position: relative;
+            padding: 40px;
+            border-radius: 40px;
+            background-color: #ffffff;
+            box-shadow: 0 20px 25px -5px rgba(249, 115, 22, 0.1);
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            height: 100%;
+            overflow: hidden;
+        }
+
+        @media (min-width: 768px) {
+            .pricing-card-highlight {
+                transform: scale(1.05);
+            }
+        }
+
+        .pricing-card-highlight::before {
+            content: 'Most Popular';
+            position: absolute;
+            top: 0;
+            right: 0;
+            background: #f97316;
+            color: white;
+            font-size: 10px;
+            font-weight: 900;
+            padding: 8px 24px;
+            border-radius: 0 40px 0 16px;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+        }
+
+        .badge-orange {
+            background: rgba(249, 115, 22, 0.1);
+            color: #ea580c;
+            padding: 6px 16px;
+            border-radius: 9999px;
+            font-size: 12px;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 0.15em;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .pricing-title {
+            font-size: 36px;
+            font-weight: 800;
+            margin-bottom: 16px;
+        }
+
+        @media (min-width: 768px) {
+            .pricing-title {
+                font-size: 48px;
+            }
+        }
+        .header {
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid #f1f5f9;
+            position: fixed;
+            top: 0;
+            width: 100%;
+            z-index: 100;
+        }
+
+        .card {
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(8px);
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
+            padding: 16px;
+            border-radius: 16px;
+        }
+
+        @keyframes float {
+            0% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+            100% { transform: translateY(0px); }
+        }
+
+        .animate-float {
+            animation: float 4s ease-in-out infinite;
+        }
+
+        .animate-float-delayed {
+            animation: float 4s ease-in-out infinite;
+            animation-delay: 2s;
+        }
+        nav {
+            height: 80px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 24px;
+        }
+
+        .nav-container {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            width: 100%;
+            max-width: 80rem;
+            margin: 0 auto;
+        }
+
+        .nav-left {
+            display: flex;
+            align-items: center;
+            gap: 40px;
+        }
+
+        .nav-brand {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .nav-brand svg {
+            width: 32px;
+            height: 32px;
+        }
+
+        .nav-brand span {
+            font-size: 20px;
+            font-weight: 800;
+            letter-spacing: -0.025em;
+        }
+
+        .nav-links {
+            display: none;
+            align-items: center;
+            gap: 32px;
+            font-size: 15px;
+            font-weight: 600;
+            color: #475569;
+        }
+
+        .nav-links a {
+            text-decoration: none;
+            color: #475569;
+            transition: color 0.3s ease;
+        }
+
+        .nav-links a:hover {
+            color: #ea580c;
+        }
+
+        .nav-right {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .nav-login {
+            display: none;
+            font-size: 15px;
+            font-weight: 600;
+            color: #475569;
+            text-decoration: none;
+            padding: 0 16px;
+        }
+
+        .nav-login:hover {
+            color: #ea580c;
+        }
+
+        @media (min-width: 992px) {
+            .nav-links {
+                display: flex;
+            }
+            .nav-login {
+                display: block;
+            }
+        }
+        header {
+            padding-top: 160px;
+            padding-bottom: 96px;
+            padding-left: 24px;
+            padding-right: 24px;
+            position: relative;
+            overflow: hidden;
+            margin-top: 80px;
+        }
+
+        header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 100%;
+            max-width: 56rem;
+            height: 384px;
+            background: #fef3c7;
+            filter: blur(120px);
+            border-radius: 50%;
+            z-index: -10;
+            opacity: 0.6;
+        }
+
+        .hero-content {
+            text-align: center;
+        }
+
+        h1 {
+            font-size: 48px;
+            font-weight: 800;
+            letter-spacing: -0.025em;
+            margin-bottom: 32px;
+            line-height: 1.05;
+        }
+
+        @media (min-width: 768px) {
+            h1 {
+                font-size: 84px;
+            }
+        }
+
+        .hero-subtitle {
+            font-size: 18px;
+            color: #64748b;
+            max-width: 42rem;
+            margin: 0 auto 40px;
+            font-weight: 500;
+        }
+
+        @media (min-width: 768px) {
+            .hero-subtitle {
+                font-size: 20px;
+            }
+        }
+
+        .input-container {
+            background: white;
+            padding: 8px 24px;
+            border-radius: 24px;
+            border: 2px solid #e2e8f0;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+            flex-wrap: nowrap;
+        }
+
+        .input-container-icon {
+            padding-left: 12px;
+            color: #cbd5e1;
+            display: flex;
+            align-items: center;
+        }
+
+        .input-container-icon svg {
+            width: 20px;
+            height: 20px;
+        }
+
+        .input-container input {
+            flex-grow: 1;
+            padding: 12px;
+            outline: none;
+            font-weight: 600;
+            color: #475569;
+            background: transparent;
+            border: none;
+            font-size: 14px;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+        }
+
+        .input-container input::placeholder {
+            color: #cbd5e1;
+        }
+
+        .input-container button {
+            background: #ea580c;
+            color: white;
+            padding: 12px 24px;
+            border-radius: 16px;
+            font-weight: 900;
+            border: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.3s ease;
+            box-shadow: 0 10px 15px -3px rgba(249, 115, 22, 0.2);
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            font-size: 14px;
+        }
+
+        .input-container button:hover {
+            background: #d97706;
+        }
+
+        .input-container button svg {
+            width: 18px;
+            height: 18px;
+        }
+
+        @media (max-width: 480px) {
+            .input-container {
+                flex-direction: column;
+                align-items: stretch;
+                padding: 8px;
+                gap: 6px;
+            }
+
+            .input-container input {
+                padding: 10px;
+                font-size: 14px;
+            }
+
+            .input-container button {
+                padding: 10px;
+                font-size: 14px;
+                gap: 4px;
+                justify-content: center;
+            }
+
+            .input-container-icon {
+                padding-left: 8px;
+            }
+
+            .input-container-icon svg {
+                width: 18px;
+                height: 18px;
+            }
+        }
+
+        .hero-features {
+            display: flex;
+            justify-content: center;
+            gap: 24px;
+            margin-top: 16px;
+            font-size: 12px;
+            font-weight: bold;
+            color: #94a3b8;
+            text-transform: uppercase;
+            letter-spacing: 0.15em;
+            flex-wrap: wrap;
+        }
+
+        .hero-features span {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .hero-features .dot {
+            width: 6px;
+            height: 6px;
+            background: #f97316;
+            border-radius: 50%;
+        }
+        .hero-image-wrapper {
+            position: relative;
+            max-width: 64rem;
+            margin: 0 auto;
+            margin-top: 48px;
+        }
+
+        .hero-floating {
+            position: absolute;
+            z-index: 20;
+        }
+
+        .hero-floating-1 {
+            top: -24px;
+            left: -16px;
+        }
+
+        @media (min-width: 768px) {
+            .hero-floating-1 {
+                left: -48px;
+            }
+        }
+
+        .hero-floating-2 {
+            top: 50%;
+            right: -16px;
+        }
+
+        @media (min-width: 768px) {
+            .hero-floating-2 {
+                right: -48px;
+            }
+        }
+
+        .hero-floating-3 {
+            bottom: 48px;
+            left: -8px;
+        }
+
+        @media (min-width: 768px) {
+            .hero-floating-3 {
+                left: -32px;
+            }
+        }
+
+        .virality-card {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .virality-score {
+            width: 48px;
+            height: 48px;
+            border-radius: 9999px;
+            background: #fed7aa;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #ea580c;
+            font-weight: 900;
+            font-size: 20px;
+            flex-shrink: 0;
+        }
+
+        .virality-text {
+            text-align: left;
+        }
+
+        .virality-label {
+            font-size: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            font-weight: bold;
+            color: #94a3b8;
+        }
+
+        .virality-value {
+            font-size: 14px;
+            font-weight: bold;
+            color: #0f172a;
+        }
+
+        .caption-card {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .caption-badge {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .caption-badge-dot {
+            width: 8px;
+            height: 8px;
+            background: #f97316;
+            border-radius: 50%;
+        }
+
+        .caption-badge-text {
+            font-size: 10px;
+            text-transform: uppercase;
+            font-weight: bold;
+            color: #ea580c;
+        }
+
+        .caption-text {
+            font-size: 14px;
+            font-weight: 900;
+            color: white;
+            background: #ea580c;
+            padding: 4px 8px;
+            display: inline-block;
+            width: fit-content;
+        }
+
+        .tracking-card {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px;
+            border-radius: 12px;
+        }
+
+        .tracking-card svg {
+            width: 20px;
+            height: 20px;
+            color: #ea580c;
+            flex-shrink: 0;
+        }
+
+        .tracking-card span {
+            font-size: 12px;
+            font-weight: bold;
+            color: #334155;
+        }
+
+        .hero-image {
+            border-radius: 24px;
+            border: 8px solid #f8fafc;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            height: auto;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero-image::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(to top, rgba(120, 53, 15, 0.1), transparent);
+            pointer-events: none;
+        }
+        section {
+            padding: 128px 24px;
+            background-color: white;
+        }
+
+        .pricing-title {
+            font-size: 36px;
+            font-weight: 800;
+            margin-bottom: 16px;
+        }
+
+        @media (min-width: 768px) {
+            .pricing-title {
+                font-size: 48px;
+            }
+        }
+
+        .pricing-subtitle {
+            color: #64748b;
+            font-weight: 500;
+            font-size: 18px;
+        }
+
+        .pricing-header {
+            text-align: center;
+            margin-bottom: 64px;
+        }
+
+        .pricing-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 32px;
+        }
+
+        @media (min-width: 768px) {
+            .pricing-grid {
+                grid-template-columns: repeat(3, 1fr);
+            }
+        }
+
+        .plan-header {
+            margin-bottom: 24px;
+        }
+
+        .plan-name {
+            font-size: 24px;
+            font-weight: 800;
+            margin-bottom: 4px;
+        }
+
+        .plan-description {
+            color: #64748b;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .plan-price {
+            display: flex;
+            align-items: baseline;
+            gap: 4px;
+            margin-bottom: 32px;
+        }
+
+        .plan-price-amount {
+            font-size: 48px;
+            font-weight: 800;
+        }
+
+        .plan-price-period {
+            color: #94a3b8;
+            font-weight: bold;
+            font-size: 14px;
+        }
+
+        .plan-divider {
+            height: 1px;
+            background: #e2e8f0;
+            width: 100%;
+            margin-bottom: 32px;
+        }
+
+        .pricing-card-highlight .plan-divider {
+            background: #fef3c7;
+        }
+
+        .plan-features {
+            list-style: none;
+            margin-bottom: 40px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .plan-features li {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 15px;
+            font-weight: 600;
+            color: #475569;
+        }
+
+        .plan-features svg {
+            width: 20px;
+            height: 20px;
+            flex-shrink: 0;
+            color: #f97316;
+            stroke: #f97316;
+        }
+
+        .plan-features li.disabled {
+            color: #cbd5e1;
+        }
+
+        .plan-features li.disabled svg {
+            color: #cbd5e1;
+            stroke: #cbd5e1;
+        }
+
+        .plan-features li.bold-feature {
+            font-weight: bold;
+            color: #0f172a;
+        }
+
+        .plan-features li.bold-orange {
+            font-weight: bold;
+            color: #ea580c;
+        }
+
+        .plan-button {
+            width: 100%;
+            padding: 16px 24px;
+            border-radius: 16px;
+            font-weight: bold;
+            margin-bottom: 12px;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+        }
+
+        .pricing-card-highlight .plan-button {
+            font-weight: 900;
+            padding: 20px 24px;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+        }
+
+        .pricing-card-highlight .plan-name {
+            color: #ea580c;
+        }
+
+        footer {
+            padding: 80px 24px;
+            border-top: 1px solid #e2e8f0;
+            background-color: white;
+        }
+
+        .footer-container {
+            max-width: 80rem;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 48px;
+        }
+
+        @media (min-width: 768px) {
+            .footer-container {
+                grid-template-columns: repeat(4, 1fr);
+            }
+        }
+
+        .footer-brand {
+            grid-column: span 2;
+        }
+
+        @media (min-width: 768px) {
+            .footer-brand {
+                grid-column: span 1;
+            }
+        }
+
+        .footer-logo {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 24px;
+        }
+
+        .footer-logo-icon {
+            width: 24px;
+            height: 24px;
+            background: #ea580c;
+            border-radius: 4px;
+        }
+
+        .footer-logo-text {
+            font-size: 20px;
+            font-weight: 800;
+            letter-spacing: -0.025em;
+            color: #0f172a;
+        }
+
+        .footer-description {
+            color: #64748b;
+            font-size: 14px;
+            font-weight: 500;
+            line-height: 1.6;
+        }
+
+        .footer-section h6 {
+            font-weight: bold;
+            color: #0f172a;
+            margin-bottom: 24px;
+        }
+
+        .footer-links {
+            list-style: none;
+        }
+
+        .footer-links li {
+            margin-bottom: 16px;
+        }
+
+        .footer-links a {
+            font-size: 14px;
+            font-weight: 600;
+            color: #64748b;
+            text-decoration: none;
+            transition: color 0.3s ease;
+        }
+
+        .footer-links a:hover {
+            color: #ea580c;
+        }
+        @media (max-width: 640px) {
+            .nav-login {
+                display: none;
+            }
+        }
+    </style>
+
+
+
+<style>
+    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;700;800&display=swap');
+
+.features-section {
+  padding: 120px 24px;
+  background-color: #fcfdfe;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+}
+
+.features-container {
+  max-width: 1600px; 
+  margin: 0 auto;
+}
+
+.features-top {
+  text-align: center;
+  margin-bottom: 70px;
+}
+
+.badge {
+  background: #fff7ed;
+  color: #ea580c;
+  padding: 6px 14px;
+  border-radius: 100px;
+  font-weight: 700;
+  font-size: 13px;
+  text-transform: uppercase;
+  border: 1px solid #ffedd5;
+}
+
+.features-top h2 {
+  font-size: 44px;
+  font-weight: 800;
+  color: #0f172a;
+  margin-top: 15px;
+  letter-spacing: -0.04em;
+}
+
+.features-stack {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr); 
+  gap: 32px;
+}
+
+.bento-card {
+  background: white;
+  border: 1px solid #f1f5f9;
+  border-radius: 32px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  min-height: 480px; 
+  transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.02), 0 2px 4px -1px rgba(0, 0, 0, 0.01);
+}
+
+@media (max-width: 850px) {
+  .features-stack {
+    grid-template-columns: 1fr;
+  }
+  
+  .features-container {
+    max-width: 500px;
+  }
+}
+
+.bento-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.04);
+  border-color: #fdba74;
+}
+
+.bento-content {
+  padding: 50px 50px 20px 50px;
+}
+
+.bento-content h3 {
+  font-size: 28px;
+  font-weight: 800;
+  color: #1e293b;
+  margin-bottom: 12px;
+  letter-spacing: -0.02em;
+}
+
+.bento-content p {
+  font-size: 17px;
+  color: #64748b;
+  max-width: 550px;
+  line-height: 1.6;
+}
+
+.visual {
+  flex-grow: 1;
+  background: #f8fafc;
+  margin: 0 30px 30px 30px;
+  border-radius: 20px;
+  border: 1px solid #f1f5f9;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+
+.platform-icons {
+  display: flex;
+  gap: 20px;
+}
+
+.p-icon {
+  background: white;
+  padding: 12px 20px;
+  border-radius: 12px;
+  font-weight: 700;
+  color: #ea580c;
+  border: 1px solid #ffedd5;
+}
+
+@media (max-width: 768px) {
+  .bento-content { padding: 30px; }
+  .features-top h2 { font-size: 32px; }
+  .bento-card { min-height: 450px; }
+}
+</style>
+</head>
+<body>
+
+    <nav class="header">
+        <div class="nav-container">
+            <div class="nav-left">
+                <div class="nav-brand">
+                    <svg viewBox="0 0 100 100" fill="none" stroke="currentColor">
+                        <circle cx="50" cy="50" r="12" fill="currentColor" style="color: #ea580c;"></circle>
+                        <ellipse rx="44" ry="18" cx="50" cy="50" stroke-width="6" transform="rotate(45 50 50)" style="color: #ea580c;"></ellipse>
+                        <ellipse rx="44" ry="18" cx="50" cy="50" stroke-width="6" transform="rotate(-45 50 50)" style="color: #ea580c;"></ellipse>
+                    </svg>
+                    <span>Solis AI</span>
+                </div>
+                <div class="nav-links">
+                    <a href="#how-it-works">Features</a>
+                    <a href="premium.html">Pricing</a>
+                    <a href="#faqs">FAQs</a>
+                </div>
+            </div>
+            <div class="nav-right">
+                <a href="login.html" class="nav-login">Login</a>
+                <a class="btn-primary" href="login.html">Start Clipping SOON</a>
+            </div>
+        </div>
+    </nav>
+
+    <header>
+        <div class="max-w-5xl hero-content">
+            <div class="badge-orange">Built for speed. Tuned for virality.</div>
+            <h1>Go viral without <br><span class="gradient-text">editing</span></h1>
+            <p class="hero-subtitle">Top creators don't edit randomly. They build videos from what already works.</p>
+            
+            <div class="max-w-3xl" style="margin: 0 auto 64px;">
+                <div class="input-container">
+                    <div class="input-container-icon">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                    </div>
+                    <input href="login.html" type="text" placeholder="Paste Your YouTube link">
+                    <button>
+                        <span>WE ARE COMING SOON!</span>
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M13 7l5 5m0 0l-5 5m5-5H6" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                    </button>
+                </div>
+                <div class="hero-features">
+                    <span><div class="dot"></div>Unlock More with Solis</span>
+                    <span><div class="dot"></div>Be <span class="gradient-text">#1</span> with Solis AI</span>
+                    <span><div class="dot"></div>The most comfortable, powerful video clipping AI</span>
+                </div>
+            </div>
+
+            <div class="hero-image-wrapper">
+            </div>
+        </div>
+    </header>
+
+    <section id="Features" class="features-section">
+        <div class="features-container">
+        <div class="features-top">
+      <h2>Everything you need to go viral</h2>
+    </div>
+
+    <div class="features-stack">
+      <div class="bento-card">
+        <div class="bento-content">
+          <h3>Video Clipping</h3>
+          <p>The fastest way to turn long-form content into high-impact, viral shorts. Just upload and let the AI find the gold.</p>
+        </div>
+        <div class="visual">
+        </div>
+      </div>
+
+      <div class="bento-card">
+        <div class="bento-content">
+          <h3>Automated Overpurpose</h3>
+          <p>Take one video and dominate every platform. Automatically resize, re-style, and optimize for TikTok, Reels, and Shorts.</p>
+        </div>
+        <div class="visual">
+        </div>
+      </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+    <section id="pricing">
+        <div class="max-w-7xl">
+            <div class="pricing-header">
+                <h2 class="pricing-title">Pricing Plans</h2>
+                <p class="pricing-subtitle">Choose the plan that fits your creator journey.</p>
+            </div>
+
+            <div class="pricing-grid">
+                
+                <div class="feature-card">
+                    <div>
+                        <div class="plan-header">
+                            <h4 class="plan-name">Basic</h4>
+                            <p class="plan-description">Perfect for getting started</p>
+                        </div>
+                        <div class="plan-price">
+                            <span class="plan-price-amount">$18.99</span>
+                            <span class="plan-price-period">/month</span>
+                        </div>
+                        <div class="plan-divider"></div>
+                        <ul class="plan-features">
+                            <li><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M5 13l4 4L19 7" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg> Supports videos up to 45 min</li>
+                            <li><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M5 13l4 4L19 7" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg> 5 video generations</li>
+                            <li><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M5 13l4 4L19 7" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg> Fast Generation</li>
+                            <li><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M5 13l4 4L19 7" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg> No Watermark</li>
+                            <li><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M5 13l4 4L19 7" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg> Up to 10 saved videos</li>
+                        </ul>
+                    </div>
+                    <div>
+                        <button class="plan-button paddle-btn">Unlock with Basic Plan</button>
+                    </div>
+                </div>
+
+                <!-- Prime Plan -->
+                <div class="feature-card pricing-card-highlight">
+                    <div>
+                        <div class="plan-header">
+                            <h4 class="plan-name">Prime</h4>
+                            <p class="plan-description">Most popular</p>
+                        </div>
+                        <div class="plan-price">
+                            <span class="plan-price-amount">$29.99</span>
+                            <span class="plan-price-period">/month</span>
+                        </div>
+                        <div class="plan-divider"></div>
+                        <ul class="plan-features">
+                            <li><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M5 13l4 4L19 7" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg> Supports videos up to 120 min</li>
+                            <li><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M5 13l4 4L19 7" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg> 12 video generations</li>
+                            <li><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M5 13l4 4L19 7" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg> Faster Generation</li>
+                            <li><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M5 13l4 4L19 7" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg> No Watermark</li>
+                            <li><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M5 13l4 4L19 7" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg> Overpainting</li>
+                            <li><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M5 13l4 4L19 7" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg> Up to 20 saved videos</li>
+                        </ul>
+                    </div>
+                    <div>
+                        <button class="plan-button btn-primary">Unlock with Prime Plan</button>
+                    </div>
+                </div>
+
+                <!-- Elite Plan -->
+                <div class="feature-card">
+                    <div>
+                        <div class="plan-header">
+                            <h4 class="plan-name">Elite</h4>
+                            <p class="plan-description">Unlock all features</p>
+                        </div>
+                        <div class="plan-price">
+                            <span class="plan-price-amount">$49.99</span>
+                            <span class="plan-price-period">/month</span>
+                        </div>
+                        <div class="plan-divider"></div>
+                        <ul class="plan-features">
+                            <li><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M5 13l4 4L19 7" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg> Supports videos up to 240 min</li>
+                            <li><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M5 13l4 4L19 7" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg> 40 video generations</li>
+                            <li><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M5 13l4 4L19 7" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg> Fastest Generation</li>
+                            <li><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M5 13l4 4L19 7" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg> No Watermark</li>
+                            <li><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M5 13l4 4L19 7" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg> Overpainting</li>
+                            <li><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M5 13l4 4L19 7" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg> Priority queue</li>
+                            <li><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M5 13l4 4L19 7" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg> Up to 100 saved videos</li>
+                        </ul>
+                    </div>
+                    <div>
+                        <button class="plan-button paddle-btn">Unlock with Elite Plan</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+    <footer>
+        <div class="footer-container">
+            <div class="footer-brand">
+                <div class="footer-logo">
+                    <span class="footer-logo-text">Solis AI</span>
+                </div>
+                <p class="footer-description">Transform your content strategy with the power of AI.</p>
+            </div>
+            <div class="footer-section">
+                <h6>Product</h6>
+                <ul class="footer-links">
+                    <li><a href="#">AI Clipping</a></li>
+                </ul>
+            </div>
+            <div class="footer-section">
+                <h6>ABOUT US</h6>
+                <ul class="footer-links">
+                    <li><a href="https://www.youtube.com/@SolisAI-Official" target="_blank" rel="noopener noreferrer">Youtube</a></li>
+                    <li><a href="https://www.tiktok.com/@solisai" target="_blank" rel="noopener noreferrer">Tiktok</a></li>
+                    <li><a href="https://discord.gg/79mF8wSgWz" target="_blank" rel="noopener noreferrer">Discord</a></li>
+                </ul>
+            </div>
+            <div class="footer-section">
+                <h6>Legal</h6>
+                <ul class="footer-links">
+                    <li><a href="#">Privacy</a></li>
+                    <li><a href="#">Terms</a></li>
+                </ul>
+            </div>
+        </div>
+    </footer>
+
+    <script src="https://unpkg.com/lucide@latest"></script>
+<script>
+  lucide.createIcons();
+</script>
+</body>
+</html>

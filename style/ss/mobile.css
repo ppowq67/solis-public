@@ -1,0 +1,226 @@
+
+:root {
+    
+    --ios-glass: rgba(28, 24, 20, 0.65);
+    --ios-blur: blur(40px) saturate(180%) brightness(100%);
+    --ios-border: 0.5px solid rgba(255, 230, 200, 0.15);
+    --ios-shadow: 0 20px 50px rgba(0, 0, 0, 0.65);
+    
+    --active-fill: rgba(255, 180, 100, 0.12);
+    --text-primary: #1a1a1a;
+    --text-secondary: rgba(255, 255, 255, 0.4);
+    --accent: #ff9d42; 
+
+    --glow-warm: rgba(255, 160, 60, 0.4);
+    --glow-soft: rgba(255, 220, 150, 0.2);
+}
+
+* {
+    box-sizing: border-box;
+    -webkit-tap-highlight-color: transparent;
+    user-select: none;
+}
+
+body {
+    margin: 0;
+    padding: 0;
+    background-color: #050403;
+    background-image: 
+        radial-gradient(at 0% 0%, hsla(25, 30%, 15%, 1) 0, transparent 50%), 
+        radial-gradient(at 50% 0%, hsla(35, 40%, 20%, 0.3) 0, transparent 50%), 
+        radial-gradient(at 100% 0%, hsla(15, 30%, 15%, 1) 0, transparent 50%);
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif;
+}
+
+.ui-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    perspective: 1200px;
+}
+
+.pill-nav {
+    background: var(--ios-glass);
+    backdrop-filter: var(--ios-blur);
+    -webkit-backdrop-filter: var(--ios-blur);
+    border-radius: 50px;
+    padding: 6px;
+    display: flex;
+    align-items: center;
+    border: var(--ios-border);
+    box-shadow: 
+        var(--ios-shadow),
+        inset 0 0 25px rgba(255, 180, 50, 0.03);
+    position: relative;
+    overflow: visible;
+}
+
+.fluid-indicator {
+    position: absolute;
+    top: 6px;
+    left: 6px;
+    width: 86px;
+    height: 76px;
+    background: var(--active-fill);
+    border-radius: 38px;
+    z-index: 0;
+    transition: 
+        transform 0.55s cubic-bezier(0.19, 1, 0.22, 1),
+        width 0.45s cubic-bezier(0.19, 1, 0.22, 1),
+        filter 0.4s ease;
+    box-shadow: 
+        inset 0 0 1px 1.5px rgba(255, 230, 150, 0.15),
+        0 8px 24px rgba(0,0,0,0.4);
+    
+    transform-origin: center;
+}
+
+.moving .fluid-indicator {
+    filter: 
+        drop-shadow(0 0 8px var(--glow-warm))
+        brightness(1.15);
+}
+
+.fluid-indicator::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background: linear-gradient(110deg, 
+        rgba(255,255,255,0.2) 0%, 
+        rgba(255,255,255,0) 45%, 
+        rgba(255,255,255,0.08) 100%);
+    pointer-events: none;
+    transition: opacity 0.3s ease;
+}
+
+.nav-item {
+    width: 86px;
+    height: 76px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-secondary);
+    cursor: pointer;
+    position: relative;
+    z-index: 1;
+    transition: color 0.4s ease;
+}
+
+.nav-item.active {
+    color: var(--text-primary);
+}
+
+.nav-item svg {
+    width: 32px; 
+    height: 32px;
+    margin-bottom: 2px;
+    transition: transform 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    stroke-width: 1.8;
+}
+
+.nav-item:active svg {
+    transform: scale(0.85);
+}
+
+.nav-item.active svg {
+    transform: scale(1.15) translateY(-2px);
+}
+
+.nav-item span {
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    opacity: 0.9;
+}
+
+.profile-btn {
+    width: 88px;
+    height: 88px;
+    background: var(--ios-glass);
+    backdrop-filter: var(--ios-blur);
+    -webkit-backdrop-filter: var(--ios-blur);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: var(--ios-border);
+    box-shadow: 
+        var(--ios-shadow),
+        inset 0 0 15px rgba(255, 200, 100, 0.05);
+    color: white;
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+    transition: all 0.35s cubic-bezier(0.35, 0.63, 0.4, 1);
+    will-change: transform, background, border-color;
+}
+
+.profile-btn::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(circle at 30% 30%, rgba(255,240,200,0.1) 0%, transparent 70%);
+    z-index: 1;
+}
+
+.profile-btn:hover {
+    transform: scale(1.06);
+    background: rgba(55, 45, 35, 0.85);
+    border-color: rgba(255, 157, 66, 0.5);
+    box-shadow: 
+        0 15px 40px rgba(0, 0, 0, 0.15),
+        inset 0 0 15px rgba(255, 200, 100, 0.08);
+}
+
+.profile-btn:active {
+    transform: scale(0.96);
+    box-shadow: 
+        0 8px 20px rgba(0, 0, 0, 0.1),
+        inset 0 0 15px rgba(255, 200, 100, 0.05);
+}
+
+.profile-btn:active {
+    transform: scale(0.92);
+}
+
+.profile-btn svg {
+    width: 38px;
+    height: 38px;
+    stroke-width: 1.6;
+    filter: drop-shadow(0 4px 8px rgba(0,0,0,0.35));
+}
+
+.lumen-icon .core {
+    transition: all 0.6s cubic-bezier(0.19, 1, 0.22, 1);
+}
+
+.nav-item.active .lumen-icon .core {
+    fill: var(--accent);
+    filter: drop-shadow(0 0 12px var(--accent));
+}
+
+@media (max-width: 768px) {
+    .ui-wrapper {
+        flex-direction: column;
+        gap: 20px;
+    }
+    
+    .pill-nav {
+        flex-direction: column;
+        border-radius: 30px;
+        width: fit-content;
+    }
+    
+    .nav-item {
+        width: 76px;
+        height: 76px;
+    }
+    
+    .fluid-indicator {
+        width: 76px;
+        height: 76px;
+        border-radius: 38px;
+    }
+}
