@@ -14,5 +14,9 @@ premium(sandbox).html
 .DS_Store
 Thumbs.db
 
-# Dependencies
+# Dependencies & Build
 node_modules/
+obfuscate.js
+package.json
+package-lock.json
+
