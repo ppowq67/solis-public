@@ -373,6 +373,8 @@
         }
 
         window.switchSection = switchSection;
+        window.handleNav = handleNav;
+        window.navigate = navigate;
         document.addEventListener('DOMContentLoaded', function() {
             if (pane && window.innerWidth <= 768) {
                 const savedIndex = localStorage.getItem('activeNavIndex');
