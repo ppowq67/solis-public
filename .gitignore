@@ -14,5 +14,5 @@ premium(sandbox).html
 .DS_Store
 Thumbs.db
 
-# Dependencies (if any Node modules)
+# Dependencies
 node_modules/

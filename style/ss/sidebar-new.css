@@ -98,7 +98,7 @@
             border: var(--ios-border);
             box-shadow: var(--ios-shadow);
             position: relative;
-            overflow: hidden; 
+            overflow: visible; 
             transform-style: preserve-3d;
             width: var(--nav-item-w);
         }

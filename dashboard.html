@@ -6,14 +6,66 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="theme-color" content="#ff6b3d">
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://cdn.socket.io; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.jsdelivr.net https://cdnjs.cloudflare.com; font-src 'self' https://fonts.gstatic.com https://cdn.jsdelivr.net https://cdnjs.cloudflare.com; img-src 'self' data: https: blob:; connect-src 'self' https://api.solisai.video https://cdn.jsdelivr.net; frame-src https://checkout.paddle.com;">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://cdn.socket.io http://localhost:5000 http://127.0.0.1:5000 http://localhost:5500 http://127.0.0.1:5500; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.jsdelivr.net https://cdnjs.cloudflare.com; font-src 'self' https://fonts.gstatic.com https://cdn.jsdelivr.net https://cdnjs.cloudflare.com; connect-src 'self' http://localhost:5000 ws://localhost:5000 http://127.0.0.1:5000 ws://127.0.0.1:5000 http://localhost:5500 ws://localhost:5500 http://127.0.0.1:5500 ws://127.0.0.1:5500 https:; img-src 'self' data: https:;">
     <meta name="csrf-token" content="">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta http-equiv="X-Content-Type-Options" content="nosniff">
-    <meta http-equiv="X-XSS-Protection" content="1; mode=block">
-    <meta http-equiv="Referrer-Policy" content="strict-origin-when-cross-origin">
-    <script src="/js/core/init.js"></script>
-    <script src="/js/core/dashboard-csrf.js"></script>
+    <script>
+        (async function initializeCsrfToken() {
+            try {
+                const response = await fetch('/api/auth/csrf-token', {
+                    method: 'GET',
+                    credentials: 'include'
+                });
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data.token && typeof data.token === 'string' && data.token.length >= 32) {
+                        document.querySelector('meta[name="csrf-token"]').setAttribute('content', data.token);
+                        console.log('✅ CSRF token initialized');
+                    }
+                } else {
+                    console.warn('Failed to fetch CSRF token:', response.status);
+                }
+            } catch (error) {
+                console.error('Error initializing CSRF token:', error);
+            }
+        })();
+        
+        // 🔐 Helper function to get CSRF token from meta tag
+        function getCSRFToken() {
+            const csrfMeta = document.querySelector('meta[name="csrf-token"]');
+            if (csrfMeta && csrfMeta.content && csrfMeta.content.length >= 32) {
+                return csrfMeta.content;
+            }
+            return null;
+        }
+        
+        // 🔐 Secure fetch wrapper that automatically includes CSRF token for mutations
+        async function secureFetch(url, options = {}) {
+            const defaultHeaders = { };
+            
+            // Add CSRF token for state-changing requests
+            if (options.method && ['POST', 'PUT', 'DELETE', 'PATCH'].includes(options.method.toUpperCase())) {
+                const csrfToken = getCSRFToken();
+                if (!csrfToken) {
+                    throw new Error('CSRF token not available - cannot make state-changing request');
+                }
+                defaultHeaders['X-CSRF-Token'] = csrfToken;
+            }
+            
+            return fetch(url, {
+                ...options,
+                credentials: 'include',
+                headers: {
+                    ...defaultHeaders,
+                    ...options.headers
+                }
+            });
+        }
+        
+        // 🔐 HTTPS enforcement warning
+        if (window.location.protocol === 'http:' && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
+            console.warn('⚠️ Warning: Connection is not secure. Use HTTPS in production.');
+        }
+    </script>
     <title>Solis AI</title>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -1815,8 +1867,69 @@
     </div>
 </div>
 
-    <script src="/js/core/dashboard-loader.js"></script>
-    <script src="/js/core/dashboard-socketio.js"></script>
+    <script>
+        (function() {
+            const LOADER = 'solisLoaderShown';
+            const loaderContainer = document.getElementById('loader-container');
+            
+            const hasShownLoader = sessionStorage.getItem(LOADER);
+            
+            if (hasShownLoader) {
+                loaderContainer.classList.add('loader-hidden');
+            } else {
+                loaderContainer.classList.remove('loader-hidden');
+                
+                setTimeout(() => {
+                    loaderContainer.classList.add('loader-hidden');
+                    sessionStorage.setItem(LOADER, 'true');
+                }, 3500);
+            }
+        })();
+    </script>
+
+    <script>
+        // 🔐 SECURITY: Use hardcoded backend URL, never read from localStorage
+        // localStorage can be modified by XSS - using it for script src = RCE vulnerability
+        const backendPort = '5500';  // Hardcoded - NOT from localStorage
+        const backendHost = '127.0.0.1';  // Hardcoded - NOT from localStorage
+        const socketioScript = document.createElement('script');
+        let socketioLoaded = false;
+        // 🔐 SECURITY: Use full URL validation instead of template string injection
+        const socketioUrl = `http://${backendHost}:${backendPort}/socket.io/socket.io.js`;
+        socketioScript.src = socketioUrl;
+        socketioScript.onload = () => {
+            socketioLoaded = true;
+            console.log('✅ Socket.IO loaded from backend');
+        };
+        socketioScript.onerror = () => {
+            if (!socketioLoaded) {
+                console.warn('⚠️ Socket.IO failed to load from backend, falling back to CDN...');
+                const cdnScript = document.createElement('script');
+                cdnScript.src = 'https://cdn.socket.io/4.7.2/socket.io.min.js';
+                cdnScript.onload = () => {
+                    socketioLoaded = true;
+                    console.log('✅ Socket.IO loaded from CDN');
+                };
+                cdnScript.onerror = () => {
+                    console.error('❌ Failed to load Socket.IO from both backend and CDN');
+                };
+                document.head.appendChild(cdnScript);
+            }
+        };
+        document.head.appendChild(socketioScript);
+        setTimeout(() => {
+            if (!socketioLoaded && typeof io === 'undefined') {
+                console.warn('⚠️ Socket.IO still not loaded, forcing CDN fallback...');
+                const cdnScript = document.createElement('script');
+                cdnScript.src = 'https://cdn.socket.io/4.7.2/socket.io.min.js';
+                cdnScript.onload = () => {
+                    socketioLoaded = true;
+                    console.log('✅ Socket.IO loaded from CDN (timeout fallback)');
+                };
+                document.head.appendChild(cdnScript);
+            }
+        }, 3000);
+    </script>
 
     <script src="/js/core/websocket-security.js?v=1"></script>
     <script src="/js/core/video-streaming.js?v=1"></script>

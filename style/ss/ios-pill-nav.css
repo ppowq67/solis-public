@@ -246,12 +246,6 @@ body {
     padding: 0;
     margin: 0;
     will-change: auto;
-    display: flex !important;
-    flex-direction: column !important;
-    align-items: center !important;
-    justify-content: center !important;
-    width: auto !important;
-    height: auto !important;
 }
 
 .pill-nav {
@@ -261,10 +255,9 @@ body {
     border-radius: 48px;
     padding: var(--nav-padding-v) 0;
     display: flex;
-    flex-direction: column;
+    flex-direction: column; 
     gap: var(--nav-gap);
     align-items: stretch;
-    justify-content: center;
     border: var(--ios-border);
     box-shadow: var(--ios-shadow);
     position: relative;
