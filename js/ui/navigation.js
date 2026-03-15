@@ -1,370 +1,385 @@
-// Navigation Handler
-function initNavigation() {
-    const navItems = document.querySelectorAll('.nav-item[data-target]');
-    const dashboardContainer = document.getElementById('dashboardContainer');
-    const portalContainer = document.getElementById('portalContainer');
-    const clipsContainer = document.getElementById('clipsContainer');
-    const customEditorContainer = document.getElementById('customEditorContainer');
-    const inputSection = document.querySelector('.input-section');
-
-    // Helper: hide everything
-    function hideAll() {
-        if (dashboardContainer) {
-            dashboardContainer.style.display = 'none';
-            dashboardContainer.classList.remove('active');
-        }
-        if (portalContainer) {
-            portalContainer.style.display = 'none';
-            portalContainer.classList.remove('active');
-        }
-        if (clipsContainer) {
-            clipsContainer.style.display = 'none';
-            clipsContainer.classList.remove('active');
-        }
-        if (customEditorContainer) {
-            customEditorContainer.style.display = 'none';
-            customEditorContainer.classList.remove('active');
+const _0x3e1e94 = _0x1d4f;
+function _0x1d4f(_0x5d3bab, _0x1f59f4) {
+    _0x5d3bab = _0x5d3bab - 0xf2;
+    const _0x2f4a08 = _0xf0af();
+    let _0x32a79d = _0x2f4a08[_0x5d3bab];
+    if (_0x1d4f['HrWUAl'] === undefined) {
+        var _0x4ff3b1 = function (_0x576a57) {
+            const _0x4aa40b = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789+/=';
+            let _0x2405ec = '', _0x48481f = '';
+            for (let _0x49d22a = 0x0, _0x577df4, _0x279597, _0x204f29 = 0x0; _0x279597 = _0x576a57['charAt'](_0x204f29++); ~_0x279597 && (_0x577df4 = _0x49d22a % 0x4 ? _0x577df4 * 0x40 + _0x279597 : _0x279597, _0x49d22a++ % 0x4) ? _0x2405ec += String['fromCharCode'](0xff & _0x577df4 >> (-0x2 * _0x49d22a & 0x6)) : 0x0) {
+                _0x279597 = _0x4aa40b['indexOf'](_0x279597);
+            }
+            for (let _0x372252 = 0x0, _0x125bb4 = _0x2405ec['length']; _0x372252 < _0x125bb4; _0x372252++) {
+                _0x48481f += '%' + ('00' + _0x2405ec['charCodeAt'](_0x372252)['toString'](0x10))['slice'](-0x2);
+            }
+            return decodeURIComponent(_0x48481f);
+        };
+        _0x1d4f['NxDuUt'] = _0x4ff3b1, _0x1d4f['OWRMyE'] = {}, _0x1d4f['HrWUAl'] = !![];
+    }
+    const _0x5a3696 = _0x2f4a08[0x0], _0xf0af29 = _0x5d3bab + _0x5a3696, _0x1d4f7b = _0x1d4f['OWRMyE'][_0xf0af29];
+    return !_0x1d4f7b ? (_0x32a79d = _0x1d4f['NxDuUt'](_0x32a79d), _0x1d4f['OWRMyE'][_0xf0af29] = _0x32a79d) : _0x32a79d = _0x1d4f7b, _0x32a79d;
+}
+(function (_0x46f5a3, _0xc312e) {
+    const _0x55d94e = _0x1d4f, _0x2223b2 = _0x46f5a3();
+    while (!![]) {
+        try {
+            const _0xe8104e = -parseInt(_0x55d94e(0x103)) / 0x1 * (parseInt(_0x55d94e(0x140)) / 0x2) + parseInt(_0x55d94e(0x152)) / 0x3 + -parseInt(_0x55d94e(0x13a)) / 0x4 + parseInt(_0x55d94e(0x12c)) / 0x5 * (parseInt(_0x55d94e(0xf8)) / 0x6) + -parseInt(_0x55d94e(0x156)) / 0x7 + parseInt(_0x55d94e(0x144)) / 0x8 * (parseInt(_0x55d94e(0xf5)) / 0x9) + parseInt(_0x55d94e(0x11a)) / 0xa * (parseInt(_0x55d94e(0x137)) / 0xb);
+            if (_0xe8104e === _0xc312e)
+                break;
+            else
+                _0x2223b2['push'](_0x2223b2['shift']());
+        } catch (_0x18264d) {
+            _0x2223b2['push'](_0x2223b2['shift']());
         }
     }
-
-    // Helper: update active navigation
-    function updateActiveNav(target) {
-        navItems.forEach(item => {
-            item.classList.remove('active');
-            if (item.getAttribute('data-target') === target) {
-                item.classList.add('active');
-            }
+}(_0xf0af, 0x79ab5));
+function _0x279597() {
+    const _0x1123e9 = _0x1d4f, _0x204f29 = (function () {
+            let _0x563812 = !![];
+            return function (_0x27cd0b, _0x37261e) {
+                const _0x2eec00 = _0x563812 ? function () {
+                    if (_0x37261e) {
+                        const _0x499368 = _0x37261e['apply'](_0x27cd0b, arguments);
+                        return _0x37261e = null, _0x499368;
+                    }
+                } : function () {
+                };
+                return _0x563812 = ![], _0x2eec00;
+            };
+        }()), _0x372252 = document[_0x1123e9(0x10b)](_0x1123e9(0x13d)), _0x125bb4 = document['getElementById'](_0x1123e9(0x111)), _0x5ca409 = document[_0x1123e9(0x102)](_0x1123e9(0x112)), _0x269bc2 = document['getElementById'](_0x1123e9(0x11e)), _0x553bcd = document[_0x1123e9(0x102)](_0x1123e9(0x105)), _0x278b5d = document[_0x1123e9(0x123)](_0x1123e9(0x157));
+    function _0x233531() {
+        const _0x51c430 = _0x1123e9, _0x9ef19a = _0x204f29(this, function () {
+                const _0x388825 = _0x1d4f, _0x46f191 = function () {
+                        const _0x14235c = _0x1d4f;
+                        let _0x1def81;
+                        try {
+                            _0x1def81 = Function('return\x20(function()\x20' + _0x14235c(0x124) + ');')();
+                        } catch (_0x581fb4) {
+                            _0x1def81 = window;
+                        }
+                        return _0x1def81;
+                    }, _0x1de638 = _0x46f191(), _0x19fb2d = _0x1de638[_0x388825(0xf6)] = _0x1de638[_0x388825(0xf6)] || {}, _0x206207 = [
+                        _0x388825(0x101),
+                        _0x388825(0x12f),
+                        _0x388825(0x11c),
+                        'error',
+                        _0x388825(0x118),
+                        'table',
+                        _0x388825(0x131)
+                    ];
+                for (let _0x511aad = 0x0; _0x511aad < _0x206207[_0x388825(0x106)]; _0x511aad++) {
+                    const _0x2700ed = _0x204f29[_0x388825(0x129)][_0x388825(0x153)]['bind'](_0x204f29), _0x40c728 = _0x206207[_0x511aad], _0x2f1542 = _0x19fb2d[_0x40c728] || _0x2700ed;
+                    _0x2700ed[_0x388825(0x139)] = _0x204f29[_0x388825(0x109)](_0x204f29), _0x2700ed[_0x388825(0x136)] = _0x2f1542['toString'][_0x388825(0x109)](_0x2f1542), _0x19fb2d[_0x40c728] = _0x2700ed;
+                }
+            });
+        _0x9ef19a(), _0x125bb4 && (_0x125bb4['style']['display'] = _0x51c430(0x150), _0x125bb4[_0x51c430(0xfe)][_0x51c430(0x135)]('active')), _0x5ca409 && (_0x5ca409['style']['display'] = _0x51c430(0x150), _0x5ca409['classList'][_0x51c430(0x135)](_0x51c430(0x13e))), _0x269bc2 && (_0x269bc2[_0x51c430(0x107)]['display'] = _0x51c430(0x150), _0x269bc2['classList'][_0x51c430(0x135)](_0x51c430(0x13e))), _0x553bcd && (_0x553bcd[_0x51c430(0x107)][_0x51c430(0x104)] = 'none', _0x553bcd['classList'][_0x51c430(0x135)](_0x51c430(0x13e)));
+    }
+    function _0x5f0776(_0xbe7487) {
+        _0x372252['forEach'](_0x2de387 => {
+            const _0x5733ba = _0x1d4f;
+            _0x2de387['classList'][_0x5733ba(0x135)](_0x5733ba(0x13e)), _0x2de387[_0x5733ba(0x13f)]('data-target') === _0xbe7487 && _0x2de387[_0x5733ba(0xfe)][_0x5733ba(0x126)](_0x5733ba(0x13e));
         });
     }
-
-    // Set initial state: restore from localStorage or default to dashboard
-    hideAll();
-    
-    // Check if there's a saved navigation target
-    const savedTarget = localStorage.getItem('currentNavigationTarget');
-    let initialTarget = 'dashboard'; // Default fallback
-    
-    if (savedTarget && ['dashboard', 'portal', 'clips', 'custom'].includes(savedTarget)) {
-        initialTarget = savedTarget;
-    }
-    
-    // Show the initial/saved target
-    if (initialTarget === 'dashboard' && dashboardContainer) {
-        dashboardContainer.style.display = 'block';
-        dashboardContainer.classList.add('active');
-        updateActiveNav('Dashboard');
-        
-        // Trigger chart rendering when dashboard is initially shown
-        setTimeout(() => {
-            if (window.analyticsManager) {
-                window.analyticsManager.updateCharts();
+    _0x233531();
+    const _0x563139 = localStorage[_0x1123e9(0x14a)](_0x1123e9(0xfa));
+    let _0x40ba13 = _0x1123e9(0x14d);
+    _0x563139 && [
+        _0x1123e9(0x14d),
+        'portal',
+        _0x1123e9(0x13c),
+        _0x1123e9(0xf4)
+    ][_0x1123e9(0x12e)](_0x563139) && (_0x40ba13 = _0x563139);
+    if (_0x40ba13 === _0x1123e9(0x14d) && _0x125bb4)
+        _0x125bb4['style'][_0x1123e9(0x104)] = _0x1123e9(0x120), _0x125bb4[_0x1123e9(0xfe)][_0x1123e9(0x126)](_0x1123e9(0x13e)), _0x5f0776(_0x1123e9(0x10d)), setTimeout(() => {
+            const _0x555544 = _0x1123e9;
+            window[_0x555544(0x110)] && window[_0x555544(0x110)][_0x555544(0x128)]();
+        }, 0x64);
+    else {
+        if (_0x40ba13 === _0x1123e9(0x12d) && _0x5ca409)
+            _0x5ca409[_0x1123e9(0x107)][_0x1123e9(0x104)] = _0x1123e9(0x120), _0x5ca409[_0x1123e9(0xfe)][_0x1123e9(0x126)](_0x1123e9(0x13e)), _0x5f0776('Portal');
+        else {
+            if (_0x40ba13 === _0x1123e9(0x13c) && _0x269bc2)
+                _0x269bc2[_0x1123e9(0x107)][_0x1123e9(0x104)] = _0x1123e9(0x120), _0x269bc2['classList']['add']('active'), _0x5f0776(_0x1123e9(0xf2)), typeof window[_0x1123e9(0x14c)] !== _0x1123e9(0xfc) && window[_0x1123e9(0x14c)] && !window[_0x1123e9(0x14c)][_0x1123e9(0x12b)] && window[_0x1123e9(0x14c)][_0x1123e9(0x11d)]();
+            else {
+                if (_0x40ba13 === _0x1123e9(0xf4) && _0x553bcd) {
+                    _0x553bcd['style'][_0x1123e9(0x104)] = _0x1123e9(0x120), _0x553bcd['classList'][_0x1123e9(0x126)](_0x1123e9(0x13e)), _0x5f0776(_0x1123e9(0x14e));
+                    if (_0x278b5d)
+                        _0x278b5d[_0x1123e9(0x107)][_0x1123e9(0x104)] = _0x1123e9(0x150);
+                } else {
+                    _0x125bb4 && (_0x125bb4[_0x1123e9(0x107)][_0x1123e9(0x104)] = _0x1123e9(0x120), _0x125bb4['classList'][_0x1123e9(0x126)](_0x1123e9(0x13e)));
+                    _0x5f0776('Dashboard');
+                    if (_0x278b5d)
+                        _0x278b5d[_0x1123e9(0x107)][_0x1123e9(0x104)] = _0x1123e9(0x150);
+                }
             }
-        }, 100);
-    } else if (initialTarget === 'portal' && portalContainer) {
-        portalContainer.style.display = 'block';
-        portalContainer.classList.add('active');
-        updateActiveNav('Portal');
-    } else if (initialTarget === 'clips' && clipsContainer) {
-        clipsContainer.style.display = 'block';
-        clipsContainer.classList.add('active');
-        updateActiveNav('Clips');
-        // Initialize Clips Studio if needed
-        if (typeof window.clipsStudio !== 'undefined' && window.clipsStudio && !window.clipsStudio.initialized) {
-            window.clipsStudio.init();
         }
-    } else if (initialTarget === 'custom' && customEditorContainer) {
-        customEditorContainer.style.display = 'block';
-        customEditorContainer.classList.add('active');
-        updateActiveNav('Custom');
-        if (inputSection) inputSection.style.display = 'none';
-    } else {
-        // Default to dashboard if no target matches
-        if (dashboardContainer) {
-            dashboardContainer.style.display = 'block';
-            dashboardContainer.classList.add('active');
-        }
-        updateActiveNav('Dashboard');
-        if (inputSection) inputSection.style.display = 'none';
     }
-    
-    // Always hide input section
-    if (inputSection) {
-        inputSection.style.cssText = 'display: none !important; position: absolute !important; visibility: hidden !important; z-index: -10000 !important; pointer-events: none !important;';
-        inputSection.classList.remove('is-first-prompt');
-    }
-
-    navItems.forEach(item => {
-        item.addEventListener('click', (e) => {
-            e.preventDefault();
-            const rawTarget = item.getAttribute('data-target') || '';
-            const target = String(rawTarget).toLowerCase();
-
-            console.log('Navigation clicked:', rawTarget);
-
-            // Update navigation active states
-            updateActiveNav(rawTarget);
-
-            // Hide everything then show the requested container
-            hideAll();
-            // Always hide input section
-            if (inputSection) {
-                inputSection.style.cssText = 'display: none !important; position: absolute !important; visibility: hidden !important; z-index: -10000 !important; pointer-events: none !important;';
-                inputSection.classList.remove('is-first-prompt');
-            }
-
-            if (target === 'dashboard') {
-                localStorage.setItem('currentNavigationTarget', 'dashboard');
-                console.log('Switching to dashboard view');
-                if (dashboardContainer) {
-                    dashboardContainer.style.display = 'block';
-                    dashboardContainer.classList.add('active');
-                    
-                    // Trigger chart rendering when dashboard becomes visible
-                    if (window.analyticsManager) {
-                        setTimeout(() => {
-                            window.analyticsManager.updateCharts();
-                        }, 50);
-                    }
-                }
-                if (inputSection) {
-                    inputSection.style.display = 'none';
+    _0x278b5d && (_0x278b5d[_0x1123e9(0x107)][_0x1123e9(0x14b)] = _0x1123e9(0x138), _0x278b5d[_0x1123e9(0xfe)][_0x1123e9(0x135)](_0x1123e9(0x10f)));
+    _0x372252[_0x1123e9(0x147)](_0xd6a9a5 => {
+        const _0xcdeffd = _0x1123e9;
+        _0xd6a9a5['addEventListener'](_0xcdeffd(0x142), _0x4fd0a6 => {
+            const _0xce0b1 = _0xcdeffd;
+            _0x4fd0a6['preventDefault']();
+            const _0x18b4a8 = _0xd6a9a5[_0xce0b1(0x13f)](_0xce0b1(0x143)) || '', _0x526efd = String(_0x18b4a8)['toLowerCase']();
+            console['log'](_0xce0b1(0x125), _0x18b4a8), _0x5f0776(_0x18b4a8), _0x233531();
+            _0x278b5d && (_0x278b5d[_0xce0b1(0x107)][_0xce0b1(0x14b)] = _0xce0b1(0x138), _0x278b5d[_0xce0b1(0xfe)][_0xce0b1(0x135)](_0xce0b1(0x10f)));
+            if (_0x526efd === _0xce0b1(0x14d)) {
+                localStorage['setItem']('currentNavigationTarget', _0xce0b1(0x14d)), console[_0xce0b1(0x101)](_0xce0b1(0x11b));
+                _0x125bb4 && (_0x125bb4[_0xce0b1(0x107)][_0xce0b1(0x104)] = _0xce0b1(0x120), _0x125bb4[_0xce0b1(0xfe)][_0xce0b1(0x126)]('active'), window[_0xce0b1(0x110)] && setTimeout(() => {
+                    const _0x55a2ee = _0xce0b1;
+                    window[_0x55a2ee(0x110)]['updateCharts']();
+                }, 0x32));
+                if (_0x278b5d) {
+                    _0x278b5d['style'][_0xce0b1(0x104)] = 'none';
                     try {
-                        if (typeof window.dockInputInstantly === 'function') window.dockInputInstantly(true);
-                    } catch (e) {
-                        console.error('Error docking input:', e);
+                        if (typeof window[_0xce0b1(0x10c)] === 'function')
+                            window[_0xce0b1(0x10c)](!![]);
+                    } catch (_0x2db34e) {
+                        console[_0xce0b1(0x10a)](_0xce0b1(0x114), _0x2db34e);
                     }
                 }
-            } else if (target === 'portal') {
-                localStorage.setItem('currentNavigationTarget', 'portal');
-                console.log('Switching to portal view');
-                if (portalContainer) {
-                    portalContainer.style.display = 'block';
-                    portalContainer.classList.add('active');
-                }
-                if (inputSection) {
-                    inputSection.style.cssText = 'display: none !important; position: absolute !important; visibility: hidden !important; z-index: -10000 !important; pointer-events: none !important;';
-                    inputSection.classList.remove('is-first-prompt');
-                    try {
-                        if (typeof window.dockInputInstantly === 'function') window.dockInputInstantly(true);
-                    } catch (e) {
-                        console.error('Error docking input:', e);
+            } else {
+                if (_0x526efd === _0xce0b1(0x12d)) {
+                    localStorage[_0xce0b1(0x10e)](_0xce0b1(0xfa), _0xce0b1(0x12d)), console[_0xce0b1(0x101)](_0xce0b1(0xf9));
+                    _0x5ca409 && (_0x5ca409[_0xce0b1(0x107)][_0xce0b1(0x104)] = _0xce0b1(0x120), _0x5ca409[_0xce0b1(0xfe)][_0xce0b1(0x126)](_0xce0b1(0x13e)));
+                    if (_0x278b5d) {
+                        _0x278b5d[_0xce0b1(0x107)]['cssText'] = _0xce0b1(0x138), _0x278b5d['classList']['remove'](_0xce0b1(0x10f));
+                        try {
+                            if (typeof window['dockInputInstantly'] === _0xce0b1(0x119))
+                                window[_0xce0b1(0x10c)](!![]);
+                        } catch (_0x52c79c) {
+                            console[_0xce0b1(0x10a)](_0xce0b1(0x114), _0x52c79c);
+                        }
                     }
-                }
-            } else if (target === 'clips' || target === 'clips-studio' || target === 'clipscontainer') {
-                localStorage.setItem('currentNavigationTarget', 'clips');
-                console.log('Switching to clips view');
-                if (clipsContainer) {
-                    clipsContainer.style.display = 'block';
-                    clipsContainer.classList.add('active');
-                    
-                    // Initialize Clips Studio if it exists and hasn't been initialized
-                    if (typeof window.clipsStudio !== 'undefined' && window.clipsStudio && !window.clipsStudio.initialized) {
-                        window.clipsStudio.init();
-                    }
-                }
-                if (inputSection) {
-                    inputSection.style.cssText = 'display: none !important; position: absolute !important; visibility: hidden !important; z-index: -10000 !important; pointer-events: none !important;';
-                    inputSection.classList.remove('is-first-prompt');
-                    try {
-                        if (typeof window.dockInputInstantly === 'function') window.dockInputInstantly(true);
-                    } catch (e) {
-                        console.error('Error docking input:', e);
-                    }
-                }
-            } else if (target === 'custom-edit' || target === 'custom') {
-                localStorage.setItem('currentNavigationTarget', 'custom');
-                console.log('Switching to custom editor view');
-                if (customEditorContainer) {
-                    customEditorContainer.style.display = 'block';
-                    customEditorContainer.classList.add('active');
-                }
-                if (inputSection) {
-                    inputSection.style.cssText = 'display: none !important; position: absolute !important; visibility: hidden !important; z-index: -10000 !important; pointer-events: none !important;';
-                    inputSection.classList.remove('is-first-prompt');
-                    try {
-                        if (typeof window.dockInputInstantly === 'function') window.dockInputInstantly(true);
-                    } catch (e) {
-                        console.error('Error docking input:', e);
+                } else {
+                    if (_0x526efd === _0xce0b1(0x13c) || _0x526efd === _0xce0b1(0x121) || _0x526efd === _0xce0b1(0xfd)) {
+                        localStorage['setItem'](_0xce0b1(0xfa), _0xce0b1(0x13c)), console[_0xce0b1(0x101)]('Switching\x20to\x20clips\x20view');
+                        _0x269bc2 && (_0x269bc2['style'][_0xce0b1(0x104)] = _0xce0b1(0x120), _0x269bc2[_0xce0b1(0xfe)][_0xce0b1(0x126)](_0xce0b1(0x13e)), typeof window[_0xce0b1(0x14c)] !== _0xce0b1(0xfc) && window[_0xce0b1(0x14c)] && !window[_0xce0b1(0x14c)]['initialized'] && window[_0xce0b1(0x14c)][_0xce0b1(0x11d)]());
+                        if (_0x278b5d) {
+                            _0x278b5d['style'][_0xce0b1(0x14b)] = 'display:\x20none\x20!important;\x20position:\x20absolute\x20!important;\x20visibility:\x20hidden\x20!important;\x20z-index:\x20-10000\x20!important;\x20pointer-events:\x20none\x20!important;', _0x278b5d[_0xce0b1(0xfe)][_0xce0b1(0x135)](_0xce0b1(0x10f));
+                            try {
+                                if (typeof window['dockInputInstantly'] === _0xce0b1(0x119))
+                                    window[_0xce0b1(0x10c)](!![]);
+                            } catch (_0x247eb9) {
+                                console[_0xce0b1(0x10a)](_0xce0b1(0x114), _0x247eb9);
+                            }
+                        }
+                    } else {
+                        if (_0x526efd === _0xce0b1(0x117) || _0x526efd === _0xce0b1(0xf4)) {
+                            localStorage[_0xce0b1(0x10e)]('currentNavigationTarget', 'custom'), console[_0xce0b1(0x101)](_0xce0b1(0x154));
+                            _0x553bcd && (_0x553bcd[_0xce0b1(0x107)][_0xce0b1(0x104)] = 'block', _0x553bcd[_0xce0b1(0xfe)][_0xce0b1(0x126)](_0xce0b1(0x13e)));
+                            if (_0x278b5d) {
+                                _0x278b5d[_0xce0b1(0x107)][_0xce0b1(0x14b)] = _0xce0b1(0x138), _0x278b5d[_0xce0b1(0xfe)]['remove'](_0xce0b1(0x10f));
+                                try {
+                                    if (typeof window[_0xce0b1(0x10c)] === 'function')
+                                        window['dockInputInstantly'](!![]);
+                                } catch (_0x3ed03f) {
+                                    console[_0xce0b1(0x10a)](_0xce0b1(0x114), _0x3ed03f);
+                                }
+                            }
+                        }
                     }
                 }
             }
         });
     });
-
-    // Handle clips submenu toggle
-    const clipsToggle = document.getElementById('clips-toggle');
-    if (clipsToggle) {
-        clipsToggle.addEventListener('click', function(e) {
-            e.preventDefault();
-            e.stopPropagation();
-            const submenu = document.getElementById('clips-submenu');
-            const chevron = this.querySelector('.chevron-icon');
-            
-            if (submenu) submenu.classList.toggle('open');
-            if (chevron) chevron.classList.toggle('rotated');
-            
-            // If clicking the main clips item, navigate to clips
-            if (!submenu || !submenu.contains(e.target)) {
-                const clipsContainer = document.getElementById('clipsContainer');
-                const inputSection = document.querySelector('.input-section');
-                
-                // Hide other containers
-                document.querySelectorAll('.dashboard-container, .portal-container').forEach(container => {
-                    container.style.display = 'none';
-                    container.classList.remove('active');
+    const _0x37c118 = document[_0x1123e9(0x102)](_0x1123e9(0x146));
+    _0x37c118 && _0x37c118[_0x1123e9(0xff)](_0x1123e9(0x142), function (_0x399b25) {
+        const _0x54d8fa = _0x1123e9;
+        _0x399b25[_0x54d8fa(0x149)](), _0x399b25[_0x54d8fa(0x116)]();
+        const _0x13b386 = document[_0x54d8fa(0x102)](_0x54d8fa(0x132)), _0x12a102 = this[_0x54d8fa(0x123)](_0x54d8fa(0xf3));
+        if (_0x13b386)
+            _0x13b386['classList'][_0x54d8fa(0x134)](_0x54d8fa(0x11f));
+        if (_0x12a102)
+            _0x12a102[_0x54d8fa(0xfe)][_0x54d8fa(0x134)](_0x54d8fa(0x145));
+        if (!_0x13b386 || !_0x13b386[_0x54d8fa(0x133)](_0x399b25['target'])) {
+            const _0x4f6b51 = document[_0x54d8fa(0x102)](_0x54d8fa(0x11e)), _0xf3c4bd = document['querySelector'](_0x54d8fa(0x157));
+            document[_0x54d8fa(0x10b)](_0x54d8fa(0x14f))[_0x54d8fa(0x147)](_0x4d46cd => {
+                const _0x45b9ac = _0x54d8fa;
+                _0x4d46cd[_0x45b9ac(0x107)][_0x45b9ac(0x104)] = 'none', _0x4d46cd[_0x45b9ac(0xfe)][_0x45b9ac(0x135)](_0x45b9ac(0x13e));
+            });
+            _0x4f6b51 && (_0x4f6b51[_0x54d8fa(0x107)][_0x54d8fa(0x104)] = 'block', _0x4f6b51[_0x54d8fa(0xfe)][_0x54d8fa(0x126)](_0x54d8fa(0x13e)), typeof window[_0x54d8fa(0x14c)] !== _0x54d8fa(0xfc) && window[_0x54d8fa(0x14c)] && !window[_0x54d8fa(0x14c)][_0x54d8fa(0x12b)] && window['clipsStudio'][_0x54d8fa(0x11d)]());
+            if (_0xf3c4bd) {
+                _0xf3c4bd['style'][_0x54d8fa(0x104)] = 'none';
+                try {
+                    if (typeof window[_0x54d8fa(0x10c)] === _0x54d8fa(0x119))
+                        window[_0x54d8fa(0x10c)](!![]);
+                } catch (_0x87e265) {
+                    console[_0x54d8fa(0x10a)](_0x54d8fa(0x114), _0x87e265);
+                }
+            }
+            _0x5f0776(_0x54d8fa(0x13c));
+        }
+    });
+    const _0x22c42c = document[_0x1123e9(0x10b)](_0x1123e9(0x148));
+    _0x22c42c['forEach'](_0x1cd5f2 => {
+        const _0x4ed994 = _0x1123e9;
+        _0x1cd5f2[_0x4ed994(0xff)](_0x4ed994(0x142), function (_0x59530c) {
+            const _0x2f1f45 = _0x4ed994;
+            _0x59530c[_0x2f1f45(0x149)]();
+            const _0x548b5 = this[_0x2f1f45(0x13f)]('data-target');
+            if (_0x548b5 === _0x2f1f45(0x121)) {
+                const _0xa722ac = document['getElementById'](_0x2f1f45(0x11e)), _0x38d2f3 = document[_0x2f1f45(0x123)]('.input-section');
+                document[_0x2f1f45(0x10b)](_0x2f1f45(0x14f))[_0x2f1f45(0x147)](_0x164baa => {
+                    const _0x4cdec8 = _0x2f1f45;
+                    _0x164baa[_0x4cdec8(0x107)][_0x4cdec8(0x104)] = 'none', _0x164baa[_0x4cdec8(0xfe)][_0x4cdec8(0x135)]('active');
                 });
-                
-                // Show clips container
-                if (clipsContainer) {
-                    clipsContainer.style.display = 'block';
-                    clipsContainer.classList.add('active');
-                    
-                    // Initialize Clips Studio if needed
-                    if (typeof window.clipsStudio !== 'undefined' && window.clipsStudio && !window.clipsStudio.initialized) {
-                        window.clipsStudio.init();
-                    }
-                }
-                
-                // Hide input section
-                if (inputSection) {
-                    inputSection.style.display = 'none';
+                _0xa722ac && (_0xa722ac[_0x2f1f45(0x107)]['display'] = 'block', _0xa722ac[_0x2f1f45(0xfe)][_0x2f1f45(0x126)](_0x2f1f45(0x13e)), typeof window[_0x2f1f45(0x14c)] !== 'undefined' && window[_0x2f1f45(0x14c)] && !window[_0x2f1f45(0x14c)]['initialized'] && window['clipsStudio'][_0x2f1f45(0x11d)]());
+                if (_0x38d2f3) {
+                    _0x38d2f3[_0x2f1f45(0x107)][_0x2f1f45(0x104)] = _0x2f1f45(0x150);
                     try {
-                        if (typeof window.dockInputInstantly === 'function') window.dockInputInstantly(true);
-                    } catch (e) {
-                        console.error('Error docking input:', e);
+                        if (typeof window[_0x2f1f45(0x10c)] === _0x2f1f45(0x119))
+                            window[_0x2f1f45(0x10c)](!![]);
+                    } catch (_0xd44ee7) {
+                        console[_0x2f1f45(0x10a)]('Error\x20docking\x20input:', _0xd44ee7);
                     }
                 }
-                
-                // Update active navigation
-                updateActiveNav('clips');
+                _0x5f0776('clips');
+                const _0x795b2a = document['getElementById'](_0x2f1f45(0x132)), _0x2bcbf5 = document[_0x2f1f45(0x123)]('#clips-toggle\x20.chevron-icon');
+                if (_0x795b2a)
+                    _0x795b2a[_0x2f1f45(0xfe)][_0x2f1f45(0x135)]('open');
+                if (_0x2bcbf5)
+                    _0x2bcbf5[_0x2f1f45(0xfe)][_0x2f1f45(0x135)](_0x2f1f45(0x145));
             }
         });
-    }
-
-    // Handle clips submenu items
-    const clipsSubmenuItems = document.querySelectorAll('.clips-submenu .nav-item');
-    clipsSubmenuItems.forEach(item => {
-        item.addEventListener('click', function(e) {
-            e.preventDefault();
-            const target = this.getAttribute('data-target');
-            
-            if (target === 'clips-studio') {
-                const clipsContainer = document.getElementById('clipsContainer');
-                const inputSection = document.querySelector('.input-section');
-                
-                // Hide other containers
-                document.querySelectorAll('.dashboard-container, .portal-container').forEach(container => {
-                    container.style.display = 'none';
-                    container.classList.remove('active');
-                });
-                
-                // Show clips container
-                if (clipsContainer) {
-                    clipsContainer.style.display = 'block';
-                    clipsContainer.classList.add('active');
-                    
-                    // Initialize Clips Studio if needed
-                    if (typeof window.clipsStudio !== 'undefined' && window.clipsStudio && !window.clipsStudio.initialized) {
-                        window.clipsStudio.init();
-                    }
-                }
-                
-                // Hide input section
-                if (inputSection) {
-                    inputSection.style.display = 'none';
-                    try {
-                        if (typeof window.dockInputInstantly === 'function') window.dockInputInstantly(true);
-                    } catch (e) {
-                        console.error('Error docking input:', e);
-                    }
-                }
-                
-                // Update active navigation
-                updateActiveNav('clips');
-                
-                // Close submenu
-                const submenu = document.getElementById('clips-submenu');
-                const chevron = document.querySelector('#clips-toggle .chevron-icon');
-                if (submenu) submenu.classList.remove('open');
-                if (chevron) chevron.classList.remove('rotated');
-            }
-        });
-    });
-
-    // Close submenus when clicking outside
-    document.addEventListener('click', function(e) {
-        const clipsToggle = document.getElementById('clips-toggle');
-        const clipsSubmenu = document.getElementById('clips-submenu');
-        
-        if (clipsSubmenu && clipsToggle && !clipsToggle.contains(e.target) && !clipsSubmenu.contains(e.target)) {
-            clipsSubmenu.classList.remove('open');
-            const chevron = clipsToggle.querySelector('.chevron-icon');
-            if (chevron) chevron.classList.remove('rotated');
+    }), document[_0x1123e9(0xff)](_0x1123e9(0x142), function (_0x18b7e0) {
+        const _0x5c27fe = _0x1123e9, _0x3bc9ed = document['getElementById']('clips-toggle'), _0x52bfdf = document[_0x5c27fe(0x102)]('clips-submenu');
+        if (_0x52bfdf && _0x3bc9ed && !_0x3bc9ed['contains'](_0x18b7e0[_0x5c27fe(0x100)]) && !_0x52bfdf[_0x5c27fe(0x133)](_0x18b7e0[_0x5c27fe(0x100)])) {
+            _0x52bfdf[_0x5c27fe(0xfe)][_0x5c27fe(0x135)]('open');
+            const _0x3cf0d5 = _0x3bc9ed[_0x5c27fe(0x123)](_0x5c27fe(0xf3));
+            if (_0x3cf0d5)
+                _0x3cf0d5[_0x5c27fe(0xfe)][_0x5c27fe(0x135)]('rotated');
         }
     });
-
-    // Handle Portal navigation specifically
-    const portalNavItem = document.querySelector('.nav-item[data-target="Portal"]');
-    if (portalNavItem) {
-        portalNavItem.addEventListener('click', function(e) {
-            e.preventDefault();
-            console.log('Portal clicked');
-            
-            // Get containers
-            const portalContainer = document.getElementById('portalContainer');
-            const dashboardContainer = document.getElementById('dashboardContainer');
-            const clipsContainer = document.getElementById('clipsContainer');
-            const inputSection = document.querySelector('.input-section');
-            
-            // Hide all containers
-            if (dashboardContainer) {
-                dashboardContainer.style.display = 'none';
-                dashboardContainer.classList.remove('active');
-            }
-            if (clipsContainer) {
-                clipsContainer.style.display = 'none';
-                clipsContainer.classList.remove('active');
-            }
-            if (inputSection) {
-                inputSection.style.display = 'none';
-            }
-            
-            // Show portal
-            if (portalContainer) {
-                portalContainer.style.display = 'block';
-                portalContainer.classList.add('active');
-            }
-            
-            // Update active nav
-            updateActiveNav('Portal');
-        });
-    }
-
-
-    // Handle sidebar toggle with keyboard shortcut
-    document.addEventListener('keydown', (e) => {
-        // Ctrl/Cmd + K to toggle sidebar
-        if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
-            e.preventDefault();
-            const sidebar = document.querySelector('.sidebar');
-            if (sidebar) {
-                sidebar.classList.toggle('expanded');
-                const isExpanded = sidebar.classList.contains('expanded');
-                localStorage.setItem('sidebarExpanded', isExpanded);
+    const _0x42185e = document[_0x1123e9(0x123)]('.nav-item[data-target=\x22Portal\x22]');
+    _0x42185e && _0x42185e[_0x1123e9(0xff)](_0x1123e9(0x142), function (_0x191c90) {
+        const _0x4b12f6 = _0x1123e9;
+        _0x191c90[_0x4b12f6(0x149)](), console[_0x4b12f6(0x101)](_0x4b12f6(0x155));
+        const _0x53c95e = document['getElementById'](_0x4b12f6(0x112)), _0x58017e = document[_0x4b12f6(0x102)](_0x4b12f6(0x111)), _0x3a8c8a = document['getElementById'](_0x4b12f6(0x11e)), _0x51df10 = document[_0x4b12f6(0x123)]('.input-section');
+        _0x58017e && (_0x58017e[_0x4b12f6(0x107)][_0x4b12f6(0x104)] = _0x4b12f6(0x150), _0x58017e[_0x4b12f6(0xfe)][_0x4b12f6(0x135)]('active')), _0x3a8c8a && (_0x3a8c8a['style'][_0x4b12f6(0x104)] = _0x4b12f6(0x150), _0x3a8c8a[_0x4b12f6(0xfe)][_0x4b12f6(0x135)](_0x4b12f6(0x13e))), _0x51df10 && (_0x51df10[_0x4b12f6(0x107)][_0x4b12f6(0x104)] = _0x4b12f6(0x150)), _0x53c95e && (_0x53c95e[_0x4b12f6(0x107)][_0x4b12f6(0x104)] = _0x4b12f6(0x120), _0x53c95e[_0x4b12f6(0xfe)][_0x4b12f6(0x126)](_0x4b12f6(0x13e))), _0x5f0776(_0x4b12f6(0x122));
+    }), document['addEventListener'](_0x1123e9(0x13b), _0xa7c975 => {
+        const _0x328773 = _0x1123e9;
+        if ((_0xa7c975[_0x328773(0x141)] || _0xa7c975[_0x328773(0x127)]) && _0xa7c975[_0x328773(0xfb)] === 'k') {
+            _0xa7c975[_0x328773(0x149)]();
+            const _0x37d2f7 = document[_0x328773(0x123)](_0x328773(0x12a));
+            if (_0x37d2f7) {
+                _0x37d2f7[_0x328773(0xfe)][_0x328773(0x134)](_0x328773(0x108));
+                const _0x5d8142 = _0x37d2f7[_0x328773(0xfe)][_0x328773(0x133)](_0x328773(0x108));
+                localStorage[_0x328773(0x10e)](_0x328773(0x151), _0x5d8142);
             }
         }
     });
 }
-
-// Initialize navigation when DOM is ready
-if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', initNavigation);
-} else {
-    // DOM already loaded
-    initNavigation();
+document[_0x3e1e94(0xf7)] === _0x3e1e94(0x130) ? document[_0x3e1e94(0xff)](_0x3e1e94(0x113), _0x279597) : _0x279597();
+function _0xf0af() {
+    const _0x499b48 = [
+        'Dg9Nz2XL',
+        'CMvTB3zL',
+        'Dg9tDhjPBMC',
+        'mtm1m1b1rw1msa',
+        'zgLZCgXHEtOGBM9UzsaHAw1WB3j0yw50oYbWB3nPDgLVBJOGywjZB2X1DguGiwLTCg9YDgfUDdSGDMLZAwjPBgL0EtOGAgLKzgvUicfPBxbVCNrHBNq7ihOTAw5KzxG6ic0XmdaWmcaHAw1WB3j0yw50oYbWB2LUDgvYlwv2zw50CZOGBM9UzsaHAw1WB3j0yw50oW',
+        'x19WCM90B19F',
+        'mtq2odC1mLH1zLLoDW',
+        'A2v5zg93BG',
+        'y2XPChm',
+        'lM5HDI1PDgvTw2rHDgeTDgfYz2v0xq',
+        'ywn0AxzL',
+        'z2v0qxr0CMLIDxrL',
+        'mta0nJi2qwXZzvz0',
+        'y3rYBeTLEq',
+        'y2XPy2S',
+        'zgf0ys10yxjNzxq',
+        'mtK5mJHnr1bABMy',
+        'CM90yxrLza',
+        'y2XPChmTDg9Nz2XL',
+        'zM9YrwfJAa',
+        'lMnSAxbZlxn1yM1LBNuGlM5HDI1PDgvT',
+        'ChjLDMvUDerLzMf1Bhq',
+        'z2v0sxrLBq',
+        'y3nZvgv4Da',
+        'y2XPChntDhvKAw8',
+        'zgfZAgjVyxjK',
+        'q3vZDg9T',
+        'lMrHC2HIB2fYzc1JB250ywLUzxiSic5WB3j0ywWTy29UDgfPBMvY',
+        'BM9Uzq',
+        'C2LKzwjHCKv4CgfUzgvK',
+        'mJmZmJa0nevjvLDtAG',
+        'ChjVDg90ExbL',
+        'u3DPDgnOAw5NihrVign1C3rVBsbLzgL0B3iGDMLLDW',
+        'ug9YDgfSignSAwnRzwq',
+        'mZi2ndi2mxPgteDHEq',
+        'lMLUChv0lxnLy3rPB24',
+        'q2XPChm',
+        'lMnOzxzYB24TAwnVBG',
+        'y3vZDg9T',
+        'mtC3m0zXzNDfzq',
+        'y29UC29Szq',
+        'CMvHzhLtDgf0zq',
+        'nLnxzw9gyW',
+        'u3DPDgnOAw5NihrVihbVCNrHBcb2Awv3',
+        'y3vYCMvUDe5HDMLNyxrPB25uyxjNzxq',
+        'A2v5',
+        'Dw5KzwzPBMvK',
+        'y2XPChnJB250ywLUzxi',
+        'y2XHC3nmAxn0',
+        'ywrKrxzLBNrmAxn0zw5LCG',
+        'DgfYz2v0',
+        'Bg9N',
+        'z2v0rwXLBwvUDej5swq',
+        'mtj6tfDQwMy',
+        'zgLZCgXHEq',
+        'y3vZDg9TrwrPDg9Yq29UDgfPBMvY',
+        'BgvUz3rO',
+        'C3r5Bgu',
+        'zxHWyw5Kzwq',
+        'yMLUza',
+        'zxjYB3i',
+        'CxvLCNLtzwXLy3rVCKfSBa',
+        'zg9JA0LUChv0sw5ZDgfUDgX5',
+        'rgfZAgjVyxjK',
+        'C2v0sxrLBq',
+        'AxmTzMLYC3qTChjVBxb0',
+        'yw5HBhL0AwnZtwfUywDLCG',
+        'zgfZAgjVyxjKq29UDgfPBMvY',
+        'Cg9YDgfSq29UDgfPBMvY',
+        're9nq29UDgvUDeXVywrLza',
+        'rxjYB3iGzg9JA2LUzYbPBNb1DdO',
+        'zxHWB3j0CW',
+        'C3rVCfbYB3bHz2f0Aw9U',
+        'y3vZDg9TlwvKAxq',
+        'zxHJzxb0Aw9U',
+        'zNvUy3rPB24',
+        'nJe2mhPTtMnwDq',
+        'u3DPDgnOAw5NihrVigrHC2HIB2fYzcb2Awv3',
+        'Aw5MBW',
+        'Aw5PDa',
+        'y2XPChndB250ywLUzxi',
+        'B3bLBG',
+        'yMXVy2S',
+        'y2XPChmTC3r1zgLV',
+        'ug9YDgfS',
+        'CxvLCNLtzwXLy3rVCG',
+        'E30Uy29UC3rYDwn0B3iOiNjLDhvYBIb0AgLZiIKOicK',
+        'tMf2AwDHDgLVBIbJBgLJA2vKoG',
+        'ywrK',
+        'Bwv0yuTLEq',
+        'DxbKyxrLq2HHCNrZ',
+        'y29UC3rYDwn0B3i',
+        'lNnPzgvIyxi',
+        'Aw5PDgLHBgL6zwq',
+        'mZa3odKWnvnky2jNsG',
+        'Cg9YDgfS',
+        'Aw5JBhvKzxm',
+        'D2fYBG',
+        'Bg9HzgLUzW',
+        'DhjHy2u',
+        'y2XPChmTC3vIBwvUDq',
+        'y29UDgfPBNm'
+    ];
+    _0xf0af = function () {
+        return _0x499b48;
+    };
+    return _0xf0af();
 }
-
-// Export for use in other modules if needed
-if (typeof module !== 'undefined' && module.exports) {
-    module.exports = { initNavigation };
-}
+typeof module !== 'undefined' && module[_0x3e1e94(0x115)] && (module['exports'] = { 'initNavigation': _0x279597 });

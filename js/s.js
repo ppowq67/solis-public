@@ -1,6781 +1,4046 @@
-/**
- * 🔐 SECURITY ARCHITECTURE
- * 
- * FRONTEND RESPONSIBILITIES (UI Layer Only):
- * ------------------------------------
- * - Display user interface based on authenticated user status (from backend)
- * - Show/hide UI elements based on user subscription level
- * - Render content based on real-time data fetched from backend
- * 
- * NOT FRONTEND RESPONSIBILITIES (Must be done on Backend):
- * ---------------------------------------------------
- * - Authenticating users (done via httpOnly session cookies)
- * - Authorizing API requests (backend SESSION verification required)
- * - Checking subscription levels for API actions
- * - Enforcing rate limits, storage limits, and feature access
- * - Validating and sanitizing all user input (URLs, text, files)
- * - Verifying project ownership before delete/download/edit (IDOR PREVENTION)
- * - Fetching and returning user data are done via httpOnly cookie
- * 
- * CRITICAL RULES:
- * ===============
- * 1. Do NOT store user data (plan, email, ID) in localStorage
- *    → Use memory-only variables for UI state
- *    → Fetch from backend on every page load via verifyToken()
- * 
- * 2. Do NOT trust any client-side variables for authorization
- *    → Backend MUST check user session and permissions on EVERY API call
- *    → Never accept plan/role/permission info from JavaScript
- *    → Attackers can always modify projectId/userId in frontend network requests
- * 
- * 3. Do NOT perform URL validation or assume safe URLs
- *    → Regex validation is weak and can be bypassed
- *    → Backend MUST validate URLs against strict whitelist (YouTube URLs only)
- *    → Never pass raw URLs to shell commands on backend
- * 
- * 4. Always use safe DOM methods to prevent XSS
- *    → Use textContent instead of innerHTML for user data
- *    → Use createElement() + appendChild() instead of innerHTML injections
- *    → Never inject unsanitized URLs/user data into HTML strings
- * 
- * 5. Always include CSRF tokens for state-changing requests
- *    → Use getCSRFToken() to fetch token from meta tag or cookie
- *    → Include in X-CSRF-Token header for POST/PUT/DELETE
- * 
- * 6. Use safeLog() instead of console.log in production
- *    → Disable via CONFIG.SECURITY.MAX_CONSOLE_LOGS = 0
- *    → console.log exposes application structure to attackers
- *    → Only use for development debugging
- */
-
-window.API_BASE_URL = 'http://127.0.0.1:5500/api';
-
-// This line will be overridden by init.js which sets the correct URL based on hostname detection
-// init.js must be loaded BEFORE any other scripts that use window.API_BASE_URL
-
-// Cooldown timer state
-let cooldownTimer = null;
-
-/**
- * Start countdown timer on submit button
- * Shows remaining seconds and disables button until countdown completes
- */
-function startCooldownTimer(remainingSeconds) {
-    const submitBtn = document.getElementById('processUrlBtn');
-    if (!submitBtn) return;
-    
-    // Cancel any existing timer
-    if (cooldownTimer) {
-        clearInterval(cooldownTimer);
-    }
-    
-    let secondsLeft = Math.max(0, remainingSeconds);
-    const originalText = '<i class="fas fa-arrow-right"></i>';
-    
-    // Immediately show first countdown
-    submitBtn.disabled = true;
-    submitBtn.classList.add('is-generating');
-    submitBtn.style.opacity = '0.5';
-    submitBtn.style.cursor = 'not-allowed';
-    submitBtn.innerHTML = `${secondsLeft}s`;
-    submitBtn.style.fontSize = '0.85em';
-    
-    // Decrement timer every second
-    cooldownTimer = setInterval(() => {
-        secondsLeft--;
-        
-        if (secondsLeft > 0) {
-            // Update button text with remaining seconds
-            submitBtn.innerHTML = `${secondsLeft}s`;
-        } else {
-            // Timer complete - re-enable button
-            clearInterval(cooldownTimer);
-            cooldownTimer = null;
-            submitBtn.disabled = false;
-            submitBtn.classList.remove('is-generating');
-            submitBtn.style.opacity = '1';
-            submitBtn.style.cursor = 'pointer';
-            submitBtn.innerHTML = originalText;
-            submitBtn.style.fontSize = '1em';
-        }
-    }, 1000);
-}
-
-const workspacePanel = document.getElementById('solisWorkspacePanel');
-const closeWorkspaceBtn = workspacePanel?.querySelector('.solis-close-btn');
-
-const appContainer = document.getElementById('appContainer');
-const sidebar = document.querySelector('.sidebar');
-const userProfile = document.getElementById('userProfile');
-const userMenu = document.getElementById('userMenu');
-const settingsBtn = document.getElementById('settingsBtn');
-const settingsPanel = document.getElementById('settingsPanel');
-const closeSettings = document.getElementById('closeSettings');
-const darkModeSettingsToggle = document.getElementById('darkModeSettingsToggle');
-
-const upgradeModal = document.getElementById('upgradeModal');
-const closeUpgrade = document.getElementById('closeUpgrade');
-const upgradeSettingsBtn = document.getElementById('upgradeSettingsBtn');
-
-const tokenCount = document.querySelector('.token-count');
-const navItems = document.querySelectorAll('.nav-item');
-const signInBtn = document.getElementById('signInBtn');
-const signInDisplay = document.querySelector('.nav-item.sign-in');
-
-let isRecording = false;
-let mediaRecorder = null;
-let audioChunks = [];
-let isGenerating = false;
-let currentTheme = 'light';
-let tokens = 1500;
-// ❌ REMOVED: chatHistory - sensitive data should NOT be stored in localStorage
-// SECURITY: Use sessionStorage only for non-sensitive temporary data
-let currentChatId = null;
-let currentAbortController = null;
-let uploadedFiles = [];
-let currentUser = null;
-// 🔐 SECURITY: Authentication via httpOnly cookies only - NEVER use localStorage for tokens
-let promptCount = 0; // Track number of prompts for centering first one
-let solisWSClient = null; // WebSocket client for real-time updates
-
-// Splitscreen Gameplay Selection
-let selectedGameplayClip = 'minecraft_1'; // Default gameplay clip
-let availableGameplayClips = [];
-
-
-// Load available gameplay clips for splitscreen template
-function toggleNavWrapperCollapse(event) {
-    if (event) {
-        event.preventDefault();
-        event.stopPropagation();
-    }
-
-    const navWrapper = document.getElementById('navWrapper');
-    if (!navWrapper) return;
-
-    const isCollapsing = !navWrapper.classList.contains('collapsed');
-
-    if (isCollapsing) {
-        // Stagger the nav items out before collapsing pill
-        const items = navWrapper.querySelectorAll('.nav-item:not(.nav-collapse-toggle)');
-        items.forEach((item, i) => {
-            item.style.transitionDelay = `${i * 30}ms`;
-        });
-        navWrapper.classList.add('collapsed');
-        // Clear delays after anim
-        setTimeout(() => items.forEach(item => item.style.transitionDelay = ''), 400);
-    } else {
-        // Expand pill first, then stagger items in
-        navWrapper.classList.remove('collapsed');
-        const items = navWrapper.querySelectorAll('.nav-item:not(.nav-collapse-toggle)');
-        items.forEach((item, i) => {
-            item.style.transitionDelay = `${i * 40}ms`;
-        });
-        setTimeout(() => items.forEach(item => item.style.transitionDelay = ''), 400);
-    }
-}
-
-// Clips Expansion Functions
-function toggleClipsExpansion(event) {
-    event.preventDefault();
-    event.stopPropagation();
-    const clipsExpansion = document.getElementById('clipsExpansionActions');
-    if (clipsExpansion) {
-        clipsExpansion.classList.toggle('expanded');
-    }
-}
-
-function closeClipsExpansion() {
-    const clipsExpansion = document.getElementById('clipsExpansionActions');
-    if (clipsExpansion) {
-        clipsExpansion.classList.remove('expanded');
-    }
-}
-
-function navigateToClipsTemplates() {
-    closeClipsExpansion();
-    const templatesTab = document.querySelector('[data-tab="templates"]');
-    if (templatesTab) {
-        templatesTab.click();
-    } else {
-        // Navigate to templates
-    }
-}
-
-function navigateToClipsCreate() {
-    closeClipsExpansion();
-    // Navigate to clips creation section
-    const clipsNav = document.querySelector('.chips-nav-item');
-    if (clipsNav) {
-        handleNav(clipsNav, 3);
-    }
-}
-
-function navigateToClipsLibrary() {
-    closeClipsExpansion();
-    const libraryTab = document.querySelector('[data-tab="library"]');
-    if (libraryTab) {
-        libraryTab.click();
-    }
-}
-
-// Ensure multiple modules can request the input to be docked
-function dockInputInstantly() {
-    const inputSection = document.querySelector('.input-section');
-    const inputContainer = inputSection ? inputSection.querySelector('.input-container') : null;
-    const currentIndex = parseInt(localStorage.getItem('sidebarActiveIndex') || '0');
-    
-    if (inputContainer) {
-        inputContainer.classList.remove('first-prompt', 'animate-down', 'animate-up');
-    }
-    if (inputSection) {
-        inputSection.classList.remove('is-first-prompt');
-        
-        // Only keep visible if on chat tab
-        if (currentIndex === 0) {
-            inputSection.style.cssText = 'display: flex !important; visibility: visible !important; opacity: 1 !important; pointer-events: all !important; z-index: 1000 !important;';
-        } else {
-            inputSection.style.cssText = 'display: none !important; visibility: hidden !important; opacity: 0 !important; pointer-events: none !important; z-index: -10000 !important;';
+const _0x4afe9d = _0xd7fc;
+(function (_0xa7942c, _0x4afd29) {
+    const _0x13f2ac = _0xd7fc, _0x4f9c4d = _0xa7942c();
+    while (!![]) {
+        try {
+            const _0x505e46 = -parseInt(_0x13f2ac(0x1c8)) / 0x1 + -parseInt(_0x13f2ac(0x3ec)) / 0x2 * (parseInt(_0x13f2ac(0x3f0)) / 0x3) + parseInt(_0x13f2ac(0x403)) / 0x4 + parseInt(_0x13f2ac(0x251)) / 0x5 * (parseInt(_0x13f2ac(0x205)) / 0x6) + parseInt(_0x13f2ac(0x51b)) / 0x7 + parseInt(_0x13f2ac(0x444)) / 0x8 * (-parseInt(_0x13f2ac(0x37c)) / 0x9) + parseInt(_0x13f2ac(0x23c)) / 0xa;
+            if (_0x505e46 === _0x4afd29)
+                break;
+            else
+                _0x4f9c4d['push'](_0x4f9c4d['shift']());
+        } catch (_0x37ed7c) {
+            _0x4f9c4d['push'](_0x4f9c4d['shift']());
         }
     }
-}
-// expose for other scripts to call safely
-window.dockInputInstantly = dockInputInstantly;
-
-/**
- * Initialize authentication on page load
- * Call this on dashboard and other authenticated pages
- */
-function initAuth() {
-    safeLog('[Auth] Initializing authentication...');
-    
-    // Verify token with backend - this will fetch and set currentUser from verified server data
-    verifyToken().then((success) => {
-        // Token verified (whether successful or fallback mode)
-        if (currentUser) {
-            safeLog('[Auth] User authenticated:', currentUser.email);
-            if (typeof updateProfileButton === 'function') {
-                updateProfileButton();
-            }
-        } else {
-            safeLog('[Auth] User not authenticated, showing guest UI');
-            updateUIForGuest();
+}(_0x1d18, 0x266f4));
+const _0x33f65c = (function () {
+        let _0x548bb7 = !![];
+        return function (_0x2923be, _0x2b5abe) {
+            const _0x5b865b = _0x548bb7 ? function () {
+                if (_0x2b5abe) {
+                    const _0x4985f3 = _0x2b5abe['apply'](_0x2923be, arguments);
+                    return _0x2b5abe = null, _0x4985f3;
+                }
+            } : function () {
+            };
+            return _0x548bb7 = ![], _0x5b865b;
+        };
+    }()), _0x2869db = _0x33f65c(this, function () {
+        const _0x2063c8 = _0xd7fc, _0xacc3a5 = function () {
+                const _0x181c8a = _0xd7fc;
+                let _0x4e63d6;
+                try {
+                    _0x4e63d6 = Function('return\x20(function()\x20' + _0x181c8a(0x1d8) + ');')();
+                } catch (_0x53b2a2) {
+                    _0x4e63d6 = window;
+                }
+                return _0x4e63d6;
+            }, _0x262947 = _0xacc3a5(), _0x2be10e = _0x262947[_0x2063c8(0x39b)] = _0x262947[_0x2063c8(0x39b)] || {}, _0x5db4c4 = [
+                _0x2063c8(0x275),
+                _0x2063c8(0x440),
+                _0x2063c8(0x52d),
+                _0x2063c8(0x302),
+                _0x2063c8(0x32a),
+                _0x2063c8(0x1c2),
+                _0x2063c8(0x362)
+            ];
+        for (let _0x16fbea = 0x0; _0x16fbea < _0x5db4c4[_0x2063c8(0x56d)]; _0x16fbea++) {
+            const _0x238e86 = _0x33f65c[_0x2063c8(0x40c)]['prototype']['bind'](_0x33f65c), _0x43dc37 = _0x5db4c4[_0x16fbea], _0x5dccbf = _0x2be10e[_0x43dc37] || _0x238e86;
+            _0x238e86[_0x2063c8(0x231)] = _0x33f65c['bind'](_0x33f65c), _0x238e86['toString'] = _0x5dccbf['toString'][_0x2063c8(0x332)](_0x5dccbf), _0x2be10e[_0x43dc37] = _0x238e86;
         }
-    }).catch(error => {
-        // verifyToken already handles errors, this catch is for unexpected issues
-        safeLog('[Auth] Unexpected error during initialization:', error);
-        updateUIForGuest();
     });
-    
-    safeLog('[Auth] Initialization started');
+_0x2869db(), window[_0x4afe9d(0x3c4)] = 'http://127.0.0.1:5500/api';
+let _0x4ae9b4 = null;
+function _0x4c2c2a(_0x1c98a8) {
+    const _0x8c794f = _0x4afe9d, _0x560719 = document[_0x8c794f(0x1b9)](_0x8c794f(0x2de));
+    if (!_0x560719)
+        return;
+    _0x4ae9b4 && clearInterval(_0x4ae9b4);
+    let _0xba681a = Math['max'](0x0, _0x1c98a8);
+    const _0x269365 = '<i\x20class=\x22fas\x20fa-arrow-right\x22></i>';
+    _0x560719[_0x8c794f(0x2ae)] = !![], _0x560719[_0x8c794f(0x2d9)][_0x8c794f(0x3ed)](_0x8c794f(0x4a2)), _0x560719['style'][_0x8c794f(0x415)] = _0x8c794f(0x3a7), _0x560719[_0x8c794f(0x344)][_0x8c794f(0x3e6)] = _0x8c794f(0x472), _0x560719['innerHTML'] = _0xba681a + 's', _0x560719[_0x8c794f(0x344)]['fontSize'] = _0x8c794f(0x435), _0x4ae9b4 = setInterval(() => {
+        const _0x18a2fe = _0x8c794f;
+        _0xba681a--, _0xba681a > 0x0 ? _0x560719[_0x18a2fe(0x471)] = _0xba681a + 's' : (clearInterval(_0x4ae9b4), _0x4ae9b4 = null, _0x560719[_0x18a2fe(0x2ae)] = ![], _0x560719['classList'][_0x18a2fe(0x40f)]('is-generating'), _0x560719['style']['opacity'] = '1', _0x560719[_0x18a2fe(0x344)][_0x18a2fe(0x3e6)] = _0x18a2fe(0x375), _0x560719[_0x18a2fe(0x471)] = _0x269365, _0x560719[_0x18a2fe(0x344)]['fontSize'] = _0x18a2fe(0x3b2));
+    }, 0x3e8);
 }
-
-// 🔐 SECURITY: Sanitize error messages to prevent info leakage
-// Never expose error.message, stack traces, or file paths to users
-function sanitizeErrorMessage(error) {
-    if (!error) return 'Unknown error';
-    
-    // Extract only safe parts of error
-    const message = String(error.message || error).trim();
-    const allowedKeywords = ['timeout', 'network', 'failed', 'unauthorized', 'not found', 'invalid', 'error'];
-    
-    // Check if message contains only safe words (case-insensitive)
-    const lowerMsg = message.toLowerCase();
-    if (allowedKeywords.some(kw => lowerMsg.includes(kw))) {
-        // Limit length to prevent DoS via error message
-        return message.substring(0, 100);
-    }
-    
-    // Default safe message - don't expose implementation details
-    return 'An error occurred';
-}
-
-// 🔐 SECURITY: Input validation helper - enforce length limits to prevent DoS attacks
-function validateInputLength(input, maxLength = 1000, fieldName = 'input') {
-    if (typeof input !== 'string') {
-        return { valid: false, error: `${fieldName} must be a string` };
-    }
-    if (input.length > maxLength) {
-        return { valid: false, error: `${fieldName} exceeds ${maxLength} character limit` };
-    }
-    if (input.length === 0) {
-        return { valid: false, error: `${fieldName} cannot be empty` };
-    }
-    return { valid: true, value: input.trim() };
-}
-
-// 🔐 SECURITY: Safe URL validation with length limits to prevent DoS
-function validateURLInput(urlString, maxLength = 512) {
-    const validation = validateInputLength(urlString, maxLength, 'URL');
-    if (!validation.valid) {
-        return validation;
-    }
-    
-    try {
-        const urlToValidate = validation.value.startsWith('http') ? validation.value : 'https://' + validation.value;
-        const url = new URL(urlToValidate);
-        // URL is syntactically valid
-        return { valid: true, value: validation.value };
-    } catch (e) {
-        return { valid: false, error: 'Invalid URL format' };
+const _0x21bfe2 = document[_0x4afe9d(0x1b9)](_0x4afe9d(0x575)), _0x522f0d = _0x21bfe2?.[_0x4afe9d(0x1ff)](_0x4afe9d(0x364)), _0x20c2d1 = document['getElementById'](_0x4afe9d(0x21a)), _0x154927 = document['querySelector'](_0x4afe9d(0x286)), _0x46a560 = document[_0x4afe9d(0x1b9)](_0x4afe9d(0x35e)), _0x69ecb9 = document[_0x4afe9d(0x1b9)](_0x4afe9d(0x505)), _0x24712d = document[_0x4afe9d(0x1b9)](_0x4afe9d(0x49f)), _0x399c40 = document[_0x4afe9d(0x1b9)](_0x4afe9d(0x221)), _0x13392e = document['getElementById'](_0x4afe9d(0x4ff)), _0xa645c4 = document[_0x4afe9d(0x1b9)](_0x4afe9d(0x186)), _0x52b9b8 = document[_0x4afe9d(0x1b9)]('upgradeModal'), _0x1191b7 = document[_0x4afe9d(0x1b9)](_0x4afe9d(0x487)), _0x4ea2fe = document[_0x4afe9d(0x1b9)](_0x4afe9d(0x265)), _0x4aab65 = document[_0x4afe9d(0x1ff)]('.token-count'), _0x37e8a6 = document[_0x4afe9d(0x350)](_0x4afe9d(0x30b)), _0x1e9071 = document[_0x4afe9d(0x1b9)](_0x4afe9d(0x542)), _0x260fe7 = document[_0x4afe9d(0x1ff)](_0x4afe9d(0x4d9));
+let _0x32c82b = ![], _0x13a1ad = null, _0x26840c = [], _0x36bf43 = ![], _0x362b2d = _0x4afe9d(0x42f), _0x10b78b = 0x5dc, _0x3d1382 = null, _0x8138a3 = null, _0xce993c = [], _0x34ba92 = null, _0x10e293 = 0x0, _0x3e82a3 = null, _0xe403d9 = _0x4afe9d(0x3ae), _0x5144b1 = [];
+function _0x3925e6(_0x2302b7) {
+    const _0x4d6f4b = _0x4afe9d;
+    _0x2302b7 && (_0x2302b7[_0x4d6f4b(0x212)](), _0x2302b7[_0x4d6f4b(0x4aa)]());
+    const _0x243b1d = document[_0x4d6f4b(0x1b9)](_0x4d6f4b(0x279));
+    if (!_0x243b1d)
+        return;
+    const _0xac89a7 = !_0x243b1d[_0x4d6f4b(0x2d9)]['contains'](_0x4d6f4b(0x24f));
+    if (_0xac89a7) {
+        const _0x4ee452 = _0x243b1d[_0x4d6f4b(0x350)]('.nav-item:not(.nav-collapse-toggle)');
+        _0x4ee452[_0x4d6f4b(0x321)]((_0x2b979d, _0x4fd4f0) => {
+            const _0xf53d5e = _0x4d6f4b;
+            _0x2b979d[_0xf53d5e(0x344)][_0xf53d5e(0x2a3)] = _0x4fd4f0 * 0x1e + 'ms';
+        }), _0x243b1d[_0x4d6f4b(0x2d9)][_0x4d6f4b(0x3ed)](_0x4d6f4b(0x24f)), setTimeout(() => _0x4ee452['forEach'](_0x5670a7 => _0x5670a7[_0x4d6f4b(0x344)][_0x4d6f4b(0x2a3)] = ''), 0x190);
+    } else {
+        _0x243b1d[_0x4d6f4b(0x2d9)]['remove'](_0x4d6f4b(0x24f));
+        const _0x342d42 = _0x243b1d[_0x4d6f4b(0x350)]('.nav-item:not(.nav-collapse-toggle)');
+        _0x342d42[_0x4d6f4b(0x321)]((_0x2bfad0, _0x4b60a7) => {
+            const _0x323f92 = _0x4d6f4b;
+            _0x2bfad0[_0x323f92(0x344)][_0x323f92(0x2a3)] = _0x4b60a7 * 0x28 + 'ms';
+        }), setTimeout(() => _0x342d42[_0x4d6f4b(0x321)](_0x3cee61 => _0x3cee61[_0x4d6f4b(0x344)][_0x4d6f4b(0x2a3)] = ''), 0x190);
     }
 }
-
-// 🔐 SECURITY: CSRF Protection Helper
-// The backend should send a CSRF token via a meta tag, cookie, or initial page load
-// CRITICAL: Ensure backend cookies have SameSite=Strict attribute
-function getCSRFToken() {
-    // First, try to get from meta tag (recommended approach)
-    const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
-    
-    // 🔐 SECURITY: Validate token format to prevent placeholder/empty values
-    // Tokens must be secure random strings of at least 32 chars (base64/hex)
-    if (!token || token === 'placeholder' || token.length < 32) {
-        // SECURITY WARNING: CSRF token is invalid or missing
-        safeLog('⚠️ WARNING: CSRF token is missing or invalid (<32 chars). Ensure:');
-        safeLog('   1. Backend sends valid CSRF token in meta tag');
-        safeLog('   2. Backend sets SameSite=Strict on auth cookie');
-        safeLog('   3. Backend validates CSRF token on state-changing requests');
-        // Fallback: Check for XSRF-TOKEN cookie (common pattern)
-        // ⚠️ NOTE: Cookies MUST have SameSite=Strict attribute for security
-        const name = 'XSRF-TOKEN=';
-        const decodedCookie = decodeURIComponent(document.cookie);
-        const cookieArray = decodedCookie.split(';');
-        for (let cookie of cookieArray) {
-            cookie = cookie.trim();
-            if (cookie.startsWith(name)) {
-                const cookieToken = cookie.substring(name.length);
-                // Validate cookie token format - must be at least 32 chars
-                if (cookieToken && cookieToken.length >= 32 && cookieToken !== 'placeholder') {
-                    return cookieToken;
-                }
-            }
-        }
-        // No valid token found
-        safeLog('⚠️ CSRF token not properly configured in meta tag or cookies');
-        return '';
-    }
-    
-    return token;
+function _0x4c17d4(_0x2457d6) {
+    const _0x579d78 = _0x4afe9d;
+    _0x2457d6['preventDefault'](), _0x2457d6['stopPropagation']();
+    const _0xd57f4f = document[_0x579d78(0x1b9)](_0x579d78(0x557));
+    _0xd57f4f && _0xd57f4f[_0x579d78(0x2d9)][_0x579d78(0x4dc)](_0x579d78(0x4c0));
 }
-
-function getAuthHeaders(includeCSRF = true) {
-    // 🔐 SECURITY: Include CSRF token for state-changing requests
-    // Browser automatically sends httpOnly cookie with all requests to same domain
-    const headers = {
-        'Content-Type': 'application/json'
+function _0x2badba() {
+    const _0x1434ac = _0x4afe9d, _0x44e5bd = document['getElementById'](_0x1434ac(0x557));
+    _0x44e5bd && _0x44e5bd[_0x1434ac(0x2d9)][_0x1434ac(0x40f)](_0x1434ac(0x4c0));
+}
+function _0x35c14e() {
+    const _0x3bab82 = _0x4afe9d;
+    _0x2badba();
+    const _0x26b846 = document[_0x3bab82(0x1ff)](_0x3bab82(0x57f));
+    if (_0x26b846)
+        _0x26b846['click']();
+    else {
+    }
+}
+function _0x3e4dcb() {
+    const _0x7879aa = _0x4afe9d;
+    _0x2badba();
+    const _0x4b1a04 = document[_0x7879aa(0x1ff)](_0x7879aa(0x208));
+    _0x4b1a04 && handleNav(_0x4b1a04, 0x3);
+}
+function _0x516908() {
+    const _0x262b21 = _0x4afe9d;
+    _0x2badba();
+    const _0x235ef3 = document[_0x262b21(0x1ff)](_0x262b21(0x20d));
+    _0x235ef3 && _0x235ef3[_0x262b21(0x185)]();
+}
+function _0x2e7abc() {
+    const _0x38e300 = _0x4afe9d, _0xaf4773 = document[_0x38e300(0x1ff)]('.input-section'), _0x36cd05 = _0xaf4773 ? _0xaf4773[_0x38e300(0x1ff)]('.input-container') : null, _0x3742df = parseInt(localStorage[_0x38e300(0x394)]('sidebarActiveIndex') || '0');
+    _0x36cd05 && _0x36cd05[_0x38e300(0x2d9)][_0x38e300(0x40f)](_0x38e300(0x51d), 'animate-down', _0x38e300(0x498)), _0xaf4773 && (_0xaf4773[_0x38e300(0x2d9)][_0x38e300(0x40f)]('is-first-prompt'), _0x3742df === 0x0 ? _0xaf4773['style'][_0x38e300(0x532)] = _0x38e300(0x1a3) : _0xaf4773['style']['cssText'] = _0x38e300(0x1d9));
+}
+window['dockInputInstantly'] = _0x2e7abc;
+function _0x225c53() {
+    const _0x1fde6d = _0x4afe9d;
+    _0x5e766a('[Auth]\x20Initializing\x20authentication...'), _0x4cb544()[_0x1fde6d(0x515)](_0x298c93 => {
+        const _0x39dcc2 = _0x1fde6d;
+        _0x34ba92 ? (_0x5e766a(_0x39dcc2(0x3b4), _0x34ba92['email']), typeof updateProfileButton === 'function' && updateProfileButton()) : (_0x5e766a('[Auth]\x20User\x20not\x20authenticated,\x20showing\x20guest\x20UI'), _0x1d8ecc());
+    })[_0x1fde6d(0x4f3)](_0x55f81b => {
+        _0x5e766a('[Auth]\x20Unexpected\x20error\x20during\x20initialization:', _0x55f81b), _0x1d8ecc();
+    }), _0x5e766a(_0x1fde6d(0x242));
+}
+function _0x27e701(_0xcff66) {
+    const _0x21caf4 = _0x4afe9d;
+    if (!_0xcff66)
+        return 'Unknown\x20error';
+    const _0x23027f = String(_0xcff66[_0x21caf4(0x45b)] || _0xcff66)['trim'](), _0x55e96e = [
+            _0x21caf4(0x2f6),
+            'network',
+            'failed',
+            'unauthorized',
+            _0x21caf4(0x4de),
+            'invalid',
+            'error'
+        ], _0x95f873 = _0x23027f[_0x21caf4(0x3f2)]();
+    if (_0x55e96e[_0x21caf4(0x577)](_0x2ea9bf => _0x95f873['includes'](_0x2ea9bf)))
+        return _0x23027f[_0x21caf4(0x51e)](0x0, 0x64);
+    return _0x21caf4(0x1ae);
+}
+function _0x3d68eb(_0x19a176, _0x470776 = 0x3e8, _0xdfce76 = _0x4afe9d(0x200)) {
+    const _0x2f62e2 = _0x4afe9d;
+    if (typeof _0x19a176 !== _0x2f62e2(0x590))
+        return {
+            'valid': ![],
+            'error': _0xdfce76 + '\x20must\x20be\x20a\x20string'
+        };
+    if (_0x19a176[_0x2f62e2(0x56d)] > _0x470776)
+        return {
+            'valid': ![],
+            'error': _0xdfce76 + _0x2f62e2(0x404) + _0x470776 + '\x20character\x20limit'
+        };
+    if (_0x19a176[_0x2f62e2(0x56d)] === 0x0)
+        return {
+            'valid': ![],
+            'error': _0xdfce76 + '\x20cannot\x20be\x20empty'
+        };
+    return {
+        'valid': !![],
+        'value': _0x19a176[_0x2f62e2(0x317)]()
     };
-    
-    // Include CSRF token if available
-    if (includeCSRF) {
-        const csrfToken = getCSRFToken();
-        if (csrfToken) {
-            headers['X-CSRF-Token'] = csrfToken;
-        }
-    }
-    
-    return headers;
 }
-
-// Use getAuthHeaders() for all authenticated requests
-// This is the only headers function needed - getHeaders() is deprecated
-// All API calls should use getAuthHeaders() for CSRF protection
-
-// Initialize CSRF token from backend endpoint
-// This replaces the "placeholder" value in the meta tag with a real secure token
-async function initializeCSRFToken() {
+function _0x2823e0(_0x100ef6, _0x4ecca0 = 0x200) {
+    const _0x178684 = _0x4afe9d, _0x1873a4 = _0x3d68eb(_0x100ef6, _0x4ecca0, _0x178684(0x56f));
+    if (!_0x1873a4[_0x178684(0x58a)])
+        return _0x1873a4;
     try {
-        const response = await fetch(`${API_BASE_URL}/auth/csrf-token`, {
-            method: 'GET',
-            headers: { 'Content-Type': 'application/json' },
-            credentials: 'include'
-        });
-        
-        if (!response.ok) {
-            safeLog('⚠️ Failed to fetch CSRF token:', response.status);
-            return false;
-        }
-        
-        const data = await response.json();
-        if (data.csrf_token && data.csrf_token.length >= 32) {
-            // Update meta tag with real token
-            const metaTag = document.querySelector('meta[name="csrf-token"]');
-            if (metaTag) {
-                metaTag.setAttribute('content', data.csrf_token);
-                safeLog('✅ CSRF token initialized successfully');
-                return true;
+        const _0x48aa35 = _0x1873a4[_0x178684(0x328)]['startsWith'](_0x178684(0x2e7)) ? _0x1873a4['value'] : _0x178684(0x327) + _0x1873a4[_0x178684(0x328)], _0x194b79 = new URL(_0x48aa35);
+        return {
+            'valid': !![],
+            'value': _0x1873a4[_0x178684(0x328)]
+        };
+    } catch (_0x1c7074) {
+        return {
+            'valid': ![],
+            'error': _0x178684(0x4a8)
+        };
+    }
+}
+function _0x1d18() {
+    const _0x4448f2 = [
+        'y29TCgXLDgvK',
+        'y29SB3i',
+        'mtK3mc0Wms0Wmq',
+        'Ag9ZDg5HBwu',
+        'vw5RBM93BIbWCM9JzxnZAw5NigvYCM9Y',
+        'Bwf4oG',
+        'y2fYzc1MB290zxi',
+        '4PYfiezpvu5e',
+        'BgLNAhq',
+        'y2XPCenVBMzPCM1by2nLChq',
+        'DgvZDa',
+        'zgfPBhLFBgLTAxq',
+        'qxzHAwXHyMXLoG',
+        'zgf0ys1PDgvTlwLK',
+        'mc44nwvT',
+        '4PYfifbYBYbMzwf0DxjLig1VzgfSihnOB3DUigzVCJO',
+        'C3rVCefSBe1VBML0B3jPBMC',
+        'C3rHCNrmAwjYyxj5ug9SBgLUzW',
+        'rxjYB3iGAw5PDgLHBgL6Aw5NientuKyGDg9Rzw46',
+        'pgrPDIbJBgfZCZ0IBg9HzgvYlxbHCNqGBg9HzgvYlxbHCNqT',
+        'ig1PBIbVBgqPoIa',
+        'u2f2zwqG',
+        'AgfZ',
+        'iIbZDhLSzt0IB3bHy2L0EtOG',
+        'q29TCgLSzsbIzwzVCMuGyw5KigfMDgvYihrYyw5ZzM9YBwf0Aw9UignSAxbZ',
+        'D2fYBG',
+        'zgf0ys10AgvTzq',
+        'mNb4',
+        'q2XPCcbJB21WAwXHDgLVBIbLCNjVCJO',
+        'mZeYzvbND25q',
+        'zxjYB3jeDxjHDgLVBLrLEhq',
+        'lNnLDhrPBMDZlw9WDgLVBG',
+        'vgvTCgXHDguGBM90igzVDw5K',
+        'l2f1DgGVC3vIC2nYAxb0Aw9U',
+        'zNjLzq',
+        'ww91vhvIzsbwAwrLBYaOsuq6ia',
+        'zMXLEa',
+        'tK8Gv0fz',
+        'lNDHDgvYBwfYAY10B2DNBguTC2XPzgvY',
+        'z2vUzxjHDgLVBLbYB2DYzxnZvgv4Da',
+        'Bw92zvrVtgLICMfYEq',
+        'Ahr0Chm6lY92AweUCgXHy2vOB2XKzxiUy29TlZeWmdb4nJaWp3rLEhq9tM8Rsw1Hz2u',
+        'zMv0y2Huzw1WBgf0zvbYzxzPzxC',
+        'Ew91DhuUyMu',
+        'y29SBgvJDen1C3rVBwL6yxrPB25Z',
+        '4PYfihrLC3ruzw1WBgf0zvbYzxzPzxCOksbPCYbYzwfKEsaTihj1BIbPDcbPBIbJB25ZB2XL',
+        'BwfUDwfSuMvMCMvZAa',
+        'iL0GlMXVywrPBMCTCgvYy2vUDgfNzq',
+        'z2v0u3rHDhvZswnVBG',
+        'rMfPBgvKihrVihnHDMuGBgLICMfYEsbPDgvTCZO',
+        'y3jLyxrL',
+        'rMfPBgvKihrVigLUAxrPywXPEMuGq2XPChmGu3r1zgLVoG',
+        'BwvZC2fNzq',
+        'jsaTia',
+        'AxnnB25PDg9YAw5N',
+        'rxjYB3iGBg9HzgLUzYbzB3vuDwjLihn1yNrPDgXLCZO',
+        'u0vdvvjjvfK',
+        'BMv3q2XPCej0BG',
+        'Aw5UzxjizwLNAhq',
+        '4PYfie1VzgfSigvSzw1LBNrZigzVDw5KlcbZAg93Aw5NignVBMzPCM1HDgLVBG',
+        'DgfYz2v0',
+        'zgvSzxrL',
+        'zMLUza',
+        't0SGv0fjva',
+        '4PYtifzPzgvVihrVBYbSB25NigrLDgvJDgvKicHMywXSyMfJAYK6',
+        'sw52ywXPzcb0zw1WBgf0zq',
+        'ChjVAMvJDeLK',
+        'ChjLDMLLD1zPzgvVrM9YBwf0',
+        'DxnLu2XVDfn5C3rLBq',
+        '4P2miezHAwXLzcb0BYbPBML0AwfSAxPLifDLyLnVy2TLDdO',
+        'icaGmI4GqMfJA2vUzcbZzxrZifnHBwvtAxrLpvn0CMLJDcbVBIbHDxrOignVB2TPzq',
+        'y2XPCfbYB2nLC3nPBMC',
+        'zMvHDhvYzs1TB2rHBa',
+        'C2LKzwjHCKv4CgfUzgvK',
+        'Aw5Uzxjive1m',
+        'BM90lwfSBg93zwq',
+        '8j+tPcbezwXLDgLUzYbWCM9Qzwn0igzYB20GC2vYDMvYoIa',
+        'Aw5SAw5LlwzSzxG',
+        'lNnLDhrPBMDZlw9WDgLVBIaUB3b0Aw9UlwrLC2nYAxb0Aw9U',
+        'ChjVlw1VzgfSlw92zxjSyxK',
+        'w2rHDgeTDgvTCgXHDgu9iG',
+        'zgfPBhLFy291BNq',
+        'C2vSzwn0zwruzw1WBgf0zq',
+        'C3jJ',
+        'B3bHy2L0EsaWlJi1CYbLyxnL',
+        'zg93BMXVywrdBgLW',
+        'CgXHBL92AwrLB19SAw1PDa',
+        'ChjLDMLLD1zPzgvVrhvYyxrPB24',
+        'C3vIDgL0BgvZ',
+        'Bg9Hzfn0B3jHz2vjBMzV',
+        'w2rHDgeTBg9HzgLUzY1Pzd0I',
+        'C3vIDgL0Bgu',
+        'zhvYyxrPB24',
+        'DMLLD0fSBefJDgL2Axr5qNrU',
+        'z2v0u2XVDhm',
+        'DMLKzw9FBwLUDxrLCW',
+        'y2XVC2vvCgDYywrL',
+        'Aw5PDgLHBgL6zvDLyLnVy2TLDa',
+        'yNv0Dg9U',
+        'zMXVB3i',
+        'icdINiuGvxbKyxrLzcbMB3jTyxq',
+        'BwfW',
+        'l2nSAxbZl2nOzwnRlwXPBwL0CW',
+        'l2f1DgGVEw91DhvIzs9ZDgf0Dxm',
+        'D2LKDgG9',
+        'C3rHCNrnB25PDg9YAw5N',
+        'l2f1DgGVD2f0zxjTyxjRlwnOzwnR',
+        'qwjVCNrfCNjVCG',
+        'zhvYyxrPB25FBwLUDxrLCW',
+        'ANnVBG',
+        'C2v0DxbxyxrLCM1HCMTuB2DNBgu',
+        'C3vIC2nYAxb0Aw9U',
+        'Aw5PDgLHBgL6zwq',
+        'yw5PBwf0zs11Ca',
+        'zMLSDgvYtgLICMfYEq',
+        'wu9vvfvcrv9bvvrix1nvq0nfu1m',
+        'ugf0DgvYBIaYig1HDgnOoG',
+        'y29UBMvJDfLVDvr1yMvcDxr0B24',
+        'AgLNAgXPz2H0zwq',
+        'y2XLyxjpBgrqCM9JzxnZAw5Nrgf0yq',
+        'C2v0DgLUz3ncDg4',
+        'cIaGicaGicaGicaGicaGicaGicaGicaGidWVzgL2pGOGicaGicaGicaGicaGicaGicaGidWVzgL2pGOGicaGicaGicaGicaGicaGpc9KAxy+cIaGicaGicaGicaGia',
+        '4PYtifnHDMvKia',
+        'AxmTz2vUzxjHDgLUzW',
+        'CMfUA2vKx2nVBxbPBgf0Aw9U',
+        '8j+tOsbmAwjYyxj5igf1Dg8TCg9SBgLUzYbZDg9WCgvK',
+        'zgLZCgf0y2HfDMvUDa',
+        'lNbYBY1WBgfUlwnHCMq',
+        'y2XPCfn0yxrqCM9JzxnZAw5N',
+        'sw52ywXPzcbvuKWGzM9YBwf0',
+        'ChjVy2vZC1LVDvr1yMvvCMW',
+        'C3rVCfbYB3bHz2f0Aw9U',
+        'D2LKDgG6ideWmcu7igHLAwDODdOGmtaWjtSGyM9YzgvYlxjHzgL1CZOGntaLoYbVyMPLy3qTzML0oIbJB3zLCJS',
+        'cIaGicaGicaGicaGicaGicaGicaGicaGicaGica8l2rPDJ4kicaGicaGicaGicaGicaGicaGicaGicaGpc9KAxy+cIaGicaGicaGicaGicaGicaGicaGpc9KAxy+cGOGicaGicaGicaGicaGicaGicaGidXIDxr0B24Gy2XHC3m9iMv4Cg9YDc1IDg4GBgLICMfYEs1KB3DUBg9Hzc1IDg4IigrHDgeTChjVAMvJDc1Pzd0I',
+        'Aw5Zzxj0qwrQywnLBNrive1m',
+        '4P2mierVD25SB2fKigvYCM9YoG',
+        'Bw91C2v1Ca',
+        'q3jLyxrLigeGAgLNAgXPz2H0ihjLzwWGB2yGzxbPyYbMywLSCYbHBMqGzNvUBNKGBw9Tzw50CW',
+        'y3vYCMvUDefjuhjVBxb0',
+        '4PYfiezVDw5KigvSzw1LBNqGD2L0AcbPzdOG',
+        'CMv2B2TLt2jQzwn0vvjm',
+        '4P2mifDHDgvYBwfYAYbisureru4',
+        'y2XLyxjqCM9JzxnZAw5NsxrLBxm',
+        '8j+NUsbqB2XSAw5NignSzwfUDxa6ia',
+        't0f1DgGGzxjYB3i6',
+        'ChjLDMLLD1DHDgvYBwfYA1rVz2DSzq',
+        'v2vIu29JA2v0ignSAwvUDcbUB3qGyxzHAwXHyMXLihLLDcWGCMv0CNLPBMCUlI4',
+        'y3rYBeTLEq',
+        'DgfNtMfTzq',
+        'y2XPCfn0yxrszw5KzxjPBMC',
+        'y2fYzc1WCMv2Awv3',
+        'mtuTmZbZ',
+        'cIaGicaGicaGicaGidXKAxyGy2XHC3m9iMXPyNjHCNKTy2fYzciGzgf0ys1Pzd0I',
+        'zxHWyw5Kzwq',
+        '8j+uKIbcBg9JA2vKihbVC3rnzxnZywDLigzYB20GDw50CNvZDgvKig9YAwDPBJO',
+        'y3vYCMvUDf92AwrLB19JB3vUDa',
+        'CMvWBgfJzvn0yxrL',
+        'lNbYB2zPBguTBM90AwyTD3jHChbLCG',
+        'u3rHDhvZiePtt04GCgfYC2uGzxjYB3i6',
+        'ugXLyxnLigvUDgvYigeGww91vhvIzsbvuKWGzMLYC3q',
+        '8j+xHo+4JYbszw1VDMLUzYbMCM9TigXVy2fSigfYCMf5CW',
+        'vKLeru9Fve9px0XptKC',
+        '4PYfie9l',
+        'rMfPBgvKihrVigzLDgnOihn1yNnJCMLWDgLVBIbPBMzV',
+        'vMLKzw8GDgvTCgXHDguGChjLDMLLDW',
+        'Bg9HzgLUzW',
+        'z2v0qxr0CMLIDxrL',
+        '4PQG77IpiefuieXjtuLu',
+        'lMXPyNjHCNKTzgvSzxrLlwj0BG',
+        'y2XPCc1WCM9JzxnZAw5Nlw1VzgfS',
+        'C3rYAw5NAwz5',
+        'vw5RBM93BIbLCNjVCG',
+        'y2XLyxi',
+        'zw1HAwW',
+        'C2v0DxbfDMvUDeXPC3rLBMvYCYGPoIbKyxjRtw9KzvnLDhrPBMDZvg9Nz2XLigLZig5VDcbHBIbPBNb1DcbJAgvJA2jVEc4GrgfYAYbTB2rLigz1BMn0Aw9UywXPDhKGBwf5igjLigLTCgfPCMvKlG',
+        'cIaGicaGicaGicaGicaGica8C3zNihHTBg5ZpsjODhrWoI8VD3D3lNCZlM9YzY8YmdaWl3n2zYiGD2LKDgG9iJi0iIbOzwLNAhq9iJi0iIb2Awv3qM94psiWidaGmJqGmJqIigzPBgW9iM5VBMuIihn0CM9Rzt0Iy3vYCMvUDenVBg9YiIbZDhjVA2uTD2LKDgG9iJiIihn0CM9Rzs1SAw5Ly2fWpsjYB3vUzciGC3rYB2TLlwXPBMvQB2LUpsjYB3vUzci+cIaGicaGicaGicaGicaGicaGicaGphbHDgGGzd0IttiGmJfHoca4idaGmcaXideXlJG3mY03iI8+cIaGicaGicaGicaGicaGicaGicaGpgnPCMnSzsbJEd0ImtaIign5psi4iIbYpsi1iI8+cIaGicaGicaGicaGicaGicaGicaGphbHDgGGzd0IBte3ide3iduGnsiVpGOGicaGicaGicaGicaGicaGicaGidXWyxrOigq9iM0YmIaXnY01iduIlZ4kicaGicaGicaGicaGicaGidWVC3zNpGOGicaGicaGicaGica',
+        'mca3ns4ZnG',
+        'BwvZC2fNzufKzgvK',
+        'lM5HDI1PDgvTlNnPz24TAw4',
+        'igrHEq',
+        '4P2mifnfq1vssvrzoIbjBNzHBgLKigL0zw1jzcbMB3iGzgvSzxrLoIa',
+        'Dg9Nz2XL',
+        'l2fWAs9Nyw1LCgXHEs9HDMfPBgfIBgu',
+        'BM90igzVDw5K',
+        'iIb0AxrSzt0IrgvSzxrLignSAxaIpGOGicaGicaGicaGicaGicaGicaGicaGicaGicaGphn2zYb2Awv3qM94psiWidaGmJqGmJqIigzPBgW9iM5VBMuIihn0CM9Rzt0Iy3vYCMvUDenVBg9YiIbZDhjVA2uTD2LKDgG9iJiUnsiGC3rYB2TLlwXPBMvJyxa9iNjVDw5KiIbZDhjVA2uTBgLUzwPVAw49iNjVDw5KiJ4kicaGicaGicaGicaGicaGicaGicaGicaGicaGicaGica8Cgf0AcbKpsjnmYa2Ade4iI8+cIaGicaGicaGicaGicaGicaGicaGicaGicaGicaGicaGphbHDgGGzd0Itte5idz2mtrJmcaXlteGmI0Yidjin2mTmsaWltiTms0YltjwnIiVpGOGicaGicaGicaGicaGicaGicaGicaGicaGicaGicaGidXWyxrOigq9iK04idzwngmWlteGms0YidiTmMG0yZeGmcaYideGmIaYDJiIlZ4kicaGicaGicaGicaGicaGicaGicaGicaGicaGicaGica8BgLUzsb4mt0ImtaIihKXpsiXmsiGEdi9iJeWiIb5mJ0ImtCIlZ4kicaGicaGicaGicaGicaGicaGicaGicaGicaGicaGica8BgLUzsb4mt0ImtqIihKXpsiXmsiGEdi9iJe0iIb5mJ0ImtCIlZ4kicaGicaGicaGicaGicaGicaGicaGicaGicaGidWVC3zNpGOGicaGicaGicaGicaGicaGicaGicaGica8l2j1DhrVBJ4kicaGicaGicaGicaGicaGicaGica8l2rPDJ4kicaGicaGicaGicaGicaGidWVzgL2pGOkicaGicaGicaGicaGicaGidXKAxyGy2XHC3m9iMnHCMqTy29UDgvUDci+cIaGicaGicaGicaGicaGicaGicaGpgrPDIbJBgfZCZ0IAw5MBY1NCM91Cci+cIaGicaGicaGicaGicaGicaGicaGicaGidXOmIbJBgfZCZ0Iy2fYzc10AxrSzsi+',
+        'lNnLDhrPBMDZlwjHy2TKCM9W',
+        'qxv0Acb2zxjPzMLJyxrPB24GzxjYB3i6',
+        'sw52ywXPzcbzB3vuDwjLifvsta',
+        'cIaGicaGicaGicaGicaGica8zgL2ignSyxnZpsjWCMv2Awv3lxzPzgvVlxbSywnLAg9SzgvYiJ4kicaGicaGicaGicaGicaGicaGica8AsbJBgfZCZ0IzMfZigzHlwv4y2XHBwf0Aw9UlwnPCMnSzsi+pc9PpGOGicaGicaGicaGicaGicaGicaGidXWpKvYCM9YigXVywrPBMCGChjLDMLLDZWVCd4kicaGicaGicaGicaGicaGidWVzgL2pGOGicaGicaGicaGica',
+        'rMLSDgvYzwqGyNK6ia',
+        'igrHExm',
+        'l2fWAs9JBgLWCY9KDxjHDgLVBI8',
+        'AgvHzgvYCW',
+        'C3rVCMfNzv9PBMzV',
+        'rMfPBgvKihrVihnHDMuGChjVy2vZC2LUzYbPDgvTCZO',
+        'ChjVz3jLC3ndAxjJBgu',
+        'u2LKzs1IEs1ZAwrLihzPzgvVignVBxbHCMLZB24',
+        'rMfPBgvKihrVihnHDMuGzxzLBIbHzNrLCIbJBgvHBNvWoG',
+        'C29SAxnbsvDHDgvYBwfYA0vUywjSzwq',
+        'y2XLyxjdAgf0sgLZDg9YEuj0BG',
+        'C2v0qxr0CMLIDxrL',
+        'DMLZAwjPBgL0EwnOyw5NzsbOyw5KBgvYigvYCM9Y',
+        'C3rHCNrtBwfYDe1VBML0B3jPBMC',
+        'BgLICMfYEuDYAwq',
+        'y2f0y2G',
+        '4P2mievYCM9YoIa',
+        'BM9Uzq',
+        'lM9WDgLVBI1Uyw1L',
+        'cIaGicaGicaGicaGicaGicaGicaGicaGicaGicaGicaGicaGidWVzgL2pGOGicaGicaGicaGicaGicaGicaGicaGicaGicaGicaGidWVzgL2pGOGicaGicaGicaGicaGicaGicaGicaGicaGicaG',
+        'yM9YzgvYq29SB3i',
+        'Aw5UzxjxAwr0Aa',
+        'q2XPCa',
+        'BM90AwzPy2f0Aw9Uia',
+        'DgL0Bgu',
+        'DgH1BwjUywLSvxjS',
+        'Dhj1zq',
+        'y2XVC2vtzxr0Aw5NCW',
+        'zwrPDg9Y',
+        'uxvVDgffEgnLzwrLzevYCM9Y',
+        '8j+NUsbdBgvHBMLUzYb1Cca',
+        'C3rHDhvZvgv4Da',
+        'zhvYyxrPB25FzM9YBwf0DgvK',
+        'DxnLCK1LBNu',
+        'q2HHDcbOAxn0B3j5ignSzwfYzwq',
+        'su0GrfLjtKC',
+        'B2zMC2v0sgvPz2H0',
+        'zgfPBhK',
+        'CgfKu3rHCNq',
+        'zw50CMLLCW',
+        '4PQG77IpienVDwXKig5VDcb2zxjPzNKGC2vZC2LVBI4Gq29UDgLUDwLUzYbPBIbNDwvZDcbTB2rLlG',
+        'zgf0ys1PBML0AwfSAxPLza',
+        'ugXLyxnLihDHAxqGysbTB21LBNqGyMvMB3jLihrYEwLUzYbHz2fPBG',
+        'DMfSAwrHDgvqCM9Qzwn0swq',
+        'zgvZy3jPChrPB24',
+        'ywjVCNq',
+        'BgLUAW',
+        'y2XPChnmAwjYyxj5',
+        'yMXVy2S',
+        'DgHLBG',
+        'C3bPBM5LCG',
+        'vMLKzw8GDg9VigXVBMCGka',
+        'y2XPCfbYzxzPzxDdB250ywLUzxi',
+        'zg9JDw1LBNrfBgvTzw50',
+        'Dw5RBM93BG',
+        'mtK0mdrUs0zXv3G',
+        'BgLTAxq',
+        'zMLYC3qTChjVBxb0',
+        'C3vIC3rYAw5N',
+        'C3rHDhvZ',
+        'igLUihbYzxzPzxC',
+        'CMfUA2LUzW',
+        'C3rVCe1VBML0B3jPBMC',
+        'v2fYBMLUzZOGrMfPBgvKihrVigrLBgv0zsbMAwXLCYbVBIbZzxj2zxi',
+        'CMvTB3zLrxzLBNrmAxn0zw5LCG',
+        '4PQG77IpifvZzxiGBM90igf1DgHLBNrPy2f0zwqGlsbxzwjtB2nRzxqGC2TPChbLza',
+        'y3vYCMvUDfrHCMDLDa',
+        'zgvSzxrLuhjVy2vZC2LUz0L0zw0',
+        'ywLqCM9TChrjBNb1Da',
+        'y29UBMvJDgvK',
+        'CMvTywLUAw5Nx3nLy29Uzhm',
+        'DxbKyxrLv2f0zxjTyxjRvg9Nz2XLu3rHDgu',
+        'C2XVDfn5C3rLBuLUzM8',
+        'Aw5MBW',
+        '4PQG77Ipig5HBwvfBcbUB3qGzM91BMq',
+        'zgvSzxrLq29UzMLYBwf0Aw9Uvgv4Da',
+        'BgLICMfYEq',
+        'lgXLzNq9',
+        'y3nZvgv4Da',
+        '4P2mievYCM9YigXVywrPBMCGDgLLCIbPBMzVoG',
+        'ugXLyxnLihbYB2nLC3mGysbzB3vuDwjLifvstcbMAxjZDa',
+        'CM90yxrLza',
+        'DxjSqNv0Dg9Utg9JA2vKDw50AwW',
+        'z2v0rMLSBgvKu2XVDhm',
+        'r0iGC3rVCMfNzq',
+        'DxjSrgLZCgXHEq',
+        'y2HLy2TwAwrLB0r1CMf0Aw9UqMvMB3jLvgvTCgXHDgvZ',
+        'y2XVC2vuzw1WBgf0zvbYzxzPzxDcDg4',
+        'rxjYB3iGy2HLy2TPBMCGD2f0zxjTyxjRigvSAwDPyMLSAxr5oG',
+        'Dg90ywXdBgLWCW',
+        '8j+NUsbdBgvHCMLUzYa',
+        '4PYtieXVywrLzca',
+        'DgvTCgXHDgvZ',
+        'Bg9HzevKAxrVCKrHDge',
+        'C2LNBKLUqNrU',
+        'D2f0zxjTyxjRvg9Nz2XL',
+        'z2v0v2f0zxjTyxjRugfYyw1Z',
+        'cIaGicaGicaGicaGicaGicaGicaGphn2zYb3Awr0Ad0ImtGIigHLAwDODd0ImtGIihzPzxDcB3G9iJaGmcaYncaYnciGzMLSBd0IBM9UzsiGC3rYB2TLpsjJDxjYzw50q29SB3iIihn0CM9Rzs13Awr0Ad0ImI41iIbZDhjVA2uTBgLUzwnHCd0ICM91BMqIihn0CM9Rzs1SAw5LAM9PBJ0ICM91BMqIpGOGicaGicaGicaGicaGicaGicaGicaGica8Cgf0AcbKpsjnmJeGmtv2ngeYidiGmcaWideTmIaYsdvHmIaYidaGmcaXltiTmNyTnciVpGOGicaGicaGicaGicaGicaGicaGicaGica8zYbJBgfZCZ0IzxHWB3j0lwfYCM93iJ4kicaGicaGicaGicaGicaGicaGicaGicaGicaGidXWB2X5BgLUzsbWB2LUDhm9iJCGmtaGmtiGmtuGmtCGmtaIlZ4kicaGicaGicaGicaGicaGicaGicaGicaGicaGidXSAw5LihGXpsiXmIiGEte9iJe1iIb4mJ0ImtiIihKYpsiZiI8+cIaGicaGicaGicaGicaGicaGicaGicaGidWVzZ4kicaGicaGicaGicaGicaGicaGica8l3n2zZ4kicaGicaGicaGicaGicaGicaGicbfEhbVCNqkicaGicaGicaGicaGicaGia',
+        'ywn0AxzPDhLmAxn0',
+        'y2XPChnqCM9JzxnZAw5N',
+        'sefiquHbsee',
+        'C2HVD0DHBwvWBgf5ugfUzwW',
+        'zMLSDgvY',
+        'q3jLyxrLigeGDhv0B3jPywWGC25PChbLDcbZzxjPzxmGzNjVBsb5B3vYigXVBMDLCIb2AwrLB3m',
+        'Ahr0Chm6lY9HCgKUC29SAxnHAs52AwrLBY9HCgK',
+        'vgLRvg9Ric8Gu2HVCNrZ',
+        'C2HVD1bYB0zLyxr1CMvnB2rHBa',
+        'icHtBg90ia',
+        'q29TCgLSzsbQyxCTzhjVChbPBMCGBw9Tzw50CYbHBMqGCgXVDcb0D2LZDhm',
+        'u2vYDMvYigvYCM9YoIa',
+        'y3jLyxrLzf9HDa',
+        '8j+tIYbnB2rHBcbKAxnWBgf5zwq',
+        'y2XPCfn0yxreB3DUBg9Hza',
+        'cIaGicaGicaGicaGicaGicbaA2v5zNjHBwvZigzHzgvjBK92zxjSyxKGEYb0BYb7ig9WywnPDhK6ide7ih0GFqOGicaGicaGicaGicaGicaGqgTLEwzYyw1LCYbZBgLKzvvWihSGcIaGicaGicaGicaGicaGicaGicaGzNjVBsb7ig9WywnPDhK6ida7ihrYyw5ZzM9YBtOGDhjHBNnSyxrLwsGXohb4ksbZy2fSzsGWlJK3ktSGFqOGicaGicaGicaGicaGicaGicaGihrVihSGB3bHy2L0EtOGmtSGDhjHBNnMB3jToIb0CMfUC2XHDgvzkdaPihnJywXLkdePoYb9cIaGicaGicaGicaGicaGicb9cIaGicaGicaGicaGicaGicbaA2v5zNjHBwvZihbVCeLUihSkicaGicaGicaGicaGicaGicaGicaWjsb7ihrYyw5ZzM9YBtOGC2nHBguOmcKGCM90yxrLkc0XnwrLzYK7ig9WywnPDhK6ida7ih0kicaGicaGicaGicaGicaGicaGica2mcuGEYb0CMfUC2zVCM06ihnJywXLkdeUmsKGCM90yxrLkdrKzwCPoYbVCgfJAxr5oIaXoYb9cIaGicaGicaGicaGicaGicaGicaGodaLihSGDhjHBNnMB3jToIbZy2fSzsGWlJK1ksbYB3rHDguOltjKzwCPoYb9cIaGicaGicaGicaGicaGicaGicaGmtaWjsb7ihrYyw5ZzM9YBtOGC2nHBguOmsKGCM90yxrLkdbKzwCPoYbVCgfJAxr5oIaXoYb9cIaGicaGicaGicaGicaGicb9cIaGicaGicaGicaGicaGicbaA2v5zNjHBwvZigzHzgvvCefUAw0GEWOGicaGicaGicaGicaGicaGicaGigzYB20GEYbVCgfJAxr5oIaWoYb0CMfUC2zVCM06ihrYyw5ZBgf0zvKOohb4ktSGFqOGicaGicaGicaGicaGicaGicaGihrVihSGB3bHy2L0EtOGmtSGDhjHBNnMB3jToIb0CMfUC2XHDgvzkdaPoYb9cIaGicaGicaGicaGicaGicb9cGOGicaGicaGicaGicaGicaGlNbYBY1TB2rHBc1VDMvYBgf5ihSkicaGicaGicaGicaGicaGicaGicbWB3nPDgLVBJOGzML4zwqGiwLTCg9YDgfUDdSkicaGicaGicaGicaGicaGicaGicbPBNnLDdOGmcaHAw1WB3j0yw50oWOGicaGicaGicaGicaGicaGicaGigjHy2TNCM91BMq6ihjNyMeOmcWWldaSmc4ZksaHAw1WB3j0yw50oWOGicaGicaGicaGicaGicaGicaGigjHy2TKCM9WlwzPBhrLCJOGyMX1CIG4ChGPicfPBxbVCNrHBNq7cIaGicaGicaGicaGicaGicaGicaGlxDLyMTPDc1IywnRzhjVCc1MAwX0zxi6igjSDxiOohb4ksaHAw1WB3j0yw50oWOGicaGicaGicaGicaGicaGicaGigrPC3bSyxK6igzSzxGGiwLTCg9YDgfUDdSkicaGicaGicaGicaGicaGicaGicbHBgLNBI1PDgvTCZOGy2vUDgvYicfPBxbVCNrHBNq7cIaGicaGicaGicaGicaGicaGicaGANvZDgLMEs1JB250zw50oIbJzw50zxiGiwLTCg9YDgfUDdSkicaGicaGicaGicaGicaGicaGicb6lwLUzgv4oIa5otK5icfPBxbVCNrHBNq7cIaGicaGicaGicaGicaGicaGicaGCgfKzgLUzZOGmJbWEcaHAw1WB3j0yw50oWOGicaGicaGicaGicaGicaGicaGig9WywnPDhK6ida7cIaGicaGicaGicaGicaGicaGicaGyw5PBwf0Aw9UoIbMywrLsw5pDMvYBgf5idaUm3mGzwfZzsbMB3j3yxjKCZSkicaGicaGicaGicaGicaGih0kcIaGicaGicaGicaGicaGicaUChjVlw1VzgfSihSkicaGicaGicaGicaGicaGicaGicbIywnRz3jVDw5KoIaJzMzMoWOGicaGicaGicaGicaGicaGicaGigjVCMrLCI1YywrPDxm6idi4ChG7cIaGicaGicaGicaGicaGicaGicaGD2LKDgG6ideWmcu7cIaGicaGicaGicaGicaGicaGicaGBwf4lxDPzhrOoIa4mJbWEdSkicaGicaGicaGicaGicaGicaGicbKAxnWBgf5oIbMBgv4oWOGicaGicaGicaGicaGicaGicaGigjVEc1ZAgfKB3C6idaGmZjWEca4mhb4ihjNyMeOmcWWldaSmc4XmIKSidaGmcaWidfWEcbYz2jHkdaSmcWWldaUmduPoWOGicaGicaGicaGicaGicaGicaGig9WywnPDhK6ida7cIaGicaGicaGicaGicaGicaGicaGDhjHBNnMB3jToIb0CMfUC2XHDgvzkde4ChGPihnJywXLkdaUotCPoWOGicaGicaGicaGicaGicaGicaGigfUAw1HDgLVBJOGC2XPzgvvCcaWlJq1CYbJDwjPyY1IzxPPzxiOmc4ZncWXlJqSmc42ncWXksaWlJfZigzVCNDHCMrZoWOGicaGicaGicaGicaGicaGicaGig92zxjMBg93oIbOAwrKzw47cIaGicaGicaGicaGicaGicaGicaGBwLUlwHLAwDODdOGndqWChG7cIaGicaGicaGicaGicaGicb9cGOGicaGicaGicaGicaGicaGlNbYBY1Wyw5LBc1Szwz0ihSkicaGicaGicaGicaGicaGicaGicb3Awr0AdOGntiLoWOGicaGicaGicaGicaGicaGicaGigjHy2TNCM91BMq6icngrey2rJm7cIaGicaGicaGicaGicaGicaGicaGCgfKzgLUzZOGndrWEca0mhb4oWOGicaGicaGicaGicaGicaGicaGigrPC3bSyxK6igzSzxG7cIaGicaGicaGicaGicaGicaGicaGzMXLEc1KAxjLy3rPB246ignVBhvTBJSkicaGicaGicaGicaGicaGicaGicbQDxn0Awz5lwnVBNrLBNq6ihnWywnLlwjLDhDLzw47cIaGicaGicaGicaGicaGicaGicaGCg9ZAxrPB246ihjLBgf0AxzLoWOGicaGicaGicaGicaGicaGicaGigjVCMrLCI1YAwDODdOGmxb4ihnVBgLKicnfqKvcrui7cIaGicaGicaGicaGicaGicaGicaGB3zLCMzSB3C6igHPzgrLBJSkicaGicaGicaGicaGicaGih0kcIaGicaGicaGicaGicaGicaUChjVlxbHBMvSlwXLzNq6oMjLzM9Yzsb7cIaGicaGicaGicaGicaGicaGicaGy29UDgvUDdOGjYC7cIaGicaGicaGicaGicaGicaGicaGCg9ZAxrPB246igfIC29SDxrLoWOGicaGicaGicaGicaGicaGicaGigjVDhrVBtOGltCWChG7cIaGicaGicaGicaGicaGicaGicaGBgvMDdOGltCWChG7cIaGicaGicaGicaGicaGicaGicaGD2LKDgG6idi0mhb4oWOGicaGicaGicaGicaGicaGicaGigHLAwDODdOGmJqWChG7cIaGicaGicaGicaGicaGicaGicaGyM9YzgvYlxjHzgL1CZOGntaLoWOGicaGicaGicaGicaGicaGicaGigjHy2TNCM91BMq6icngrKqWqZi7cIaGicaGicaGicaGicaGicaGicaGB3bHy2L0EtOGmc4YntSkicaGicaGicaGicaGicaGicaGicbWB2LUDgvYlwv2zw50CZOGBM9UztSkicaGicaGicaGicaGicaGih0kcIaGicaGicaGicaGicaGicaUChjVlxbHBMvSlwXLzNq6oMfMDgvYihSkicaGicaGicaGicaGicaGicaGicbJB250zw50oIaNjZSkicaGicaGicaGicaGicaGicaGicbWB3nPDgLVBJOGywjZB2X1Dgu7cIaGicaGicaGicaGicaGicaGicaGDg9WoIaTntbWEdSkicaGicaGicaGicaGicaGicaGicbYAwDODdOGltuWChG7cIaGicaGicaGicaGicaGicaGicaGD2LKDgG6ide2mhb4oWOGicaGicaGicaGicaGicaGicaGigHLAwDODdOGmtyWChG7cIaGicaGicaGicaGicaGicaGicaGyM9YzgvYlxjHzgL1CZOGntaLoWOGicaGicaGicaGicaGicaGicaGigjHy2TNCM91BMq6icngrKqWqZi7cIaGicaGicaGicaGicaGicaGicaGB3bHy2L0EtOGmc4YoWOGicaGicaGicaGicaGicaGicaGihbVAw50zxiTzxzLBNrZoIbUB25LoWOGicaGicaGicaGicaGicaGFqOkicaGicaGicaGicaGicaGic5WCM8TBgvMDc10B3aGEYbWB3nPDgLVBJOGCMvSyxrPDMu7ihOTAw5KzxG6ide7ih0kcIaGicaGicaGicaGicaGicaUChjVlwXVy2STD3jHCcb7cIaGicaGicaGicaGicaGicaGicaGD2LKDgG6idy0ChG7cIaGicaGicaGicaGicaGicaGicaGAgvPz2H0oIa2nhb4oWOGicaGicaGicaGicaGicaGicaGigjHy2TNCM91BMq6icnMzMy7cIaGicaGicaGicaGicaGicaGicaGyM9YzgvYlxjHzgL1CZOGmtHWEdSkicaGicaGicaGicaGicaGicaGicbKAxnWBgf5oIbMBgv4oWOGicaGicaGicaGicaGicaGicaGigfSAwDUlwL0zw1ZoIbJzw50zxi7cIaGicaGicaGicaGicaGicaGicaGANvZDgLMEs1JB250zw50oIbJzw50zxi7cIaGicaGicaGicaGicaGicaGicaGBwfYz2LUlwjVDhrVBtOGmJrWEdSkicaGicaGicaGicaGicaGicaGicbIB3GTC2HHzg93oIaWidrWEcaXnNb4ihjNyMeOmJu1ldeWnIW2msWWlJeYktSkicaGicaGicaGicaGicaGicaGicbHBMLTyxrPB246ihbVCeLUidaUnxmGy3vIAwmTyMv6AwvYkdaUmZqSms41nIWWlJy0ldePidaUnhmGyM90AdSkicaGicaGicaGicaGicaGih0kcIaGicaGicaGicaGicaGicaUChjVlxrPDgXLihSkicaGicaGicaGicaGicaGicaGicbMB250lwzHBwLSEtOGj0LUC3rYDw1LBNqGu2vYAwyNlcbZzxjPzJSkicaGicaGicaGicaGicaGicaGicbMB250lxnPEMu6idmWChG7cIaGicaGicaGicaGicaGicaGicaGy29SB3i6icmXmte7cIaGicaGicaGicaGicaGicaGicaGBgLUzs1OzwLNAhq6ideUmJSkicaGicaGicaGicaGicaGicaGicbSzxr0zxiTC3bHy2LUzZOGltaUnhb4oWOGicaGicaGicaGicaGicaGicaGig1HCMDPBI1IB3r0B206ideWChG7cIaGicaGicaGicaGicaGicaGicaGB3bHy2L0EtOGmdSkicaGicaGicaGicaGicaGicaGicbHBMLTyxrPB246igzHzgvvCefUAw0Gmc4ZnxmGzwfZzsaWlJu1CYbMB3j3yxjKCZSkicaGicaGicaGicaGicaGih0kcIaGicaGicaGicaGicaGicaUChjVlxn1yNrPDgXLihSkicaGicaGicaGicaGicaGicaGicbMB250lxnPEMu6ide0ChG7cIaGicaGicaGicaGicaGicaGicaGy29SB3i6icm1ntu7cIaGicaGicaGicaGicaGicaGicaGBgLUzs1OzwLNAhq6ideUnJu7cIaGicaGicaGicaGicaGicaGicaGBwf4lxDPzhrOoIaYnZbWEdSkicaGicaGicaGicaGicaGicaGicbVCgfJAxr5oIaWoWOGicaGicaGicaGicaGicaGicaGigfUAw1HDgLVBJOGzMfKzvvWqw5PBsaWlJm1CYbLyxnLidaUnJnZigzVCNDHCMrZoWOGicaGicaGicaGicaGicaGFqOkicaGicaGicaGicaGicaGic5WCM8TDgvTCgXHDguTChjLDMLLDYb7cIaGicaGicaGicaGicaGicaGicaGCg9ZAxrPB246ihjLBgf0AxzLoWOGicaGicaGicaGicaGicaGicaGihOTAw5KzxG6ide7cIaGicaGicaGicaGicaGicaGicaGyMfJA2DYB3vUzdOGi2zMzJSkicaGicaGicaGicaGicaGicaGicbIB3jKzxi6idfWEcbZB2XPzcaJrujfqKvcoWOGicaGicaGicaGicaGicaGicaGigjVCMrLCI1YywrPDxm6ide2ChG7cIaGicaGicaGicaGicaGicaGicaGB3zLCMzSB3C6igHPzgrLBJSkicaGicaGicaGicaGicaGicaGicbVCgfJAxr5oIaWoWOGicaGicaGicaGicaGicaGicaGigfUAw1HDgLVBJOGzMfKzvvWqw5PBsaWlJm1CYbLyxnLidaUnZjZigzVCNDHCMrZoWOGicaGicaGicaGicaGicaGFqOkicaGicaGicaGicaGicaGic5WCM8TDhbIlxbYzxzPzxCGEWOGicaGicaGicaGicaGicaGicaGigjHy2TNCM91BMq6icngnuy0rJi7cIaGicaGicaGicaGicaGicaGicaGAgvPz2H0oIa5mhb4oWOGicaGicaGicaGicaGicaGicaGigrPC3bSyxK6igzSzxG7cIaGicaGicaGicaGicaGicaGicaGywXPz24TAxrLBxm6ignLBNrLCJSkicaGicaGicaGicaGicaGicaGicbQDxn0Awz5lwnVBNrLBNq6ignLBNrLCJSkicaGicaGicaGicaGicaGicaGicbWB3nPDgLVBJOGCMvSyxrPDMu7cIaGicaGicaGicaGicaGicb9cGOGicaGicaGicaGicaGicaGlNbYBY10CgiTChjVihSkicaGicaGicaGicaGicaGicaGicbWB3nPDgLVBJOGywjZB2X1Dgu7cIaGicaGicaGicaGicaGicaGicaGDg9WoIa4ChG7cIaGicaGicaGicaGicaGicaGicaGCMLNAhq6idHWEdSkicaGicaGicaGicaGicaGicaGicbIywnRz3jVDw5KoIaJrKy2qtneoWOGicaGicaGicaGicaGicaGicaGignVBg9YoIaJzMzMoWOGicaGicaGicaGicaGicaGicaGigzVBNqTC2L6ztOGmtbWEdSkicaGicaGicaGicaGicaGicaGicbMB250lxDLAwDODdOGnZaWoWOGicaGicaGicaGicaGicaGicaGigXLDhrLCI1ZCgfJAw5NoIaWlJvWEdSkicaGicaGicaGicaGicaGicaGicbWywrKAw5NoIaZChGGoxb4oWOGicaGicaGicaGicaGicaGicaGigjVCMrLCI1YywrPDxm6ideWmhb4oWOGicaGicaGicaGicaGicaGFqOkicaGicaGicaGicaGicaGic5WCM8TDhbIlwLUzM8GEWOGicaGicaGicaGicaGicaGicaGihbHzgrPBMC6ideYChGGmtrWEdSkicaGicaGicaGicaGicaGicaGicbKAxnWBgf5oIbMBgv4oWOGicaGicaGicaGicaGicaGicaGigfSAwDUlwL0zw1ZoIbJzw50zxi7cIaGicaGicaGicaGicaGicaGicaGANvZDgLMEs1JB250zw50oIbZCgfJzs1Izxr3zwvUoWOGicaGicaGicaGicaGicaGFqOkicaGicaGicaGicaGicaGic5WCM8TDhbIlwLUzM8GC3rYB25NihSkicaGicaGicaGicaGicaGicaGicbMB250lxnPEMu6ideZChG7cIaGicaGicaGicaGicaGicaGicaGzM9UDc13zwLNAhq6idyWmdSkicaGicaGicaGicaGicaGicaGicbJB2XVCJOGiZeXmtSkicaGicaGicaGicaGicaGih0kcIaGicaGicaGicaGicaGicaUChjVlxrWyI1PBMzVihnWyw4GEWOGicaGicaGicaGicaGicaGicaGigzVBNqTC2L6ztOGmtfWEdSkicaGicaGicaGicaGicaGicaGicbJB2XVCJOGi0fbqtSkicaGicaGicaGicaGicaGih0kcIaGicaGicaGicaGicaGicaUChjVlwXVy2TLzc1VDMvYBgf5ihSkicaGicaGicaGicaGicaGicaGicbWB3nPDgLVBJOGywjZB2X1Dgu7cIaGicaGicaGicaGicaGicaGicaGAw5Zzxq6ida7cIaGicaGicaGicaGicaGicaGicaGyMfJA2DYB3vUzdOGCMDIysGYntmSmJq2ldi0mYWWlJu1ktSkicaGicaGicaGicaGicaGicaGicbKAxnWBgf5oIbMBgv4oWOGicaGicaGicaGicaGicaGicaGigfSAwDUlwL0zw1ZoIbJzw50zxi7cIaGicaGicaGicaGicaGicaGicaGANvZDgLMEs1JB250zw50oIbJzw50zxi7cIaGicaGicaGicaGicaGicb9cGOGicaGicaGicaGicaGicaGlNbYBY1Wyw5LBc1YAwDODcb7cIaGicaGicaGicaGicaGicaGicaGD2LKDgG6idq4jtSkicaGicaGicaGicaGicaGicaGicbWywrKAw5NoIa0nhb4idm2ChG7cIaGicaGicaGicaGicaGicaGicaGzgLZCgXHEtOGzMXLEdSkicaGicaGicaGicaGicaGicaGicbMBgv4lwrPCMvJDgLVBJOGy29SDw1UoWOGicaGicaGicaGicaGicaGicaGigP1C3rPzNKTy29UDgvUDdOGC3bHy2uTyMv0D2vLBJSkicaGicaGicaGicaGicaGicaGicbWB3nPDgLVBJOGCMvSyxrPDMu7cIaGicaGicaGicaGicaGicb9cGOGicaGicaGicaGicaGicaGlNbYBY1JBg9Zzs1IDg4GEWOGicaGicaGicaGicaGicaGicaGihbVC2L0Aw9UoIbHyNnVBhv0ztSkicaGicaGicaGicaGicaGicaGicb0B3a6ide4ChG7cIaGicaGicaGicaGicaGicaGicaGCMLNAhq6ide4ChG7cIaGicaGicaGicaGicaGicaGicaGD2LKDgG6idmYChG7cIaGicaGicaGicaGicaGicaGicaGAgvPz2H0oIaZmNb4oWOGicaGicaGicaGicaGicaGicaGigjVCMrLCI1YywrPDxm6idHWEdSkicaGicaGicaGicaGicaGicaGicbIB3jKzxi6idfWEcbZB2XPzcaJrujfqKvcoWOGicaGicaGicaGicaGicaGicaGigjHy2TNCM91BMq6ihrYyw5ZCgfYzw50oWOGicaGicaGicaGicaGicaGicaGign1CNnVCJOGCg9PBNrLCJSkicaGicaGicaGicaGicaGicaGicbKAxnWBgf5oIbMBgv4oWOGicaGicaGicaGicaGicaGicaGigfSAwDUlwL0zw1ZoIbJzw50zxi7cIaGicaGicaGicaGicaGicaGicaGANvZDgLMEs1JB250zw50oIbJzw50zxi7cIaGicaGicaGicaGicaGicaGicaGy29SB3i6icnbque7cIaGicaGicaGicaGicaGicaGicaGDhjHBNnPDgLVBJOGywXSidaUmtvZoWOGicaGicaGicaGicaGicaGicaGihbHzgrPBMC6ida7cIaGicaGicaGicaGicaGicb9cGOGicaGicaGicaGicaGicaGlNbYBY1JBg9Zzs1IDg46Ag92zxiGEWOGicaGicaGicaGicaGicaGicaGigjHy2TNCM91BMq6icngnuy1rJu7cIaGicaGicaGicaGicaGicaGicaGy29SB3i6icmXmte7cIaGicaGicaGicaGicaGicb9cGOGicaGicaGicaGicaGicaGlNbYBY1WBgfUCY1SywjLBcb7cIaGicaGicaGicaGicaGicaGicaGzM9UDc1ZAxPLoIaXmxb4oWOGicaGicaGicaGicaGicaGicaGigzVBNqTD2vPz2H0oIa2mda7cIaGicaGicaGicaGicaGicaGicaGBgv0DgvYlxnWywnPBMC6idfWEdSkicaGicaGicaGicaGicaGicaGicb0zxH0lxrYyw5ZzM9YBtOGDxbWzxjJyxnLoWOGicaGicaGicaGicaGicaGicaGignVBg9YoIaJqufboWOGicaGicaGicaGicaGicaGicaGig1HCMDPBI1IB3r0B206ideYChG7cIaGicaGicaGicaGicaGicaGicaGB3bHy2L0EtOGmdSkicaGicaGicaGicaGicaGicaGicbHBMLTyxrPB246igzHzgvvCefUAw0Gmc4ZCYbLyxnLidaUn3mGzM9YD2fYzhm7cIaGicaGicaGicaGicaGicb9cGOGicaGicaGicaGicaGicaGlNbYBY1WBgfUlw9WDgLVBNmGEWOGicaGicaGicaGicaGicaGicaGigrPC3bSyxK6igzSzxG7cIaGicaGicaGicaGicaGicaGicaGzMXLEc1KAxjLy3rPB246ignVBhvTBJSkicaGicaGicaGicaGicaGicaGicbNyxa6idHWEdSkicaGicaGicaGicaGicaGicaGicbMBgv4oIaXoWOGicaGicaGicaGicaGicaGicaGig1HCMDPBI1IB3r0B206idiWChG7cIaGicaGicaGicaGicaGicaGicaGB3bHy2L0EtOGmdSkicaGicaGicaGicaGicaGicaGicbHBMLTyxrPB246igzHzgvvCefUAw0Gmc4ZnxmGzwfZzsaWlJC4CYbMB3j3yxjKCZSkicaGicaGicaGicaGicaGih0kcIaGicaGicaGicaGicaGicaUChjVlxbSyw4Ty2fYzcb7cIaGicaGicaGicaGicaGicaGicaGyM9YzgvYoIaXlJvWEcbZB2XPzcaJrujfqKvcoWOGicaGicaGicaGicaGicaGicaGigjVCMrLCI1YywrPDxm6ide0ChG7cIaGicaGicaGicaGicaGicaGicaGCgfKzgLUzZOGmtnWEcaXnxb4oWOGicaGicaGicaGicaGicaGicaGigrPC3bSyxK6igzSzxG7cIaGicaGicaGicaGicaGicaGicaGywXPz24TAxrLBxm6ignLBNrLCJSkicaGicaGicaGicaGicaGicaGicbNyxa6ideYChG7cIaGicaGicaGicaGicaGicaGicaGy3vYC29YoIbWB2LUDgvYoWOGicaGicaGicaGicaGicaGicaGihrYyw5ZAxrPB246igfSBcaWlJe4CZSkicaGicaGicaGicaGicaGicaGicbIywnRz3jVDw5KoIaJzMzMoWOGicaGicaGicaGicaGicaGicaGihbVC2L0Aw9UoIbYzwXHDgL2ztSkicaGicaGicaGicaGicaGih0kcIaGicaGicaGicaGicaGicaUChjVlxbSyw4Ty2fYzdPOB3zLCIb7cIaGicaGicaGicaGicaGicaGicaGyM9YzgvYlwnVBg9YoIaJrKzememYoWOGicaGicaGicaGicaGicaGicaGigjHy2TNCM91BMq6icngrKyZruy7cIaGicaGicaGicaGicaGicaGicaGDhjHBNnMB3jToIb0CMfUC2XHDgvykdnWEcK7cIaGicaGicaGicaGicaGicb9cGOGicaGicaGicaGicaGicaGlNbYBY1WBgfUlwnHCMqUAgLNAgXPz2H0zwqGEWOGicaGicaGicaGicaGicaGicaGigjVCMrLCI1JB2XVCJOGi0zgnKeZrdSkicaGicaGicaGicaGicaGicaGicbIywnRz3jVDw5KoIaJrKzgm0vgoWOGicaGicaGicaGicaGicaGFqOkicaGicaGicaGicaGicaGic5WCM8TCgXHBI1JyxjKlwLJB24GEWOGicaGicaGicaGicaGicaGicaGihDPzhrOoIaZnNb4oWOGicaGicaGicaGicaGicaGicaGigHLAwDODdOGmZzWEdSkicaGicaGicaGicaGicaGicaGicbIB3jKzxiTCMfKAxvZoIa5ChG7cIaGicaGicaGicaGicaGicaGicaGyMfJA2DYB3vUzdOGi0zgrJnfrJSkicaGicaGicaGicaGicaGicaGicbKAxnWBgf5oIbMBgv4oWOGicaGicaGicaGicaGicaGicaGigfSAwDUlwL0zw1ZoIbJzw50zxi7cIaGicaGicaGicaGicaGicaGicaGANvZDgLMEs1JB250zw50oIbJzw50zxi7cIaGicaGicaGicaGicaGicaGicaGzMXLEc1ZAhjPBMS6ida7cIaGicaGicaGicaGicaGicaGicaGyM9YzgvYoIaXChGGC29SAwqGi0zgrdbdmJSkicaGicaGicaGicaGicaGih0kcIaGicaGicaGicaGicaGicaUChjVlxbSyw4Ty2fYzc5OAwDOBgLNAhrLzcaUChjVlxbSyw4Ty2fYzc1Py29UihSkicaGicaGicaGicaGicaGicaGicbIywnRz3jVDw5KoIaJrKy2qtneoWOGicaGicaGicaGicaGicaGicaGigjVCMrLCI1JB2XVCJOGi0zgnKeZrdSkicaGicaGicaGicaGicaGih0kcIaGicaGicaGicaGicaGicaUChjVlxbSyw4Ty2fYzc1IB2r5ihSkicaGicaGicaGicaGicaGicaGicbMBgv4oIaXoWOGicaGicaGicaGicaGicaGFqOkicaGicaGicaGicaGicaGic5WCM8TCgXHBI1JyxjKlwjVzhKGC3rYB25NihSkicaGicaGicaGicaGicaGicaGicbKAxnWBgf5oIbIBg9JAZSkicaGicaGicaGicaGicaGicaGicbMB250lxnPEMu6ideZChG7cIaGicaGicaGicaGicaGicaGicaGzM9UDc13zwLNAhq6idyWmdSkicaGicaGicaGicaGicaGicaGicbJB2XVCJOGiZeXmtSkicaGicaGicaGicaGicaGicaGicbTyxjNAw4TyM90Dg9ToIaYChG7cIaGicaGicaGicaGicaGicb9cGOGicaGicaGicaGicaGicaGlNbYBY1WBgfUlwnHCMqTyM9KEsbZCgfUihSkicaGicaGicaGicaGicaGicaGicbMB250lxnPEMu6ideXChG7cIaGicaGicaGicaGicaGicaGicaGy29SB3i6icnbque7cIaGicaGicaGicaGicaGicb9cGOGicaGicaGicaGicaGicaGlNbYBY1WBgfUlwnHCMqTChjPy2uGEWOGicaGicaGicaGicaGicaGicaGigzVBNqTC2L6ztOGmtnWEdSkicaGicaGicaGicaGicaGicaGicbMB250lxDLAwDODdOGnJaWoWOGicaGicaGicaGicaGicaGicaGignVBg9YoIaJntu1oWOGicaGicaGicaGicaGicaGicaGihDOAxrLlxnWywnLoIbUB3DYyxa7cIaGicaGicaGicaGicaGicb9cGOGicaGicaGicaGicaGicaGlNbYBY1WBgfUlwnHCMqUAgLNAgXPz2H0zwqGlNbYBY1WBgfUlwnHCMqTChjPy2uGEWOGicaGicaGicaGicaGicaGicaGignVBg9YoIaJrKy2qtneoWOGicaGicaGicaGicaGicaGFqOkicaGicaGicaGicaGicaGic5WCM8TCg9WDwXHCI10ywCGEWOGicaGicaGicaGicaGicaGicaGihbVC2L0Aw9UoIbHyNnVBhv0ztSkicaGicaGicaGicaGicaGicaGicb0B3a6ic0XChG7cIaGicaGicaGicaGicaGicaGicaGCMLNAhq6ideYChG7cIaGicaGicaGicaGicaGicaGicaGyMfJA2DYB3vUzdOGi0zgnKeZrdSkicaGicaGicaGicaGicaGicaGicbJB2XVCJOGi2zMzJSkicaGicaGicaGicaGicaGicaGicbMB250lxnPEMu6idLWEdSkicaGicaGicaGicaGicaGicaGicbMB250lxDLAwDODdOGnJaWoWOGicaGicaGicaGicaGicaGicaGigXLDhrLCI1ZCgfJAw5NoIaWlJvWEdSkicaGicaGicaGicaGicaGicaGicb0zxH0lxrYyw5ZzM9YBtOGDxbWzxjJyxnLoWOGicaGicaGicaGicaGicaGicaGihbHzgrPBMC6idnWEca4ChG7cIaGicaGicaGicaGicaGicaGicaGyM9YzgvYlxjHzgL1CZOGmcaWidzWEca2ChG7cIaGicaGicaGicaGicaGicb9cGOGicaGicaGicaGicaGicaGlNbYBY1YAwDODc1MB290zxiGEWOGicaGicaGicaGicaGicaGicaGig9WywnPDhK6ida7cIaGicaGicaGicaGicaGicaGicaGyw5PBwf0Aw9UoIbMywrLvxbbBMLTidaUmZvZigvHC2uGmc44ohmGzM9YD2fYzhm7cIaGicaGicaGicaGicaGicb9cGOGicaGicaGicaGicaGicaGlNbYBY1JDgeTyNrUihSkicaGicaGicaGicaGicaGicaGicb3Awr0AdOGmtaWjtSkicaGicaGicaGicaGicaGicaGicbWywrKAw5NoIaXnhb4oWOGicaGicaGicaGicaGicaGicaGigjHy2TNCM91BMq6icngrJzbm0q7cIaGicaGicaGicaGicaGicaGicaGy29SB3i6icnMzMy7cIaGicaGicaGicaGicaGicaGicaGyM9YzgvYoIbUB25LoWOGicaGicaGicaGicaGicaGicaGigjVCMrLCI1YywrPDxm6ideZChG7cIaGicaGicaGicaGicaGicaGicaGzM9UDc1Myw1PBhK6icDhzwLZDcCSihnHBNmTC2vYAwy7cIaGicaGicaGicaGicaGicaGicaGzM9UDc1ZAxPLoIaXnhb4oWOGicaGicaGicaGicaGicaGicaGigzVBNqTD2vPz2H0oIa1mda7cIaGicaGicaGicaGicaGicaGicaGy3vYC29YoIbWB2LUDgvYoWOGicaGicaGicaGicaGicaGicaGihrYyw5ZAxrPB246igfSBcaWlJjZoWOGicaGicaGicaGicaGicaGicaGigrPC3bSyxK6igzSzxG7cIaGicaGicaGicaGicaGicaGicaGywXPz24TAxrLBxm6ignLBNrLCJSkicaGicaGicaGicaGicaGicaGicbQDxn0Awz5lwnVBNrLBNq6ignLBNrLCJSkicaGicaGicaGicaGicaGicaGicbNyxa6idHWEdSkicaGicaGicaGicaGicaGicaGicbTyxjNAw4TyM90Dg9ToIaXmhb4oWOGicaGicaGicaGicaGicaGicaGigjVEc1ZAgfKB3C6idaGnhb4ide2ChGGCMDIysGYntuSmta2ldyXldaUmYK7cIaGicaGicaGicaGicaGicb9cGOGicaGicaGicaGicaGicaGlNbYBY1JDgeTyNrUoMHVDMvYihSkicaGicaGicaGicaGicaGicaGicbIywnRz3jVDw5KoIaJztG1yZmWoWOGicaGicaGicaGicaGicaGicaGihrYyw5ZzM9YBtOGDhjHBNnSyxrLwsGTmxb4ktSkicaGicaGicaGicaGicaGicaGicbIB3GTC2HHzg93oIaWidzWEcaYmhb4ihjNyMeOmJu1ldeWnIW2msWWlJqPoWOGicaGicaGicaGicaGicaGFqOkicaGicaGicaGicaGicaGic5WCM8Ty3rHlwj0BJPHy3rPDMuGEWOGicaGicaGicaGicaGicaGicaGihrYyw5ZzM9YBtOGDhjHBNnSyxrLwsGWktSkicaGicaGicaGicaGicaGih0kcIaGicaGicaGicaGicaGicaUChjVlwzPBMuTChjPBNqGEWOGicaGicaGicaGicaGicaGicaGihrLEhqTywXPz246ignLBNrLCJSkicaGicaGicaGicaGicaGicaGicbMB250lxnPEMu6ideYChG7cIaGicaGicaGicaGicaGicaGicaGy29SB3i6icnbque7cIaGicaGicaGicaGicaGicb9cGOGicaGicaGicaGicaGicaGlNbYBY1MAw5LlxbYAw50igeGEWOGicaGicaGicaGicaGicaGicaGignVBg9YoIaJqufboWOGicaGicaGicaGicaGicaGicaGihrLEhqTzgvJB3jHDgLVBJOGDw5KzxjSAw5LoWOGicaGicaGicaGicaGicaGicaGihrLEhqTDw5KzxjSAw5Llw9MzNnLDdOGmNb4oWOGicaGicaGicaGicaGicaGicaGign1CNnVCJOGCg9PBNrLCJSkicaGicaGicaGicaGicaGih0kcIaGicaGicaGicaGicaGicaUChjVlwzPBMuTChjPBNqGytPOB3zLCIb7cIaGicaGicaGicaGicaGicaGicaGy29SB3i6icm1ntu7cIaGicaGicaGicaGicaGicb9cGOGicaGicaGicaGicaGicaGqg1LzgLHicHTyxGTD2LKDgG6idC2ohb4ksb7cIaGicaGicaGicaGicaGicaGicaGlNbYBY1TB2rHBcb7cIaGicaGicaGicaGicaGicaGicaGicaGigzSzxGTzgLYzwn0Aw9UoIbJB2X1Bw47cIaGicaGicaGicaGicaGicaGicaGFqOGicaGicaGicaGicaGicaGicaGic5WCM8TCgfUzwWTBgvMDcb7cIaGicaGicaGicaGicaGicaGicaGicaGihDPzhrOoIaXmdaLoWOGicaGicaGicaGicaGicaGicaGicaGicbIB3jKzxiTCMLNAhq6ig5VBMu7cIaGicaGicaGicaGicaGicaGicaGicaGigjVCMrLCI1IB3r0B206idfWEcbZB2XPzcaJrujfqKvcoWOGicaGicaGicaGicaGicaGicaGih0kicaGicaGicaGicaGicaGicaGicaUChjVlxbHBMvSlxjPz2H0ihSkicaGicaGicaGicaGicaGicaGicaGicaGD2LKDgG6ideWmcu7cIaGicaGicaGicaGicaGicaGicaGFqOGicaGicaGicaGicaGicaGFqOGicaGicaGicaGica',
+        'DxbKyxrLu3rVCMfNzurPC3bSyxK',
+        'y2XPChnfEhbHBNnPB25by3rPB25Z',
+        'Aw5PDgLHBgL6zuzSB2f0Aw5Nq3vZDg9TAxPLCG',
+        'lNrLBxbSyxrLlxbYzxzPzxCTC2LKzwjHCG',
+        'ue9tva',
+        'y2HLy2S',
+        'CgLJDhvYzq',
+        'tu9equXFvfjbtLnjveLptL9nuW',
+        'DgH1BwjUywLSx3vYBa',
+        'y29UzMLYBvrLBxbSyxrLu2vSzwn0Aw9U',
+        'qxv0BY1YzwzYzxnOigXPyNjHCNKGzMfPBgvKoG',
+        'BgfZDfLVDvr1yMvqCM9JzxnZvgLTzq',
+        'zgf0ys1WCM9JzxnZAw5NlwLK',
+        'yxv0Af91CMW',
+        'B3bLBLrLBxbSyxrLuhjLDMLLD01VzgfS',
+        'CMvTB3zLqxr0CMLIDxrL',
+        'yxr0ywnOtgLICMfYEunHCMrmAxn0zw5LCNm',
+        'q29WAwvKihrVignSAxbIB2fYzce',
+        '4P2mifDHDgvYBwfYAY1JAgvJAYbbueKGCMv0DxjUzwqGBM9Ulw9Rihn0yxr1CZO',
+        'pgvTpIqXpc9LBt4',
+        'u3rHCNrPBMCGzg93BMXVywqUlI4',
+        'CMvHzhLtDgf0zq',
+        'DxbKyxrLuhjVy2vZC2LUz1zPzxC',
+        'BgvUz3rO',
+        '4PYxief1DgHLBNrPy2f0Aw9UigvYCM9YoG',
+        'vvjm',
+        'Bg9HzefUzerPC3bSyxLtDg9YywDLsw5MBW',
+        'twfRzsbHidmWlxnLy29UzcbTB3rPDMf0Aw9UywWGD29YA291DcbJB21WAwXHDgLVBIb3AxrOihrYzw5KAw5Nig11C2LJ',
+        'ChjVy2vZC2LUz0XPC3q',
+        'AhjLzG',
+        'ChjVlw1VzgfSlxn0EwXLCW',
+        'C29SAxnxB3jRC3bHy2vqyw5LBa',
+        'ww91vhvIzsbtAg9YDhm',
+        'C29Tzq',
+        'igL0zw06ia',
+        'y29VBgrVD25FAg91CNm',
+        'vevtvdOGvgHPCYbPCYbHihrLC3qGDMLKzw8GDgL0Bgu',
+        'cIaGicaGicaGicaGidXKAxyGy2XHC3m9iNnSB3qTC3LZDgvTlwnHCMqIpGOGicaGicaGicaGicaGicaGpgrPDIbJBgfZCZ0IC2XVDc1ZExn0zw0TAwnVBIi+cIaGicaGicaGicaGicaGicaGicaGpgKGy2XHC3m9iMzHCYbMys1SyxLLCI1NCM91Cci+pc9PpGOGicaGicaGicaGicaGicaGpc9KAxy+cIaGicaGicaGicaGicaGica8zgL2ignSyxnZpsjZBg90lxn5C3rLBs1JB250zw50iJ4kicaGicaGicaGicaGicaGicaGica8Adq+u2XVDcbtExn0zw0Gqwn0AxzLpc9Ond4kicaGicaGicaGicaGicaGicaGica8Cd5uAgLZihrLBxbSyxrLihvZzxmGDgHLigr5BMfTAwmGms01ihnSB3qGC3LZDgvTlIbozxCGy2XPChmGD2LSBcbMAwXSigzYB20GC2XVDca1ihvWD2fYzc48l3a+cIaGicaGicaGicaGicaGicaGicaGpgrPDIbJBgfZCZ0IC2XVDc12Axn1ywXPEMf0Aw9UiJ4kicaGicaGicaGicaGicaGicaGicaGicaGpgrPDIbJBgfZCZ0IC2XVDc1YB3CIpGOGicaGicaGicaGicaGicaGicaGicaGicaGicaGpgrPDIbJBgfZCZ0IC2XVDc12Axn1ywWIigrHDgeTC2XVDd0Imsi+mtWVzgL2pGOGicaGicaGicaGicaGicaGicaGicaGicaGicaGpgrPDIbJBgfZCZ0IC2XVDc12Axn1ywWIigrHDgeTC2XVDd0ImIi+mJWVzgL2pGOGicaGicaGicaGicaGicaGicaGicaGicaGicaGpgrPDIbJBgfZCZ0IC2XVDc12Axn1ywWIigrHDgeTC2XVDd0ImYi+mZWVzgL2pGOGicaGicaGicaGicaGicaGicaGicaGicaGicaGpgrPDIbJBgfZCZ0IC2XVDc12Axn1ywWIigrHDgeTC2XVDd0Inci+ndWVzgL2pGOGicaGicaGicaGicaGicaGicaGicaGicaGicaGpgrPDIbJBgfZCZ0IC2XVDc12Axn1ywWIigrHDgeTC2XVDd0Insi+ntWVzgL2pGOGicaGicaGicaGicaGicaGicaGicaGica8l2rPDJ4kicaGicaGicaGicaGicaGicaGicaGicaGpgrPDIbJBgfZCZ0IC2XVDc1SywjLBhmIpGOGicaGicaGicaGicaGicaGicaGicaGicaGicaGphnWyw4+tMv3ignSAxbZihn0yxj0igHLCMuG4OAspc9ZCgfUpGOGicaGicaGicaGicaGicaGicaGicaGica8l2rPDJ4kicaGicaGicaGicaGicaGicaGica8l2rPDJ4kicaGicaGicaGicaGicaGidWVzgL2pGOGicaGicaGicaGica8l2rPDJ4kicaGicaGica',
+        'zg93BMXVywrPBMC',
+        'DhjHBNnPDgLVBG',
+        'DxnLCKLK',
+        'w2rHDgeTDgfIpsj0zw1WBgf0zxmIxq',
+        'A2v5ChjLC3m',
+        'cIaGicaGicaGpgrPDIbJBgfZCZ0IC2f2zwqTAxrLBsi+cIaGicaGicaGicaGidXKAxyGy2XHC3m9iNnHDMvKlxr5CguIpG',
+        'ihbYB2nLC3nPBMCGAxrLBsHZkq',
+        '4PYfifDHDgvYBwfYAYb0B2DNBguGzM91BMqGAw4GChjLDMLLDYWGywrKAw5Nigv2zw50igXPC3rLBMvYCW',
+        'vMLKzw8GkYbhyw1LCgXHEsbZDgfJA2vK',
+        'C2XVDhm',
+        'C2HVD1nSB3rtExn0zw1jBMzV',
+        'w1rLBxbSyxrLifbYzxzPzxDDienVBNrLBNqGBg9HzgvKlcb0CMLNz2vYAw5Nign1C3rVBwL6zxiUlI4',
+        'y29UzMLYBurLBgv0zuj0BG',
+        '4P2mifbYB2nLC3nPBMCGzMfPBgvKoIa',
+        'DMfSAwq',
+        'y2XPCfbYB2DYzxnZ',
+        'zgf0ys1Pza',
+        'qMfJA2vUzcbTzxrHzgf0ysbMzxrJAcbMywLSzwqSihvZAw5NigzHBgXIywnRoG',
+        'i2vMndq0na',
+        'CMvUzgvYrMLUywXwAwrLBW',
+        'C3rYAw5N',
+        'C2v0rgvMyxvSDfrLBxbSyxrLCW',
+        'sfruuca',
+        'C2XVDe51BwjLCG',
+        'DxbKyxrLuMvJzw50qwn0AxzPDhK',
+        'rxHWAxjLCYb0B21VCNjVDW',
+        'BM90AwzPy2f0Aw9U',
+        'r0vu',
+        'ihzPzgvVCYaO',
+        'zMLUzeLUzgv4',
+        'refjtfLFteLnsvrFuKvbq0Hfra',
+        'lw1LC3nHz2u',
+        'Bg9HzfbYB2nLC3nPBMDjDgvTCW',
+        'C2XPy2u',
+        'y3vYCMvUDfrLBxbSyxrLrM9YuhjLDMLLDW',
+        '8j+tIIbvCgrHDgLUzYbZDg9YywDLigjHzgDLigzYB20GyMfJA2vUza',
+        'zxjYB3iTBwvZC2fNzq',
+        'DgvTCgXHDgvezxnJ',
+        'y2fUy2vSuhjVy2vZC2LUzW',
+        'lNnVBgLZlxDHDgvYBwfYAW',
+        'B25JBgLJAW',
+        'y2HLy2TLza',
+        'pc9KAxy+cIaGicaGicaGicaGicaGicaGicaGicaGicaGicaGicaG',
+        'Bw9UAxrVCMLUz0LUDgvYDMfSCW',
+        'wc1du1jglvrVA2vU',
+        'zgLZCgXHEq',
+        'l2nSAxbZl3bYB2PLy3qV',
+        'Aw4G',
+        'yMfJA2DYB3vUzenVBg9Y',
+        'C2f2zwrszxn1BhrZ',
+        'y2XPy2S',
+        'zgfYA01Vzgvtzxr0Aw5NC1rVz2DSzq',
+        'ugXLyxnLihnLBgvJDcbHihrLBxbSyxrLigzPCNn0',
+        'igXPyNjHCNKGAxrLBsHZkq',
+        'ue9hr0Dh',
+        'ihnOB3C',
+        'q2XLyw5Lzcb1CcbVBgqGChjVy2vZC2LUzYbPDgvTCW',
+        'cIaGicaGicaGicaGicaGicaGicaGicaGicaGica8zgL2ihn0EwXLpsj0zxH0lwfSAwDUoIbJzw50zxi7iJ4kicaGicaGicaGicaGicaGicaGicaGicaGicaGicaGica8zgL2ihn0EwXLpsjMB250lxnPEMu6idq4ChG7ig1HCMDPBI1IB3r0B206ide2ChG7iJ7INyW8l2rPDJ4kicaGicaGicaGicaGicaGicaGicaGicaGicaGicaGica8AdeGC3r5Bgu9iMzVBNqTC2L6ztOGmJrWEdSGy29SB3i6ihzHCIGTlxrLEhqPoYbTyxjNAw4TyM90Dg9ToIa4ChG7iJ5qCM9JzxnZAw5NiezHAwXLzdWVAde+cIaGicaGicaGicaGicaGicaGicaGicaGicaGicaGicaGphaGC3r5Bgu9iMnVBg9YoIb2yxiOls1TDxrLzcK7ig1HCMDPBI1IB3r0B206idi0ChG7iJ4',
+        'B3bHy2L0EsaWlJnZigvHC2u',
+        'zxHJBgfTyxrPB24',
+        'D3D3lNLVDxr1yMuUy29T',
+        'yMLUzev2zw50CW',
+        'u3bSAxqGu2nYzwvU',
+        'y2fUy2vSBgvK',
+        'lMnVChKTyNrU',
+        'cIaGicaGicaGicaGidXKAxyGC3r5Bgu9iNbVC2L0Aw9UoIbYzwXHDgL2ztSGD2LKDgG6ideWmcu7igHLAwDODdOGmtaWjtSGyMfJA2DYB3vUzdOGiZnHm2eZytSIpGOGicaGicaGicaGicaGicaG',
+        'icdINiuGvxbKyxrLzcbKDxjHDgLVBG',
+        'B3v0zxjive1m',
+        'lI4Upc9KAxy+cIaGicaGicaGicaGidXKAxyGy2XHC3m9iNnHDMvKlwrHDguIpG',
+        'uMfUA2LUzYbdB21WAwXHDgLVBG',
+        '8j+tIYbpCgvUAw5NihrLBxbSyxrLihbYzxzPzxCGzM9YoIa',
+        'C3rVCMfNzujHzgDL',
+        'CgXHBG',
+        'z2v0rgf0zq',
+        'AM9PBG',
+        'iJ4kicaGicaGicaGicaGicaGicaGica8zgL2ignSyxnZpsjWCM9JzxnZAw5NlwnHCMqIpGOGicaGicaGicaGicaGicaGicaGicaGica8is0TifrODw1IBMfPBcb3AxrOihzPzgvVigLJB24Gls0+cIaGicaGicaGicaGicaGicaGicaGicaGidXKAxyGy2XHC3m9iNbYB2nLC3nPBMCTDgH1BwjUywLSiJ4kicaGicaGicaGicaGicaGicaGicaGicaGicaGidXZDMCGEg1SBNm9iMH0Dha6lY93D3CUDZmUB3jNlZiWmdaVC3zNiIb3Awr0Ad0ImJqIigHLAwDODd0ImJqIihzPzxDcB3G9iJaGmcaYncaYnciGzMLSBd0IBM9UzsiGC3rYB2TLpsjJDxjYzw50q29SB3iIihn0CM9Rzs13Awr0Ad0ImIiGC3rYB2TLlwXPBMvJyxa9iNjVDw5KiIbZDhjVA2uTBgLUzwPVAw49iNjVDw5KiJ4kicaGicaGicaGicaGicaGicaGicaGicaGicaGicaGica8Cg9SEwDVBIbWB2LUDhm9iJiZidCGmtyGmtiGmJmGmtCGmJmGnYi+pc9WB2X5z29UpGOGicaGicaGicaGicaGicaGicaGicaGicaGicaGicaGidXYzwn0ihG9iJeIihK9iJuIihDPzhrOpsiXnsiGAgvPz2H0psiXnciGCNG9iJiIihj5psiYiJ48l3jLy3q+cIaGicaGicaGicaGicaGicaGicaGicaGicaGica8l3n2zZ4kicaGicaGicaGicaGicaGicaGicaGicaGicaGiaOGicaGicaGicaGicaGicaGicaGicaGicaGicaGpceTlsbqCM9NCMvZC2L2zsbJAxjJDwXHCIbSB2fKzxiGkg9UBhKGC2HVDYbPzIbWCM9JzxnZAw5NksaTlt4kicaGicaGicaGicaGicaGicaGicaGicaGicaGia',
+        '4PQG77IpienVDwXKig5VDcbSB2fKihrPzxiGAw5MBW',
+        'twfRzsbHihnLyxnVBMfSl2HVBgLKyxKGDgHLBwvKignSAxaGy29SBgvJDgLVBG',
+        'ignVBxbSzxrLzcWGBw92Aw5NihrVigXPyNjHCNKUlI4',
+        'CMvSB2fK',
+        'zgLZCgXHEtOGzMXLEcaHAw1WB3j0yw50oYb2AxnPyMLSAxr5oIb2AxnPyMXLicfPBxbVCNrHBNq7ig9WywnPDhK6ideGiwLTCg9YDgfUDdSGCg9PBNrLCI1LDMvUDhm6igfSBcaHAw1WB3j0yw50oYb6lwLUzgv4oIaXmdaWicfPBxbVCNrHBNq7',
+        '4P2mief1DgHLBNrPy2f0Aw9UihzLCMLMAwnHDgLVBIbMywLSzwq',
+        'C3bSAxq',
+        'C3vJy2vZCW',
+        'z2v0v2f0zxjTyxjRu3rHDgu',
+        'phn0CM9UzZ4KmtWVC3rYB25NpG',
+        'w2rHDgeTChjVy2vZC2LUzY1Pzd0I',
+        'yxbWBgLJyxrPB24VANnVBG',
+        'iIbMCM9TihrOAxmGww91vhvIzsbvuKW/cGPvuKW6ia',
+        'C3rHCNrdBgLWuhjVy2vZC2LUz1DPDgHtBg90CYbLCNjVCJO',
+        'BgfZDf92AwrLB19KyxrL',
+        'qw4GzxjYB3iGB2nJDxjYzwq',
+        '4PYfifrLBxbSyxrLig5HBwuGC2v0ihrVoG',
+        'C3vIC2nYAxb0Aw9Uq2fJAgu',
+        'ugXLyxnLigXVzYbPBIbMAxjZDcb0BYbJB25Uzwn0ifLVDvr1yMu',
+        'uhjVy2vZC2LUzYbJyw5JzwXSzwq',
+        'CgfYC2u',
+        'z2vUzxjHDgLVBLbYB2DYzxnZv3jHChbLCG',
+        'ndaZ',
+        'rMfPBgvKihrVigrLBgv0zsbJBgLWoIa',
+        'CgXHy2vOB2XKzxi',
+        'C3rHCNrdBgLWuhjVy2vZC2LUz1DPDgHtBg90CW',
+        'z2v0rwXLBwvUDej5swq',
+        '4PYfifn0B3jHz2uGzgLZCgXHEsb1CgrHDgvKihDPDgGGzNjLC2GGyMfJA2vUzcbKyxrH',
+        'rMfPBgvKihrVigXVywqGBgLICMfYEsbPDgvTCZO',
+        'iY9JBgLWCW',
+        'ksaTia',
+        't0zg',
+        '4P2mihnOB3Dhyw1LCgXHEvbHBMvSig5VDcbHDMfPBgfIBgu',
+        'zgfYAW',
+        'y2HHBMDL',
+        'DgfIBgu',
+        '4P2mifnfq1vssvrzoIbjBNzHBgLKihbYB2PLy3rjzcbMB3iGzg93BMXVywq6ia',
+        'z2v0u2XVDa',
+        'CgvUzgLUzW',
+        'rMfPBgvKihrVignVChK6',
+        'y2XPCgjVyxjK',
+        'odeZmtLvvKn3zKO',
+        'vevtvdOGuMfUA2LUzYbnB21LBNrZ',
+        'CxvLC3rPB24',
+        'C2v0DxbxzwjtB2nRzxriyw5KBgvYCW',
+        'ChjLDMLLD1rLBxbSyxrLtMfTzq',
+        'oGOk',
+        'DgvTCgXHDgvZu2vJDgLVBG',
+        'DMfSAwrHDgvjDgvTswq',
+        'zMv0y2HbBMrvCgrHDgveDxjHDgLVBG',
+        '8j+NQIburu1qtefursbquKvwsuvxifrfu1q6',
+        'igHVDxi',
+        '4PQG77IpievYCM9YihzHBgLKyxrPBMCG',
+        '4PYfifDHDgvYBwfYA2vKieHutuWGC2v0',
+        'zhvYyxrPB25fCNjVCK1LC3nHz2u',
+        'CMDIysGYntuSideWnYWGmcWGmsK',
+        'icHZDgf0Dxm6ia',
+        'E30Uy29UC3rYDwn0B3iOiNjLDhvYBIb0AgLZiIKOicK',
+        'zgLZCgXHEtOGBM9UzsaHAw1WB3j0yw50oYb2AxnPyMLSAxr5oIbOAwrKzw4GiwLTCg9YDgfUDdSGB3bHy2L0EtOGmcaHAw1WB3j0yw50oYbWB2LUDgvYlwv2zw50CZOGBM9UzsaHAw1WB3j0yw50oYb6lwLUzgv4oIaTmtaWmdaGiwLTCg9YDgfUDdS',
+        'y2XPCfbYB2DYzxnZrMLSBa',
+        '8j+uJsbxyxrLCM1HCMSGy2HLy2SGCMvZCg9UC2u6',
+        'y29VA2LL',
+        'y29UzMLYBvvZzvrLBxbSyxrLqNrU',
+        'l2nSAxbZl2nOzwnRlwr1CMf0Aw9U',
+        'BM93',
+        'DxbKyxrLv2f0zxjTyxjRrgLZCgXHEq',
+        'yM9YzgvYv2LKDgG',
+        'lNbYBY1JDgeTyNrU',
+        'vw50AxrSzwqGq2XPCa',
+        'r0vorvjbveLptL9dt09mre9xtG',
+        'CMDIysGYntuSidy4lca2ocWGmc4WnsK',
+        'pgKGy2XHC3m9iMzHCYbMys1ZAwDUlw91Dc1HBhqIpJWVAt48C3bHBJ5tAwDUig91DdWVC3bHBJ4',
+        'Bw91C2vTB3zL',
+        'rxjYB3iGAw4GzMv0y2HwAwrLB01LDgfKyxrHoG',
+        'C3vWCg9YDhntBg90u3LZDgvT',
+        'DMLZAwjSzq',
+        'lhrVCd0',
+        'Dg9Rzw4',
+        'y2fUy2vSvgvTCgXHDgvcDg4',
+        'u2f2zwqGC3vJy2vZC2z1BgX5iq',
+        'DgHLBwu',
+        'y2HHDeHPC3rVCNK',
+        'zgf0yq',
+        'B3bLBKvKAxrVCG',
+        'Bg9HzeXPyNjHCNLjDgvTC0zYB21tDg9YywDL',
+        '4P2mifzPzgvVia',
+        'zMLYC3rdAgLSza',
+        'zNvUy3rPB24',
+        'BwvZC2fNzs1YB3CG',
+        'C2vHCMnO',
+        'C2XVDf9UDw1Izxi',
+        'zgf0ytO',
+        'cIaGicaGicaGicaGicaGica8zgL2ignSyxnZpsjZB2XPCY13yxrLCM1HCMSIihn0EwXLpsjWB3nPDgLVBJOGywjZB2X1Dgu7igjVDhrVBtOGmtjWEdSGCMLNAhq6ideYChG7ihOTAw5KzxG6ideWmdSGCg9PBNrLCI1LDMvUDhm6ig5VBMu7igrPC3bSyxK6igzSzxG7igzSzxGTzgLYzwn0Aw9UoIbJB2X1Bw47igfSAwDUlwL0zw1ZoIbMBgv4lwvUzdSGy29SB3i6icnMzMzMzMy7ihvZzxiTC2vSzwn0oIbUB25LoYbMAwX0zxi6igrYB3aTC2HHzg93kdbWEcaYChGGnhb4ihjNyMeOmcWGmcWGmcWGmc41ksK7igzVBNqTzMfTAwX5oIaNugX1CYbkywTHCNrHifnHBNmNlcaTyxbWBguTC3LZDgvTlcbcBgLUA01Hy1n5C3rLBuzVBNqSicDtzwDVzsbvssCSihnHBNmTC2vYAwy7iJ4kicaGicaGicaGicaGicaGicaGica8zgL2ihn0EwXLpsjKAxnWBgf5oIbMBgv4oYbHBgLNBI1PDgvTCZOGy2vUDgvYoYbNyxa6idHWEdSIpGOGicaGicaGicaGicaGicaGicaGicaGica8zgL2ihn0EwXLpsj3Awr0AdOGmJHWEdSGAgvPz2H0oIaYohb4oYbKAxnWBgf5oIbMBgv4oYbHBgLNBI1PDgvTCZOGy2vUDgvYoYbQDxn0Awz5lwnVBNrLBNq6ignLBNrLCJSGzMXLEc1ZAhjPBMS6ida7iJ4kicaGicaGicaGicaGicaGicaGicaGicaGicaGidXZDMCGDMLLD0jVEd0ImcaWideWmcaXmdaIigzPBgW9iM5VBMuIihn0CM9Rzt0Iy3vYCMvUDenVBg9YiIb3Awr0Ad0ImJGIigHLAwDODd0ImJGIihHTBg5ZpsjODhrWoI8VD3D3lNCZlM9YzY8YmdaWl3n2zYi+cIaGicaGicaGicaGicaGicaGicaGicaGicaGicaGicaGpgnPCMnSzsbJEd0IntaIign5psi1mciGCJ0ImtiIigzPBgW9iMn1CNjLBNrdB2XVCIi+pc9JAxjJBgu+cIaGicaGicaGicaGicaGicaGicaGicaGicaGicaGicaGpgvSBgLWC2uGCNG9iJq0iIbYEt0ImtGIign4psi1mciGy3K9iJuWiIbZDhjVA2uTD2LKDgG9iJyIihrYyw5ZzM9YBt0ICM90yxrLkdq1iduWiduWksi+pc9LBgXPChnLpGOGicaGicaGicaGicaGicaGicaGicaGicaGicaGicaGidXLBgXPChnLihj4psi0nciGCNK9iJe4iIbJEd0IntaIign5psi1mciGC3rYB2TLlxDPzhrOpsi2iIb0CMfUC2zVCM09iNjVDgf0zsGTnduGntaGntaPiJ48l2vSBgLWC2u+cIaGicaGicaGicaGicaGicaGicaGicaGicaGica8l3n2zZ4kicaGicaGicaGicaGicaGicaGicaGicaGpc9KAxy+cIaGicaGicaGicaGicaGicaGicaGicaGidXKAxyGC3r5Bgu9iMzVBNqTC2L6ztOGmtvWEdSGzM9UDc13zwLNAhq6idGWmdSGBgv0DgvYlxnWywnPBMC6ic0WlJaYzw07ihrLEhqTDhjHBNnMB3jToIb1ChbLCMnHC2u7igXPBMuTAgvPz2H0oIaXoYi+cIaGicaGicaGicaGicaGicaGicaGicaGicaGicbtB2XPCYa8C3bHBIbZDhLSzt0IB3bHy2L0EtOGmc44ntSGzM9UDc13zwLNAhq6idCWmdSIpKfjpc9ZCgfUpGOGicaGicaGicaGicaGicaGicaGicaGica8l2rPDJ4kicaGicaGicaGicaGicaGicaGica8l2rPDJ4kicaGicaGicaGicaGicaGidWVzgL2pGOGicaGicaGicaGicaGicaG',
+        'DgvZDfrLBxbSyxrLuhjLDMLLDW',
+        '4P2miezHAwXLza',
+        'pha+tM8GC2f2zwqGAxrLBxmUpc9WpG',
+        'CxvLCNLtzwXLy3rVCG',
+        'Aw5WDxq',
+        'Bwf4x2r1CMf0Aw9Ux21PBNv0zxm',
+        'DMLZAwjPBgL0Eq',
+        '8j+uKIbcBg9JA2vKigLUDMfSAwqGvvjmihnJAgvTztO',
+        '4PYfifDHDgvYBwfYAYbPBML0AwfSBhKGAgLKzgvUicH0B2DNBguGB2zMkq',
+        'mte4ntm5meLvwgTSvG',
+        '4PQG77IpifDLyLnVy2TLDcbJBgLLBNqGy2XHC3mGBM90igf2ywLSywjSzq',
+        'DxnLza',
+        'lMnOAxbZlw5HDI1PDgvT',
+        'rxjYB3i',
+        '4PQG77IpifDHDgvYBwfYAYb0B2DNBguGy2HLy2TIB3GGtK9uigzVDw5KigLUihbYzxzPzxCH',
+        'y29UzMLYBvrLBxbSyxrLvxnL',
+        'icaGmY4GqMfJA2vUzcb2ywXPzgf0zxmGq1nsrIb0B2TLBIbVBIbZDgf0zs1JAgfUz2LUzYbYzxf1zxn0CW',
+        'w2rHDgeTDgfIpsjSAwjYyxj5iL0',
+        'qxv0AgvUDgLJyxrPB24GDMvYAwzPy2f0Aw9UigzHAwXLza',
+        'zgL2',
+        'pc9ZDhjVBMC+cIaGicaGicaGicaGicaGicaGicaGicaGicaGicaGicaGphnWyw4GC3r5Bgu9iMrPC3bSyxK6yMXVy2S7BwfYz2LUlxrVCdOYChG7zM9UDc1ZAxPLoJeXChG7y29SB3i6i0fbqsi+',
+        'rMfPBgvKihrVigzLDgnOihn1yNnJCMLWDgLVBIbPBMzVlcbZDgf0Dxm6',
+        'ChjLDMvUDerLzMf1Bhq',
+        'DxjSqNv0Dg9Utg9JA2vK',
+        'pc9WpGOGicaGicaGicaGicaGicaGicaGidWVzgL2pGOkicaGicaGicaGicaGicaGicaGica8zgL2ignSyxnZpsjWCM8TDgvTCgXHDguTChjLDMLLDYi+cIaGicaGicaGicaGicaGicaGicaGicaGidXKAxyGy2XHC3m9iNbYBY10CgiTChjLDMLLDYi+cIaGicaGicaGicaGicaGicaGicaGicaGicaGica8zgL2ignSyxnZpsjWCM8TDhbIlxbYBYi+ufjppc9KAxy+cIaGicaGicaGicaGicaGicaGicaGicaGicaGica8C3zNihDPzhrOpsi0mciGAgvPz2H0psi0mciGDMLLD0jVEd0ImcaWidi0idi0iIbMAwXSpsjUB25LiIbZDhjVA2u9iIndoem0qKuIihn0CM9Rzs13Awr0Ad0Ims41iIbZDhjVA2uTBgLUzwnHCd0ICM91BMqIihn0CM9Rzs1SAw5LAM9PBJ0ICM91BMqIpGOGicaGicaGicaGicaGicaGicaGicaGicaGicaGicaGidXYzwn0ihG9iJmIihK9iJmIihDPzhrOpsi3iIbOzwLNAhq9iJe4iIbYEd0ImsiVpGOGicaGicaGicaGicaGicaGicaGicaGicaGicaGicaGidXYzwn0ihG9iJe0iIb5psiZiIb3Awr0Ad0InYiGAgvPz2H0psiXociGCNG9iJeIlZ4kicaGicaGicaGicaGicaGicaGicaGicaGicaGidWVC3zNpGOGicaGicaGicaGicaGicaGicaGicaGicaGicaGpgrPDIbJBgfZCZ0IChjVlwXVy2TLzc1VDMvYBgf5iJ4kicaGicaGicaGicaGicaGicaGicaGicaGicaGicaGica8C3zNihDPzhrOpsiYmciGAgvPz2H0psiYmciGDMLLD0jVEd0ImcaWidi0idi0iIbMAwXSpsjUB25LiIbZDhjVA2u9iIngrJzbm0qIihn0CM9Rzs13Awr0Ad0ImIiGC3rYB2TLlwXPBMvJyxa9iNjVDw5KiIbZDhjVA2uTBgLUzwPVAw49iNjVDw5KiJ4kicaGicaGicaGicaGicaGicaGicaGicaGicaGicaGicaGicaGphjLy3qGEd0ImYiGEt0ImteIihDPzhrOpsiXociGAgvPz2H0psiXmsiGCNG9iJiIihj5psiYiI8+cIaGicaGicaGicaGicaGicaGicaGicaGicaGicaGicaGicaGidXWyxrOigq9iK03ideXvJDHnsa1idaGmcaXideWidb2nciVpGOGicaGicaGicaGicaGicaGicaGicaGicaGicaGicaGidWVC3zNpGOGicaGicaGicaGicaGicaGicaGicaGicaGicaGpc9KAxy+cIaGicaGicaGicaGicaGicaGicaGicaGidWVzgL2pGOGicaGicaGicaGicaGicaGicaGicaGica8zgL2ignSyxnZpsjWCM8TDhbIlwLUzM8IpGOGicaGicaGicaGicaGicaGicaGicaGicaGicaGpgrPDJ4kicaGicaGicaGicaGicaGicaGicaGicaGicaGicaGica8C3rYB25NpG',
+        'y3vYCMvUDfrHyG',
+        'ywXSB3DLza',
+        'qxv0BY1WB2XSAw5NigvYCM9YoG',
+        '4PQG77IpientuKyGDg9Rzw4GBM90ihbYB3bLCMX5ignVBMzPz3vYzwqGAw4GBwv0ysb0ywCGB3iGy29VA2LLCW',
+        'tufyx0nptLnptevFte9huW',
+        'yxbWq29UDgfPBMvY',
+        'y2HLy2Tuzw1WBgf0zufJy2vZCW',
+        'y2fYzc1JB250zw50',
+        'BwvUDs1VCgvU',
+        'rMfPBgvKihrVigXVywqGChjVy2vZC2LUzYbPDgvTCZO',
+        '4PYfifDLyLnVy2TLDcbOyw5KBgvYCYbPBML0AwfSAxPLza',
+        'Aw5JBhvKzxm',
+        'C2v0DgLUz3nqyw5LBa',
+        'y3vYCMvUDfnSB3rtDgf0zq',
+        'wuvtu1m',
+        'A2v5',
+        'rMfPBgvKihrVigXVywqGz2fTzxbSyxKGy2XPChmGzNjVBsbIywnRzw5K',
+        '8j+uJsbJB25MAxjTvgvTCgXHDgvvC2u6',
+        'y3jLyxrLrwXLBwvUDa',
+        'uhv0ihrVz2v0AgvYihzPCMfSigrHBMnLignSAxbZigzYB20GEw91CIbSyxrLC3qGww91vhvIzsb2AwrLBW',
+        'igfNBW',
+        'y2XVC2vqCM9gzwf0DxjLtw9KywW',
+        'Aw5SAw5L',
+        'u3rVCMfNzsbXDw90ysbLEgnLzwrLzcaTignSzwfYAw5Nig9SzcbKyxrH',
+        'Ew91DhvIzs5JB20',
+        '8j+uHcbpqxv0Acb3Aw5KB3CGy2XVC2vKlcb2zxjPzNLPBMCGy29UBMvJDgLVBI4UlG',
+        'Ahr0Chm6lY9MB250CY5NB29NBgvHCgLZlMnVBs9JC3mYp2zHBwLSEt1bCMnOAxzVk0jSywnRjMrPC3bSyxK9C3DHCa',
+        'y3jLyxrLrMLYC3rdBgLWqNrU',
+        'x19WCM90B19F',
+        'lM5HDI1PDgvTw2rHDgeTDgfYz2v0psjJBgLWCYjD',
+        'CgXHBL9Uyw1L',
+        'lMrHC2HIB2fYzc1JAgfYDhm',
+        'CMvUzgvYvgvTCgXHDgvqCMv2Awv3',
+        'DgvTCgXHDgu6',
+        'uhjVzMLSzsbKCM9Wzg93BIb1CgrHDguGzxjYB3i6',
+        '4PQG77IpienHBM5VDcbKzwXLDguGChjVy2vZC2LUzYbPDgvToIa',
+        'Dg9mB2nHBgvtDhjPBMC',
+        'C2H1zMzSzuLKzwfZqNrU',
+        'l2rHC2HIB2fYzc5ODg1S',
+        'otKWntKWAg1jqNjL',
+        'C3r5BgvZAgvLDa',
+        'te1bt09p',
+        '4PYtie9bDxrOihDPBMrVDYbVCgvUzwq',
+        '4P2mieL0zw0GBM90igzVDw5KoIa',
+        '4PYfieXVz2DLzcbVDxqGC3vJy2vZC2z1BgX5',
+        'w0f1DgHDieLUAxrPywXPEMf0Aw9Uihn0yxj0zwq',
+        'y2XLyxjpBgrmAwjYyxj5rgf0yq',
+        '4PYtieDVDcbpqxv0AcbvuKWGzNjVBsbIywnRzw5K',
+        'y2HHCKf0',
+        'Dw5IBhvYCMLUzW',
+        'v2fUDcb0BYb1BMXVy2SGzNvSBcbMzwf0DxjLigfJy2vZCZ8Gu2LNBIbPBIb0B2rHEq',
+        'qxv0AgvUDgLJyxrPB24GzMfPBgvKoIa',
+        'q2fUBM90igrLBgv0zsbPDgvTCYb3AgLSzsbWCM9JzxnZAw5NlIbxywL0igzVCIbJB21WBgv0Aw9Uig9YignHBMnLBcbMAxjZDc4',
+        'iIbHBhq9iKfZC2v0ifbYzxzPzxCIig9UzxjYB3i9iNrOAxmUC3jJpsDODhrWCZOVl3zPys5WBgfJzwHVBgrLCI5JB20VmtaWmhG2mda/Dgv4Dd1oBYTjBwfNzsCIpGOGicaGicaGicaGicaGicaGicaGidXKAxyGy2XHC3m9iMnHCMqTywn0Aw9UCYi+cIaGicaGicaGicaGicaGicaGicaGicaGidXIDxr0B24Gy2XHC3m9iMnHCMqTywn0Aw9Ulwj0BIbSAwjYyxj5lwrLBgv0zs1IDg4IihrPDgXLpsjezwXLDguGy2XPCciGDgfIAw5KzxG9iJaIpGOGicaGicaGicaGicaGicaGicaGicaGicaGicaGphn2zYb2Awv3qM94psiWidaGmJqGmJqIigzPBgW9iM5VBMuIihn0CM9Rzt0Iy3vYCMvUDenVBg9YiIbZDhjVA2uTD2LKDgG9iJiUnsiGC3rYB2TLlwXPBMvJyxa9iNjVDw5KiIbZDhjVA2uTBgLUzwPVAw49iNjVDw5KiJ4kicaGicaGicaGicaGicaGicaGicaGicaGicaGicaGica8Cgf0AcbKpsjnmYa2Ade4iI8+cIaGicaGicaGicaGicaGicaGicaGicaGicaGicaGicaGphbHDgGGzd0Itte5idz2mtrJmcaXlteGmI0Yidjin2mTmsaWltiTms0YltjwnIiVpGOGicaGicaGicaGicaGicaGicaGicaGicaGicaGicaGidXWyxrOigq9iK04idzwngmWlteGms0YidiTmMG0yZeGmcaYideGmIaYDJiIlZ4kicaGicaGicaGicaGicaGicaGicaGicaGicaGicaGica8BgLUzsb4mt0ImtaIihKXpsiXmsiGEdi9iJeWiIb5mJ0ImtCIlZ4kicaGicaGicaGicaGicaGicaGicaGicaGicaGicaGica8BgLUzsb4mt0ImtqIihKXpsiXmsiGEdi9iJe0iIb5mJ0ImtCIlZ4kicaGicaGicaGicaGicaGicaGicaGicaGicaGidWVC3zNpGOGicaGicaGicaGicaGicaGicaGicaGica8l2j1DhrVBJ4kicaGicaGicaGicaGicaGicaGica8l2rPDJ4kicaGicaGicaGicaGicaGia',
+        'Dg9ju09tDhjPBMC',
+        'cIaGicaGicaGicaGicaGicaGicaGicaGicaGica8zgL2ihn0EwXLpsj0zxH0lwfSAwDUoIbJzw50zxi7igfUAw1HDgLVBJOGC2XPzgvvCcaWlJnZigvHC2u7iJ4kicaGicaGicaGicaGicaGicaGicaGicaGicaGicaGica8zgL2ihn0EwXLpsjMB250lxnPEMu6idGWChG7ig1HCMDPBI1IB3r0B206ide2ChG7igfUAw1HDgLVBJOGCg9Wsw4Gmc40CYbJDwjPyY1IzxPPzxiOmc4ZncWGms41nIWGmc42ncWGmsK7iJ7INiu8l2rPDJ4kicaGicaGicaGicaGicaGicaGicaGicaGicaGicaGica8AdeGC3r5Bgu9iMzVBNqTC2L6ztOGmZjWEdSGy29SB3i6ihzHCIGTlxrLEhqPoYbTyxjNAw4TyM90Dg9ToIa4ChG7igzVBNqTD2vPz2H0oIa3mda7iJ5dB21WAwXHDgLVBIbszwfKEse8l2GXpGOGicaGicaGicaGicaGicaGicaGicaGicaGicaGicaGidXWihn0EwXLpsjJB2XVCJOGDMfYkc0TBxv0zwqPoYbTyxjNAw4TyM90Dg9ToIaZmNb4oYi+ww91CIb2AwrLBYbPCYbYzwfKEsb0BYbLzgL0igfUzcbWDwjSAxnOpc9WpGOGicaGicaGicaGicaGicaGicaGicaGicaGicaGicaGidXIDxr0B24GB25JBgLJAZ0IcIaGicaGicaGicaGicaGicaGicaGicaGicaGicaGicaGicaGigrVy3vTzw50lMDLDevSzw1LBNrcEuLKkcDJBgLWlxbYB2nLC3nPBMCTBw9KywWNks5Yzw1VDMuOktSkicaGicaGicaGicaGicaGicaGicaGicaGicaGicaGicaGicaGD2LUzg93lMXVy2f0Aw9UlMHHC2GGpsaNiY9JBgLWCYC7cIaGicaGicaGicaGicaGicaGicaGicaGicaGicaGicaGiIbZDhLSzt0IcIaGicaGicaGicaGicaGicaGicaGicaGicaGicaGicaGicaGihbHzgrPBMC6ideYChGGmJrWEdSkicaGicaGicaGicaGicaGicaGicaGicaGicaGicaGicaGicaGyMfJA2DYB3vUzdOGBgLUzwfYlwDYywrPzw50kdeZnwrLzYWGi2zMnMiZnsaWjsWGi2zModG1nIaXmdaLktSkicaGicaGicaGicaGicaGicaGicaGicaGicaGicaGicaGicaGy29SB3i6ihDOAxrLoWOGicaGicaGicaGicaGicaGicaGicaGicaGicaGicaGicaGicbIB3jKzxi6ig5VBMu7cIaGicaGicaGicaGicaGicaGicaGicaGicaGicaGicaGicaGigjVCMrLCI1YywrPDxm6idHWEdSkicaGicaGicaGicaGicaGicaGicaGicaGicaGicaGicaGicaGy3vYC29YoIbWB2LUDgvYoWOGicaGicaGicaGicaGicaGicaGicaGicaGicaGicaGicaGicbMB250lxDLAwDODdOGnJaWoWOGicaGicaGicaGicaGicaGicaGicaGicaGicaGicaGicaGicbMB250lxnPEMu6ide0ChG7cIaGicaGicaGicaGicaGicaGicaGicaGicaGicaGicaGicaGihrYyw5ZAxrPB246igfSBcaWlJjZoWOGicaGicaGicaGicaGicaGicaGicaGicaGicaGicaGiciGB25TB3vZzw92zxi9iNrOAxmUC3r5BguUDhjHBNnMB3jTpsD0CMfUC2XHDgvzkc0YChGPoYb0AgLZlNn0EwXLlMjVEfnOywrVDZ0Nmca0ChGGmtjWEcbYz2jHkdi1nsWGmta3lca1mYWGmc4ZksCIig9UBw91C2vVDxq9iNrOAxmUC3r5BguUDhjHBNnMB3jTpsD0CMfUC2XHDgvzkdaPjZSGDgHPCY5ZDhLSzs5IB3HtAgfKB3C9j25VBMuNpGOGicaGicaGicaGicaGicaGicaGicaGicaGicaGicaGicaGicdWN5ooie9Wzw4GuhjVAMvJDaOGicaGicaGicaGicaGicaGicaGicaGicaGicaGicaGidWVyNv0Dg9UpGOGicaGicaGicaGicaGicaGicaGicaGicaGicaGpc9KAxy+cIaGicaGicaGicaGicaGicaGicaGicaGicaGica8C3r5Bgu+cIaGicaGicaGicaGicaGicaGicaGicaGicaGicaGicaGqgTLEwzYyw1LCYbWB3bjBIb7cIaGicaGicaGicaGicaGicaGicaGicaGicaGicaGicaGicaGidaLihSGDhjHBNnMB3jToIbZy2fSzsGWlJmPoYbVCgfJAxr5oIaWoYb9cIaGicaGicaGicaGicaGicaGicaGicaGicaGicaGicaGicaGidCWjsb7ihrYyw5ZzM9YBtOGC2nHBguOms4XktSGFqOGicaGicaGicaGicaGicaGicaGicaGicaGicaGicaGicaGicaXmdaLihSGDhjHBNnMB3jToIbZy2fSzsGXktSGB3bHy2L0EtOGmtSGFqOGicaGicaGicaGicaGicaGicaGicaGicaGicaGicaGih0kicaGicaGicaGicaGicaGicaGicaGicaGicaGicaGicbaA2v5zNjHBwvZihnSAwrLvxaGEWOGicaGicaGicaGicaGicaGicaGicaGicaGicaGicaGicaGicbMCM9TihSGDhjHBNnMB3jToIb0CMfUC2XHDgvzkdiWChGPoYbVCgfJAxr5oIaWoYb9cIaGicaGicaGicaGicaGicaGicaGicaGicaGicaGicaGicaGihrVihSGDhjHBNnMB3jToIb0CMfUC2XHDgvzkdaPoYbVCgfJAxr5oIaXoYb9cIaGicaGicaGicaGicaGicaGicaGicaGicaGicaGicaGFqOGicaGicaGicaGicaGicaGicaGicaGicaGicaGpc9ZDhLSzt4kicaGicaGicaGicaGicaGicaGicaGicaG',
+        'y2HHDa',
+        'CMvTB3zLsxrLBq',
+        'y29SBgfWC2vK',
+        'ywrKv2f0zxjTyxjR',
+        'nw1ns0flva',
+        'lNrLBxbSyxrLlwnHCMq',
+        'AgvHza',
+        'rg93BMXVywqGzMfPBgvKoIa',
+        'ihrVigXPyNjHCNK',
+        'y29TCgXLDgu',
+        'C2LNBMfS',
+        'qwnJB3vUDcbtzxr0Aw5NCW',
+        'cIaGicaGicaGicaGicaGicaGicaGicaGicaGicaGicaGpgrPDIbJBgfZCZ0IChjVy2vZC2LUzY1WzxjJzw50ywDLiJ4',
+        'DgvTCgXHDgvoyw1L',
+        'sw52ywXPzcbWCM9Qzwn0ieLeigzVCM1HDa',
+        'iJ4kicaGicaGicaGicaGicaGidXKAxyGy2XHC3m9iMnHCMqTChjLDMLLDYi+cIaGicaGicaGicaGicaGicaGicaGpgrPDIbJBgfZCZ0IC3rHDhvZlxbPBgWIpGOGicaGicaGicaGicaGicaGicaGicaGica8zgL2ignSyxnZpsjZDgf0DxmTzg90iJ48l2rPDJ4kicaGicaGicaGicaGicaGicaGicaGicaGphnWyw4Gy2XHC3m9iNn0yxr1CY10zxH0iJ5dBgLJAYbTztWVC3bHBJ4kicaGicaGicaGicaGicaGicaGica8l2rPDJ4kicaGicaGicaGicaGicaGicaGica8Aw1NihnYyZ0I',
+        'Aw5PDa',
+        'tg9HzgLUzYbNyw1LCgXHEsbJBgLWCY4UlG',
+        'u3rHDhvZihbVBgWGzxjYB3i6',
+        'uMf0zsbSAw1PDcbYzwfJAgvKlIbqBgvHC2uGDhj5igfNywLUigXHDgvYlG',
+        'y2HLy2TjDgvTu3rHDhvZ',
+        'rxjYB3iGBg9HzgLUzYbZDg9YywDLigLUzM86',
+        '8j+tOsbxyxrLCM1HCMSTy2HLy2SGCMvZCg9UC2uGC3rHDhvZoG',
+        'ssbdqu5u',
+        'DxbNCMfKzvnLDhrPBMDZqNrU',
+        'lwnPCMnSzsi+pc9PpGOGicaGicaGicaGica8C3bHBIbPzd0IBM90AwzPy2f0Aw9UtwvZC2fNzsi+pc9ZCgfUpGOGicaGicaGidWVzgL2pGOGicaG',
+        '4PQG77IpieLUDMfSAwqGChjVz3jLC3mGDMfSDwuGCMvJzwL2zwq6ia',
+        'A2v5zg93BG',
+        'CMvWBgfJzq',
+        'r3vLC3qGvxnLCG',
+        'igzHAwXLzdOG',
+        'lMr1CMf0Aw9UlxrLEhq',
+        'zMv0y2HwAwrLB01LDgfKyxrH',
+        'tgLMzxrPBwu',
+        'AxntBg90u3LZDgvT',
+        'lMXPyNjHCNKTz3jPzcaUBgLICMfYEs1JyxjKw2rHDgeTAwrD',
+        '4PYfienHCMqGDhjHBNnMB3jTzwq6ia',
+        'y2vPBa',
+        't0SGveHjuYbjuYbjtLnbtKu',
+        'BwLU',
+        'Bg9N',
+        'cIaGicaGicaGicaGicaGica8zgL2ignSyxnZpsjHy3rPDML0Es1PDgvTiJ4kicaGicaGicaGicaGicaGicaGica8zgL2ignSyxnZpsjHy3rPDML0Es1Py29UiJ4kicaGicaGicaGicaGicaGicaGicaGicaGpgKGy2XHC3m9iMzHCYbMys12AwrLBYi+pc9PpGOGicaGicaGicaGicaGicaGicaGidWVzgL2pGOGicaGicaGicaGicaGicaGicaGidXKAxyGy2XHC3m9iMfJDgL2Axr5lwnVBNrLBNqIpGOGicaGicaGicaGicaGicaGicaGicaGica8zgL2ignSyxnZpsjHy3rPDML0Es10AxrSzsi+q3jLyxrLzcbHignSAxa8l2rPDJ4kicaGicaGicaGicaGicaGicaGicaGicaGpgrPDIbJBgfZCZ0Iywn0AxzPDhKTzgvZy3jPChrPB24IpG',
+        'iJ4kicaGicaGicaGicaGicaGicaGicaGicaGpgrPDIbJBgfZCZ0Iy2fYzc1WCMv2Awv3ihbYB2nLC3nPBMCTChjLDMLLDYi+cIaGicaGicaGicaGicaGicaGicaGicaGicaGica8zgL2ignSyxnZpsjWCM9JzxnZAw5NlwjSDxiTB3zLCMXHEsi+pc9KAxy+cIaGicaGicaGicaGicaGicaGicaGicaGicaGica8zgL2ignSyxnZpsjWCM9JzxnZAw5NlxnWAw5UzxiIpJWVzgL2pGOGicaGicaGicaGicaGicaGicaGicaGica8l2rPDJ4kicaGicaGicaGicaGicaGicaGicaGicaGpgrPDIbJBgfZCZ0Iy2fYzc1JB250zw50iJ4kicaGicaGicaGicaGicaGicaGicaGicaGicaGidXKAxyGy2XHC3m9iMLUzM8Tz3jVDxaIpGOGicaGicaGicaGicaGicaGicaGicaGicaGicaGicaGidXOmIbJBgfZCZ0Iy2fYzc10AxrSzsiGzgf0ys1PDgvTlw5HBwu9iG',
+        'ihzPzgvVCY9KyxKSia',
+        'BMf2v3jHChbLCG',
+        'y2fUy2vSvgvTCgXHDgvtzwXLy3rPB24',
+        'iZrgndzfnq',
+        'y2XPChntDhvKAw8',
+        'DhLWzq',
+        'D3D3lNLVDxr1lMjL',
+        'cIaGicaGicaGphn0EwXLpGOGicaGicaGicaGicaUy2XPCc1JB25MAxjTlw1VzgfSihSkicaGicaGicaGicaGicaGihbVC2L0Aw9UoIbMAxHLzdSkicaGicaGicaGicaGicaGihrVCdOGmdSkicaGicaGicaGicaGicaGigXLzNq6ida7cIaGicaGicaGicaGicaGicbYAwDODdOGmdSkicaGicaGicaGicaGicaGigjVDhrVBtOGmdSkicaGicaGicaGicaGicaGigjHy2TNCM91BMq6ihjNyMeOmcWGmcWGmcWGmc42ktSkicaGicaGicaGicaGicaGigrPC3bSyxK6igzSzxG7cIaGicaGicaGicaGicaGicbHBgLNBI1PDgvTCZOGy2vUDgvYoWOGicaGicaGicaGicaGicaGANvZDgLMEs1JB250zw50oIbJzw50zxi7cIaGicaGicaGicaGicaGicb6lwLUzgv4oIaXmdaWmdSkicaGicaGicaGicaGicaGigfUAw1HDgLVBJOGzMfKzuLUidaUmNmGzwfZztSkicaGicaGicaGicaGFqOGicaGicaGicaGicakicaGicaGicaGicaGqgTLEwzYyw1LCYbMywrLsw4GEWOGicaGicaGicaGicaGicaGzNjVBsb7ig9WywnPDhK6ida7ih0kicaGicaGicaGicaGicaGihrVihSGB3bHy2L0EtOGmtSGFqOGicaGicaGicaGicb9cIaGicaGicaGicaGiaOGicaGicaGicaGicaUy2XPCc1JB25MAxjTlwrPywXVzYb7cIaGicaGicaGicaGicaGicbIywnRz3jVDw5KoIb2yxiOls1ZDxjMywnLktSkicaGicaGicaGicaGicaGigjVCMrLCJOGmxb4ihnVBgLKihzHCIGTlwjVCMrLCIK7cIaGicaGicaGicaGicaGicbIB3jKzxiTCMfKAxvZoIaXmNb4oWOGicaGicaGicaGicaGicaGCgfKzgLUzZOGmZjWEdSkicaGicaGicaGicaGicaGig1HEc13Awr0AdOGndiWChG7cIaGicaGicaGicaGicaGicbHBMLTyxrPB246ihnSAwrLvxaGmc4ZCYbLyxnLoWOGicaGicaGicaGicaGicaGyM94lxnOywrVDZOGmcaYmhb4idyWChGGCMDIysGWlcaWlcaWlcaWlJmPoWOGicaGicaGicaGicb9cIaGicaGicaGicaGiaOGicaGicaGicaGicbaA2v5zNjHBwvZihnSAwrLvxaGEWOGicaGicaGicaGicaGicaGzNjVBsb7ihrYyw5ZzM9YBtOGDhjHBNnSyxrLwsGYmhb4ktSGB3bHy2L0EtOGmdSGFqOGicaGicaGicaGicaGicaGDg8GEYb0CMfUC2zVCM06ihrYyw5ZBgf0zvKOmcK7ig9WywnPDhK6ide7ih0kicaGicaGicaGicaGFqOGicaGicaGicaGicakicaGicaGicaGicaGlMnSAxaTy29UzMLYBs1OzwfKzxiGEWOGicaGicaGicaGicaGicaGzgLZCgXHEtOGzMXLEdSkicaGicaGicaGicaGicaGigfSAwDUlwL0zw1ZoIbJzw50zxi7cIaGicaGicaGicaGicaGicbNyxa6ideYChG7cIaGicaGicaGicaGicaGicbTyxjNAw4TyM90Dg9ToIaXnNb4oWOGicaGicaGicaGicb9cIaGicaGicaGicaGiaOGicaGicaGicaGicaUy2XPCc1JB25MAxjTlwHLywrLCIbOmIb7cIaGicaGicaGicaGicaGicbTyxjNAw46ida7cIaGicaGicaGicaGicaGicbMB250lxnPEMu6ide4ChG7cIaGicaGicaGicaGicaGicbJB2XVCJOGDMfYkc0TDgv4DcK7cIaGicaGicaGicaGicaGicbMB250lxDLAwDODdOGnJaWoWOGicaGicaGicaGicb9cIaGicaGicaGicaGiaOGicaGicaGicaGicaUy2XPCc1JB25MAxjTlwnVBNrLBNqGEWOGicaGicaGicaGicaGicaGBwfYz2LUlwjVDhrVBtOGmJrWEdSkicaGicaGicaGicaGFqOGicaGicaGicaGicakicaGicaGicaGicaGlMnSAxaTy29UzMLYBs1JB250zw50ihaGEWOGicaGicaGicaGicaGicaGBwfYz2LUoIaWidaGmtjWEcaWoWOGicaGicaGicaGicaGicaGy29SB3i6ihzHCIGTlw11DgvKktSkicaGicaGicaGicaGicaGigzVBNqTC2L6ztOGmtrWEdSkicaGicaGicaGicaGicaGigXPBMuTAgvPz2H0oIaXlJy7cIaGicaGicaGicaGih0kicaGicaGicaGicaGcIaGicaGicaGicaGic5JBgLWlwnVBMzPCM0TDxjSihSkicaGicaGicaGicaGicaGihbHzgrPBMC6ideYChG7cIaGicaGicaGicaGicaGicbIywnRz3jVDw5KoIbYz2jHkdi1nsWGmta3lca1mYWGmc4XktSkicaGicaGicaGicaGicaGigjVCMrLCJOGmxb4ihnVBgLKihjNyMeOmJu1lcaXmdCSiduZlcaWlJiPoWOGicaGicaGicaGicaGicaGyM9YzgvYlxjHzgL1CZOGnNb4oWOGicaGicaGicaGicaGicaGzM9UDc1ZAxPLoIaXmNb4oWOGicaGicaGicaGicaGicaGy29SB3i6ihzHCIGTlw11DgvKktSkicaGicaGicaGicaGicaGihDVCMqTyNjLywS6igjYzwfRlwfSBdSkicaGicaGicaGicaGicaGigzVBNqTzMfTAwX5oIbTB25VC3bHy2u7cIaGicaGicaGicaGih0kicaGicaGicaGicaGcIaGicaGicaGicaGic5JBgLWlwnVBMzPCM0Tywn0Aw9UCYb7cIaGicaGicaGicaGicaGicbKAxnWBgf5oIbMBgv4oWOGicaGicaGicaGicaGicaGz2fWoIaXmNb4oWOGicaGicaGicaGicaGicaGANvZDgLMEs1JB250zw50oIbMBgv4lwvUzdSkicaGicaGicaGicaGFqOGicaGicaGicaGicakicaGicaGicaGicaGlMnSAxaTyNrUihSkicaGicaGicaGicaGicaGihbHzgrPBMC6ideWChGGmJbWEdSkicaGicaGicaGicaGicaGigjVCMrLCJOGBM9UztSkicaGicaGicaGicaGicaGigjVCMrLCI1YywrPDxm6idHWEdSkicaGicaGicaGicaGicaGign1CNnVCJOGCg9PBNrLCJSkicaGicaGicaGicaGicaGigzVBNqTD2vPz2H0oIa2mda7cIaGicaGicaGicaGicaGicbMB250lxnPEMu6ide0ChG7cIaGicaGicaGicaGicaGicb0CMfUC2L0Aw9UoIbHBgWGmc4YCYbLyxnLoWOGicaGicaGicaGicb9cIaGicaGicaGicaGiaOGicaGicaGicaGicaUy2XPCc1IDg4TCMvQzwn0ihSkicaGicaGicaGicaGicaGigjHy2TNCM91BMq6ihjNyMeOmJu1lcaXmdCSiduZlcaWlJePoWOGicaGicaGicaGicaGicaGy29SB3i6ihzHCIGTlw11DgvKktSkicaGicaGicaGicaGFqOGicaGicaGicaGicakicaGicaGicaGicaGlMnSAxaTyNrUlxjLAMvJDdPOB3zLCIb7cIaGicaGicaGicaGicaGicbIywnRz3jVDw5KoIbYz2jHkdi1nsWGmta3lca1mYWGmc4YktSkicaGicaGicaGicaGFqOGicaGicaGicaGicakicaGicaGicaGicaGlMnSAxaTyNrUlwfJy2vWDcb7cIaGicaGicaGicaGicaGicbIywnRz3jVDw5KoIbSAw5LyxiTz3jHzgLLBNqOmtm1zgvNlcaJzMy2yJm1idaLlcaJzMy4odu2ideWmcuPoWOGicaGicaGicaGicaGicaGy29SB3i6ihDOAxrLoWOGicaGicaGicaGicb9cIaGicaGicaGicaGiaOGicaGicaGicaGicaUy2XPCc1IDg4TywnJzxb0oMHVDMvYihSkicaGicaGicaGicaGicaGihrYyw5ZzM9YBtOGDhjHBNnSyxrLwsGTmNb4ktSkicaGicaGicaGicaGicaGigjVEc1ZAgfKB3C6idaGnhb4ideYChGGCMDIysGYntuSideWnYWGntmSidaUmYK7cIaGicaGicaGicaGih0kicaGicaGica8l3n0EwXLpGOGicaGicaGiaOGicaGicaGidXKAxyGy2XHC3m9iMnSAxaTy29UzMLYBs1KAwfSB2CIpGOGicaGicaGicaGica8zgL2ignSyxnZpsjJBgLWlwnVBMzPCM0TAgvHzgvYiJ4kicaGicaGicaGicaGicaGidXZCgfUihn0EwXLpsjMB250lxnPEMu6idiWChG7iJ7WN46Spc9ZCgfUpGOGicaGicaGicaGicaGicaGpgGYpKnYzwf0zsbdBgLWienVBxbPBgf0Aw9Upc9OmJ4kicaGicaGicaGicaGpc9KAxy+cIaGicaGicaGicaGiaOGicaGicaGicaGica8zgL2ignSyxnZpsjJBgLWlwnVBMzPCM0Ty29UDgvUDci+cIaGicaGicaGicaGicaGica8Cd5szwfKEsb0BYbJCMvHDguGysbJBgLWignVBxbPBgf0Aw9UigzYB20GEw91CIbzB3vuDwjLihzPzgvVpZWVCd4kicaGicaGicaGicaGicaGidXKAxyGy2XHC3m9iMnSAxaTy29UzMLYBs11CMWIigLKpsj1CMXeAxnWBgf5iJ48l2rPDJ4kicaGicaGicaGicaGicaGidXWihn0EwXLpsjTyxjNAw4TDg9WoIaXmNb4oYbMB250lxnPEMu6ideYChG7ig9WywnPDhK6idaUnZSIpLrOAxmGBwf5ihrHA2uGysbMzxCGBwLUDxrLCY4Gww91ignHBIbTB25PDg9YihbYB2DYzxnZigLUihrOzsbqCM9JzxnZAw5NihrHyI48l3a+cIaGicaGicaGicaGidWVzgL2pGOGicaGicaGicaGicakicaGicaGicaGicaGpgrPDIbJBgfZCZ0Iy2XPCc1JB25MAxjTlwfJDgLVBNmIpGOGicaGicaGicaGicaGicaGpgj1DhrVBIbJBgfZCZ0Iy2XPCc1IDg4Gy2XPCc1IDg4TCMvQzwn0iIbPzd0Iy2XPCenVBMzPCM1dyw5JzwWIpGOGicaGicaGicaGicaGicaGicaGiokCLsbdyw5JzwWkicaGicaGicaGicaGicaGidWVyNv0Dg9UpGOGicaGicaGicaGicaGicaGpgj1DhrVBIbJBgfZCZ0Iy2XPCc1IDg4Gy2XPCc1IDg4TywnJzxb0iIbPzd0Iy2XPCenVBMzPCM1by2nLChqIpGOGicaGicaGicaGicaGicaGicaGiokCKYbdCMvHDguGq29TCgLSyxrPB24kicaGicaGicaGicaGicaGidWVyNv0Dg9UpGOGicaGicaGicaGica8l2rPDJ4kicaGicaGica8l2rPDJ4kicaGia',
+        'zw1WDhLmAwjYyxj5u3rHDgu',
+        'zMvHDhvYzxnuywjdB250ywLUzxi',
+        'zgf0ys1WCM9Qzwn0lwLK',
+        'i3bSDxngzwf0DxjLC0j0BG',
+        'zgL2AwrLCKHHBMrSzq',
+        '8j+sOsbzB3uGAgf2zsa',
+        'lNnPzgvIyxi',
+        'ru5bqKXfra',
+        'zg93BMXVywq',
+        'ywn0AxzL',
+        'iIbUB3qGzM91BMq',
+        'l2nSAxbZl3n0yxj0',
+        'twfRzsbHicjeyxKGAw4GBxKGBgLMzsiGCxvPy2SGy2XPChmGy29TCgLSyxrPB24',
+        'ChjLDMLLD1rLBxbSyxrLrgvZy3jPChrPB24',
+        'tgLICMfYEsbYzwzYzxnOzwq',
+        'AxnbCNjHEq',
+        '4PYtifzPzgvVihrVBYbSB25NigrLDgvJDgvKicHWyxr0zxjUidePoG',
+        'lMnHCMqTDgL0Bgu',
+        'y3vYCMvUDfbYB2PLy3rjza',
+        'rMfPBgvKihrVigXVywqGDgvTCgXHDgvZoG',
+        'DxnLCKnVBM5Ly3rLza',
+        'y2XPChntDhvKAw9dDxjYzw50vgfI',
+        'cIaGicaGicaGicaGidXZDhLSzt4kicaGicaGicaGicaGicaGicnJBgLWlxbYB2nLC3nPBMCTBw9KywWGEWOGicaGicaGicaGicaGicaGicaGihbVC2L0Aw9UoIbMAxHLzdSkicaGicaGicaGicaGicaGicaGicb0B3a6ida7cIaGicaGicaGicaGicaGicaGicaGBgvMDdOGmdSkicaGicaGicaGicaGicaGicaGicbYAwDODdOGmdSkicaGicaGicaGicaGicaGicaGicbIB3r0B206ida7cIaGicaGicaGicaGicaGicaGicaGyMfJA2DYB3vUzdOGBgLUzwfYlwDYywrPzw50kdeZnwrLzYWGi2zMzJvLyIaWjsWGi2zMztrKmsaXmdaLktSkicaGicaGicaGicaGicaGicaGicbKAxnWBgf5oIbMBgv4oWOGicaGicaGicaGicaGicaGicaGigzSzxGTzgLYzwn0Aw9UoIbJB2X1Bw47cIaGicaGicaGicaGicaGicaGicaGywXPz24TAxrLBxm6ignLBNrLCJSkicaGicaGicaGicaGicaGicaGicbQDxn0Awz5lwnVBNrLBNq6ignLBNrLCJSkicaGicaGicaGicaGicaGicaGicb6lwLUzgv4oIa5otK5otSkicaGicaGicaGicaGicaGicaGicbVDMvYzMXVDZOGAgLKzgvUoWOGicaGicaGicaGicaGicaGFqOGicaGicaGicaGicaGicaGcIaGicaGicaGicaGicaGicaUy2XPCc1WCM9JzxnZAw5NlwnVBNrHAw5LCIb7cIaGicaGicaGicaGicaGicaGicaGDgv4Dc1HBgLNBJOGy2vUDgvYoWOGicaGicaGicaGicaGicaGicaGihbVC2L0Aw9UoIbYzwXHDgL2ztSkicaGicaGicaGicaGicaGicaGicb6lwLUzgv4oIaXmdSkicaGicaGicaGicaGicaGih0kicaGicaGicaGicaGicaGiaOGicaGicaGicaGicaGicaGlMnSAxaTyxrVBsb7cIaGicaGicaGicaGicaGicaGicaGD2LKDgG6ide0mhb4oWOGicaGicaGicaGicaGicaGicaGigHLAwDODdOGmtqWChG7cIaGicaGicaGicaGicaGicaGicaGBwfYz2LUoIaWigf1Dg8GmZjWEdSkicaGicaGicaGicaGicaGih0kicaGicaGicaGicaGicaGiaOGicaGicaGicaGicaGicaGlMnSAxaTyxrVBsbZDMCGEWOGicaGicaGicaGicaGicaGicaGihDPzhrOoIaXmdaLoWOGicaGicaGicaGicaGicaGicaGigHLAwDODdOGmtaWjtSkicaGicaGicaGicaGicaGicaGicbMAwX0zxi6igrYB3aTC2HHzg93kdaGmcaYmhb4ihjNyMeOmJu1lcaXmdCSiduZlcaWlJmPktSkicaGicaGicaGicaGicaGih0kicaGicaGicaGicaGicaGiaOGicaGicaGicaGicaGicaGlMnSAxaTBNvJBgv1CYb7cIaGicaGicaGicaGicaGicaGicaGyw5PBwf0Aw9UoIbUDwnSzxvZuhvSC2uGms41CYbLyxnLlwLUlw91DcbPBMzPBML0ztSkicaGicaGicaGicaGicaGicaGicb0CMfUC2zVCM0TB3jPz2LUoIbJzw50zxi7cIaGicaGicaGicaGicaGicb9cIaGicaGicaGicaGicaGicakicaGicaGicaGicaGicaGiebRzxLMCMfTzxmGBNvJBgv1C1b1BhnLihSkicaGicaGicaGicaGicaGicaGicaWjsb7ihrYyw5ZzM9YBtOGC2nHBguOmc44ktSGB3bHy2L0EtOGmc42oYb9cIaGicaGicaGicaGicaGicaGicaGntaLihSGDhjHBNnMB3jToIbZy2fSzsGXktSGB3bHy2L0EtOGmtSGFqOGicaGicaGicaGicaGicaGicaGideWmcuGEYb0CMfUC2zVCM06ihnJywXLkdaUocK7ig9WywnPDhK6idaUnJSGFqOGicaGicaGicaGicaGicaGFqOGicaGicaGicaGicaGicaGcIaGicaGicaGicaGicaGicaUy2XPCc1VCMjPDcb7cIaGicaGicaGicaGicaGicaGicaGDhjHBNnMB3jTlw9YAwDPBJOGntbWEca1mhb4oWOGicaGicaGicaGicaGicaGicaGihn0CM9Rzs1KyxnOyxjYyxK6idmWmdSkicaGicaGicaGicaGicaGicaGicbZDhjVA2uTzgfZAg9MzNnLDdOGmZaWoWOGicaGicaGicaGicaGicaGFqOGicaGicaGicaGicaGicaGcIaGicaGicaGicaGicaGicaUy2XPCc1VCMjPDc0XihSkicaGicaGicaGicaGicaGicaGicb0CMfUC2zVCM06ihjVDgf0zsG3nwrLzYK7cIaGicaGicaGicaGicaGicaGicaGyw5PBwf0Aw9UoIbKCMf3t3jIAxqGms41CYbLyxnLlwLUlw91DcbPBMzPBML0ztSkicaGicaGicaGicaGicaGih0kicaGicaGicaGicaGicaGiaOGicaGicaGicaGicaGicaGlMnSAxaTB3jIAxqTmIb7cIaGicaGicaGicaGicaGicaGicaGDhjHBNnMB3jToIbYB3rHDguOltiWzgvNktSkicaGicaGicaGicaGicaGicaGicbHBMLTyxrPB246igrYyxDpCMjPDcaXlJvZigvHC2uTAw4TB3v0idaUm3mGAw5MAw5PDgu7cIaGicaGicaGicaGicaGicb9cIaGicaGicaGicaGicaGicakicaGicaGicaGicaGicaGiebRzxLMCMfTzxmGzhjHD09YyML0ihSkicaGicaGicaGicaGicaGicaGicaWjsb7ihn0CM9Rzs1KyxnOB2zMC2v0oIaZmda7ig9WywnPDhK6idaUmZSGFqOGicaGicaGicaGicaGicaGicaGiduWjsb7ihn0CM9Rzs1KyxnOB2zMC2v0oIaWoYbVCgfJAxr5oIaWlJC7ih0kicaGicaGicaGicaGicaGicaGicaXmdaLihSGC3rYB2TLlwrHC2HVzMzZzxq6idmWmdSGB3bHy2L0EtOGmc4ZoYb9cIaGicaGicaGicaGicaGicb9cIaGicaGicaGicaGicaGicakicaGicaGicaGicaGicaGic5JBgLWlxrPDgXLihSkicaGicaGicaGicaGicaGicaGicbMB250lxnPEMu6idi4ChG7cIaGicaGicaGicaGicaGicaGicaGzM9UDc13zwLNAhq6idCWmdSkicaGicaGicaGicaGicaGicaGicbJB2XVCJOGiZfHmweXytSkicaGicaGicaGicaGicaGicaGicbTyxjNAw4TyM90Dg9ToIa4ChG7cIaGicaGicaGicaGicaGicb9cIaGicaGicaGicaGicaGicakicaGicaGicaGicaGicaGic5JBgLWlxn1yNrPDgXLihSkicaGicaGicaGicaGicaGicaGicbMB250lxnPEMu6ide0ChG7cIaGicaGicaGicaGicaGicaGicaGy29SB3i6icm2nJy7cIaGicaGicaGicaGicaGicaGicaGBwfYz2LUlwjVDhrVBtOGmZjWEdSkicaGicaGicaGicaGicaGih0kicaGicaGicaGicaGicaGiaOGicaGicaGicaGicaGicaGlMnSAxaTChjVz3jLC3mTy29UDgfPBMvYihSkicaGicaGicaGicaGicaGicaGicb3Awr0AdOGmJGWChG7cIaGicaGicaGicaGicaGicaGicaGBwfYz2LUoIaWigf1Dg8GmJrWEdSkicaGicaGicaGicaGicaGih0kicaGicaGicaGicaGicaGiaOGicaGicaGicaGicaGicaGlMnSAxaTChjVz3jLC3mTyMfYihSkicaGicaGicaGicaGicaGicaGicb3Awr0AdOGmtaWjtSkicaGicaGicaGicaGicaGicaGicbOzwLNAhq6idrWEdSkicaGicaGicaGicaGicaGicaGicbIywnRz3jVDw5KoIbYz2jHkdi1nsWGmta3lca1mYWGmc4XnsK7cIaGicaGicaGicaGicaGicaGicaGyM9YzgvYlxjHzgL1CZOGmNb4oWOGicaGicaGicaGicaGicaGicaGig92zxjMBg93oIbOAwrKzw47cIaGicaGicaGicaGicaGicaGicaGBwfYz2LUlwjVDhrVBtOGmtjWEdSkicaGicaGicaGicaGicaGih0kicaGicaGicaGicaGicaGiaOGicaGicaGicaGicaGicaGlMnSAxaTChjVz3jLC3mTzMLSBcb7cIaGicaGicaGicaGicaGicaGicaGAgvPz2H0oIaXmdaLoWOGicaGicaGicaGicaGicaGicaGigjHy2TNCM91BMq6igXPBMvHCI1NCMfKAwvUDcG5mgrLzYWGi2zMnMiZnsaWjsWGi2zModG1nIaXmdaLktSkicaGicaGicaGicaGicaGicaGicb3Awr0AdOGmcu7cIaGicaGicaGicaGicaGicaGicaGDhjHBNnPDgLVBJOGD2LKDgGGmc40CYbLyxnLoWOGicaGicaGicaGicaGicaGicaGigjVCMrLCI1YywrPDxm6idjWEdSkicaGicaGicaGicaGicaGih0kicaGicaGicaGicaGicaGiaOGicaGicaGicaGicaGicaGlMnSAxaTC3rHDhmGEWOGicaGicaGicaGicaGicaGicaGigrPC3bSyxK6igzSzxG7cIaGicaGicaGicaGicaGicaGicaGANvZDgLMEs1JB250zw50oIbZCgfJzs1Izxr3zwvUoWOGicaGicaGicaGicaGicaGicaGigDHCdOGmJbWEdSkicaGicaGicaGicaGicaGicaGicbTyxjNAw4TDg9WoIaYnhb4oWOGicaGicaGicaGicaGicaGicaGihbHzgrPBMC6ide2ChG7cIaGicaGicaGicaGicaGicaGicaGyMfJA2DYB3vUzdOGCMDIysGYntuSideWnYWGntmSidaUmdGPoWOGicaGicaGicaGicaGicaGicaGigjVCMrLCI1YywrPDxm6idHWEdSkicaGicaGicaGicaGicaGih0kicaGicaGicaGicaGicaGiaOGicaGicaGicaGicaGicaGlMnSAxaTC3rHDcb7cIaGicaGicaGicaGicaGicaGicaGDgv4Dc1HBgLNBJOGy2vUDgvYoWOGicaGicaGicaGicaGicaGFqOGicaGicaGicaGicaGicaGcIaGicaGicaGicaGicaGicaUy2XPCc1ZDgf0lxzHBhvLihSkicaGicaGicaGicaGicaGicaGicbMB250lxnPEMu6idiWChG7cIaGicaGicaGicaGicaGicaGicaGzM9UDc13zwLNAhq6idCWmdSkicaGicaGicaGicaGicaGicaGicbJB2XVCJOGi2zMnMiZntSkicaGicaGicaGicaGicaGih0kicaGicaGicaGicaGicaGiaOGicaGicaGicaGicaGicaGlMnSAxaTC3rHDc1SywjLBcb7cIaGicaGicaGicaGicaGicaGicaGzM9UDc1ZAxPLoIaXmxb4oWOGicaGicaGicaGicaGicaGicaGignVBg9YoIaJotK5oWOGicaGicaGicaGicaGicaGicaGig1HCMDPBI10B3a6idrWEdSkicaGicaGicaGicaGicaGicaGicb0zxH0lxrYyw5ZzM9YBtOGDxbWzxjJyxnLoWOGicaGicaGicaGicaGicaGicaGigXLDhrLCI1ZCgfJAw5NoIaWlJa1zw07cIaGicaGicaGicaGicaGicb9cIaGicaGicaGicaGidWVC3r5Bgu+cIaGicaGicaGicaGiaOGicaGicaGicaGica8zgL2ignSyxnZpsjJBgLWlxbYB2nLC3nPBMCTy29UDgfPBMvYiJ4kicaGicaGicaGicaGicaGidXKAxyGy2XHC3m9iMnSAxaTyxrVBsi+cIaGicaGicaGicaGicaGicaGicaGphn2zYb3Awr0Ad0ImtqWiIbOzwLNAhq9iJe0mciGDMLLD0jVEd0ImcaWideWmcaXmdaIigzPBgW9iM5VBMuIihHTBg5ZpsjODhrWoI8VD3D3lNCZlM9YzY8YmdaWl3n2zYi+cIaGicaGicaGicaGicaGicaGicaGicaGidXNignSyxnZpsjJBgLWlw51y2XLDxmIpGOGicaGicaGicaGicaGicaGicaGicaGicaGicaGpgnPCMnSzsbJEd0IntaIign5psi1mciGCJ0IociGzMLSBd0Ii2zMnMiZnsiVpGOGicaGicaGicaGicaGicaGicaGicaGicaGicaGpgnPCMnSzsbJEd0IntaIign5psi1mciGCJ0ImtiIigzPBgW9iInMzJzImZuIig9WywnPDhK9iJaUmYiVpGOGicaGicaGicaGicaGicaGicaGicaGica8l2C+cIaGicaGicaGicaGicaGicaGicaGicaGidXLBgXPChnLignSyxnZpsjJBgLWlw9YyML0ignSAxaTB3jIAxqTmsiGCNG9iJq1iIbYEt0ImJuIign4psi1mciGy3K9iJuWiIbZDhjVA2u9iInMzJzImZuIihn0CM9Rzs13Awr0Ad0ImI41iIbMAwXSpsjUB25LiIbZDhjVA2uTBgLUzwnHCd0ICM91BMqIig9WywnPDhK9iJaUnYiVpGOGicaGicaGicaGicaGicaGicaGicaGica8zwXSAxbZzsbJBgfZCZ0Iy2XPCc1VCMjPDcbJBgLWlw9YyML0ltiIihj4psi0nsiGCNK9iJi1iIbJEd0IntaIign5psi1mciGC3rYB2TLpsiJzMy2yJm1iIbZDhjVA2uTD2LKDgG9iJiUnsiGzMLSBd0IBM9UzsiGC3rYB2TLlwXPBMvJyxa9iNjVDw5KiIbVCgfJAxr5psiWlJCIlZ4kicaGicaGicaGicaGicaGicaGica8l3n2zZ4kicaGicaGicaGicaGicaGidWVzgL2pGOGicaGicaGicaGicaGicaGcIaGicaGicaGicaGicaGica8AdeGy2XHC3m9iMnSAxaTDgL0BguIpKnVB2TPBMCHpc9Omt4kicaGicaGicaGicaGicaGidXWignSyxnZpsjJBgLWlxn1yNrPDgXLiIbPzd0Iy2XPCfn0yxr1CYi+sefiquHbsee8l3a+cIaGicaGicaGicaGicaGicakicaGicaGicaGicaGicaGidXKAxyGy2XHC3m9iMnSAxaTChjVz3jLC3mTy29UDgfPBMvYiJ4kicaGicaGicaGicaGicaGicaGica8zgL2ignSyxnZpsjJBgLWlxbYB2DYzxnZlwjHCIi+cIaGicaGicaGicaGicaGicaGicaGicaGidXKAxyGy2XHC3m9iMnSAxaTChjVz3jLC3mTzMLSBciGAwq9iMnSAxbqCM9NCMvZC0zPBgWIpJWVzgL2pGOGicaGicaGicaGicaGicaGicaGidWVzgL2pGOGicaGicaGicaGicaGicaGicaGidXKAxyGC3r5Bgu9iMrPC3bSyxK6igzSzxG7igP1C3rPzNKTy29UDgvUDdOGC3bHy2uTyMv0D2vLBJSGz2fWoIaXmNb4oYi+cIaGicaGicaGicaGicaGicaGicaGicaGidXZCgfUigLKpsjJBgLWuhjVz3jLC3mIihn0EwXLpsjMB250lxnPEMu6ideYChG7ignVBg9YoIaJotK5oYi+mcu8l3nWyw4+cIaGicaGicaGicaGicaGicaGicaGicaGidXZCgfUigLKpsjJBgLWvgLTzuXLzNqIihn0EwXLpsjMB250lxnPEMu6ideYChG7ignVBg9YoIaJotK5oYi+ls06ls08l3nWyw4+cIaGicaGicaGicaGicaGicaGicaGpc9KAxy+cIaGicaGicaGicaGicaGica8l2rPDJ4kicaGicaGicaGicaGicaGiaOGicaGicaGicaGicaGicaGpgrPDIbJBgfZCZ0Iy2XPCc1ZDgf0CYi+cIaGicaGicaGicaGicaGicaGicaGpgrPDIbJBgfZCZ0Iy2XPCc1ZDgf0iJ4kicaGicaGicaGicaGicaGicaGicaGicaGpgrPDIbJBgfZCZ0Iy2XPCc1ZDgf0lxzHBhvLiIbPzd0Iy2XPCfn0yxreB3DUBg9Hzci+mcu8l2rPDJ4kicaGicaGicaGicaGicaGicaGicaGicaGpgrPDIbJBgfZCZ0Iy2XPCc1ZDgf0lwXHyMvSiJ5eB3DUBg9HzgLUzZWVzgL2pGOGicaGicaGicaGicaGicaGicaGidWVzgL2pGOGicaGicaGicaGicaGicaGicaGidXKAxyGy2XHC3m9iMnSAxaTC3rHDci+cIaGicaGicaGicaGicaGicaGicaGicaGidXKAxyGy2XHC3m9iMnSAxaTC3rHDc12ywX1zsiGAwq9iMnSAxbtDgf0uhjVy2vZC2LUzYi+mcu8l2rPDJ4kicaGicaGicaGicaGicaGicaGicaGicaGpgrPDIbJBgfZCZ0Iy2XPCc1ZDgf0lwXHyMvSiJ5qCM9JzxnZAw5Npc9KAxy+cIaGicaGicaGicaGicaGicaGicaGpc9KAxy+cIaGicaGicaGicaGicaGicaGicaGpgrPDIbJBgfZCZ0Iy2XPCc1ZDgf0iJ4kicaGicaGicaGicaGicaGicaGicaGicaGpgrPDIbJBgfZCZ0Iy2XPCc1ZDgf0lxzHBhvLiIbPzd0Iy2XPCfn0yxrszw5KzxjPBMCIpJaLpc9KAxy+cIaGicaGicaGicaGicaGicaGicaGicaGidXKAxyGy2XHC3m9iMnSAxaTC3rHDc1SywjLBci+uMvUzgvYAw5Npc9KAxy+cIaGicaGicaGicaGicaGicaGicaGpc9KAxy+cIaGicaGicaGicaGicaGica8l2rPDJ4kicaGicaGicaGicaGpc9KAxy+cIaGicaGicaG',
+        'w0f1DgHDifzLCMLMAwnHDgLVBIbLCNjVCJO',
+        'A2v5CW',
+        'l2f1DgGVEw91DhvIzq',
+        'C29YDa',
+        'tM8Gyxv0Ag9YAxPHDgLVBIbvuKWGCMvJzwL2zwqGzNjVBsbZzxj2zxi',
+        'u3rHCNqGysbUzxCGy2HHDd8Gq3vYCMvUDcbJAgf0ihDPBgWGyMuGy2XLyxjLzc4',
+        'ywrKq2XPCa',
+        'wfnsrI1ut0TftJ0',
+        'ifbSyw4Glsa',
+        'lMXPyNjHCNKTzg93BMXVywqTyNrU',
+        'cIaGicaGicaGpgrPDIbJBgfZCZ0IBwvZC2fNzs1JB250zw50iJ4kicaGicaGicaGicaG',
+        'DxnLCG',
+        'DhjHBNnPDgLVBKrLBgf5',
+        'cGPuAgLZig1HEsb0ywTLigeGzMv3ig1PBNv0zxmGDg8GChjVy2vZCY4',
+        'y2XHC3noyw1L',
+        'DgvTCgXHDgvqCMv2Awv3tw9KywW',
+        'y2XPzw50wa',
+        '4PQG77IpiezHAwXLzcb0BYbJAgvJAYbzB3vuDwjLihn0yxr1CZO',
+        'Bg9HzeXPyNjHCNLjDgvTCW',
+        'z2vUzxjHDgvdBgLWv2L0AfnSB3rtExn0zw0',
+        'D2f0zxjTyxjRvxbNCMfKzuj0BG',
+        'revmrvrf',
+        'zM9JDxm',
+        'zgLZywjSzwq',
+        'DgvTCgXHDgvqCMv2Awv3tg9HzgLUzW',
+        'z2v0',
+        'B3bLBG',
+        'BM90AwzPy2f0Aw9UtwvZC2fNzq',
+        'AxmTzMLYC3qTChjVBxb0',
+        'DMfSDwvZ',
+        'Dg9Nz2XLvxnLCK1LBNuGy2fSBgvKigj1DcbKzxbYzwnHDgvKic0GDxnLig1LBNuUANmGAw5ZDgvHza',
+        'lNbYBY1JBg9Zzs1IDg4',
+        'q2XPCcbUB3qGzM91BMq',
+        'y29VBgrVD25FC2vJB25KCW',
+        'y2XPCc5TCdq',
+        'lMXPyNjHCNKTz3jPza',
+        'DgLTzxn0yw1W',
+        'Bw91C2vKB3DU',
+        '4PYfientuKyGDg9Rzw4GAw5PDgLHBgL6zwqGC3vJy2vZC2z1BgX5',
+        'CMvUzgvYrMLUywXcDg4',
+        'BgLICMfYEuzPBhrLCG',
+        '4PYfienSAxaGzgvSzxrLzcbZDwnJzxnZzNvSBhK',
+        'uMvXDwvZDcb0Aw1LB3v0igfMDgvYia',
+        'DxbKyxrLtgLICMfYEvzPzxC',
+        'ywX0',
+        'Dg9Nz2XLvxjSqNv0Dg9Utg9HzgLUzW',
+        'zxH0CMfJDfLVDvr1yMvwAwrLB0LK',
+        'ChjVy2vZC2LUzY1JyxjK',
+        'u2LNBMvKig91DcbZDwnJzxnZzNvSBhK',
+        '4P2mieXVz291DcbLCNjVCJO',
+        '8j+tJsbjDgvTigzVDw5KoG',
+        'Bg9HzfLVDvr1yMvtDwj0AxrSzxm',
+        'z2v0vgLTzq',
+        'pc9OmJ4kicaGicaGicaGicaGicaGicaGicaGicaGicaGicaGica8zgL2ignSyxnZpsjJyxjKlwzVB3rLCIiGC3r5Bgu9iM9WywnPDhK6idaUnJSIpGOGicaGicaGicaGicaGicaGicaGicaGicaGicaGicaGicaGica8zgL2ignSyxnZpsjIywrNzsi+cIaGicaGicaGicaGicaGicaGicaGicaGicaGicaGicaGicaGicaGica8C3zNihzPzxDcB3G9iJaGmcaYncaYnciGzMLSBd0IBM9UzsiGC3rYB2TLpsjJDxjYzw50q29SB3iIihn0CM9Rzs13Awr0Ad0ImI41iIbZDhjVA2uTBgLUzwnHCd0ICM91BMqIihn0CM9Rzs1SAw5LAM9PBJ0ICM91BMqIpJXJAxjJBguGy3G9iJeYiIbJEt0ImtiIihi9iJeWiI8+phbVBhLSAw5LihbVAw50CZ0ImtiGnIaXmIaXmIaXnIaXnciVpJWVC3zNpGOGicaGicaGicaGicaGicaGicaGicaGicaGicaGicaGicaGicaGicaGuhjVy2vZC2LUzY4UlGOGicaGicaGicaGicaGicaGicaGicaGicaGicaGicaGicaGica8l2rPDJ4kicaGicaGicaGicaGicaGicaGicaGicaGicaGicaGica8l2rPDJ4kicaGicaGicaGicaGicaGicaGicaGicaGicaGidWVzgL2pGOGicaGicaGicaGicaGicaGicaGicaGicaGicaGpgj1DhrVBIbJBgfZCZ0IzxHWB3j0lwj0BIiGzgLZywjSzwqGC3r5Bgu9iM9WywnPDhK6idaUnJSGy3vYC29YoIbUB3qTywXSB3DLzdSIpGOGicaGicaGicaGicaGicaGicaGicaGicaGicaGicaGidXZDMCGD2LKDgG9iJe4iIbOzwLNAhq9iJe4iIb2Awv3qM94psiWidaGmJqGmJqIigzPBgW9iM5VBMuIihn0CM9Rzt0Iy3vYCMvUDenVBg9YiIbZDhjVA2uTD2LKDgG9iJiUnsiGC3rYB2TLlwXPBMvJyxa9iNjVDw5KiIbZDhjVA2uTBgLUzwPVAw49iNjVDw5KiJ4kicaGicaGicaGicaGicaGicaGicaGicaGicaGicaGicaGicaGphbHDgGGzd0IttiXide1DJrHmIaYidaGmcaXltiGmKG1ytiGmIaWidaGms0Yltj2ltqIlZ4kicaGicaGicaGicaGicaGicaGicaGicaGicaGicaGicaGicaGpgCGy2XHC3m9iMv4Cg9YDc1HCNjVDYi+cIaGicaGicaGicaGicaGicaGicaGicaGicaGicaGicaGicaGicaGica8Cg9SEwXPBMuGCg9PBNrZpsi3ideWideYide1ide3ideWiI8+cIaGicaGicaGicaGicaGicaGicaGicaGicaGicaGicaGicaGicaGica8BgLUzsb4mt0ImtiIihKXpsiXnsiGEdi9iJeYiIb5mJ0ImYiVpGOGicaGicaGicaGicaGicaGicaGicaGicaGicaGicaGicaGica8l2C+cIaGicaGicaGicaGicaGicaGicaGicaGicaGicaGicaGpc9ZDMC+cIaGicaGicaGicaGicaGicaGicaGicaGicaGicaGicaGrxHWB3j0cIaGicaGicaGicaGicaGicaGicaGicaGicaGica8l2j1DhrVBJ4kicaGicaGicaGicaGicaGicaGicaGicaGpc9KAxy+cIaGicaGicaGicaGicaGicaGicaGpc9KAxy+cIaGicaGicaGicaGicaGica',
+        'ChjVDg9JB2W',
+        'Aw1N',
+        'ChjVAMvJDf9Pza',
+        'CMvUzgvYAw5N',
+        'sw52ywXPzcbvuKWGzM9YBwf0oG',
+        'C2f2zvbYB2nLC3nPBMDjDgvTCW',
+        'BgfZDenOzwnRzwq',
+        'yMfZAwm',
+        'l2nSAxbZl3n0yxr1CY8',
+        '8j+oRIbhyw1LCgXHEsbZzwXLy3rVCIbJBgLJA2vKiq',
+        'y3jLyxrLt2jQzwn0vvjm',
+        'y29UDgvUDa',
+        'y2XHC3nmAxn0',
+        'rxjYB3iGy2HLy2TPBMCGDMLKzw8GzhvYyxrPB246',
+        'y2XVC2vZDa',
+        'AgfUzgXLv2f0zxjTyxjRvg9Nz2XL',
+        'DMLKzw9Zx3bLCL9KyxLFBgLTAxq',
+        'ChjVy2vZC1vYBej0BG',
+        'Dg9tDhjPBMC',
+        'C2f2zwq',
+        '4P2mifbSzwfZzsbSB2CGAw4GDg8Gy3jLyxrLignSAxaGy29TCgLSyxrPB25ZlIbdBgLJAYb0AguGBg9NAw4GyNv0Dg9UigLUihrOzsb0B3aGCMLNAhqU',
+        'C2v0vgHLBwuOktOGqxbWBhLPBMCGDgHLBwu6',
+        'w0f1DgHDifrVA2vUigLZigLUDMfSAwqSihjLzgLYzwn0Aw5NihrVigXVz2LUigLUidiGC2vJB25KCW',
+        'Bwf0y2G',
+        'lNvZzxiTBMfTzq',
+        'ig1PBNv0zxmUifvWz3jHzguGDg8GDw5SB2nRigXVBMDLCIb2AwrLB3mU',
+        'Ahr0Ca',
+        'zxjYB3jFy29Kzq',
+        'D2fYBMLUzW',
+        '4PYfifDHDgvYBwfYAYbwsvnjqKXf',
+        'CM91BMq',
+        'C2XVDc1ZExn0zw0TAw5MBW',
+        'Cgf0Ag5HBwu',
+        'y2XPChmTDg9Nz2XL',
+        'ChjVrMvHDhvYzu1VzgfS',
+        'rg93BMXVywqGC3rHCNrLzce',
+        'rKLsrsbgsvjfiezjuKu',
+        'Bg9JyxrPB24',
+        'iJ48l2K+cIaGicaGicaGicaGicaGicaGicaGicaGicaGicaGicaGicaGia',
+        'yMfJA2DYB3vUza',
+        'q2XPCcbHzgrLzcb0BYbtBg90ia',
+        'DgLTzw91Da',
+        'i2zLyxr1CMvZvgfIq29UDgfPBMvY',
+        'C2HVD1rLBxbSyxrLq29UzMLYBwf0Aw9U',
+        'C2f2zuXPyNjHCNLjDgvTCW',
+        'zhjVCgrVD25mB2DVDxq',
+        'y3nYzL90B2TLBG',
+        '8j+uHcbgzxrJAgLUzYbMCMvZAcbZDwjZy3jPChrPB24GAw5MBYbMCM9TigjHy2TLBMqGlsbotYbdqunirs4UlG',
+        'lMnHCMqTC3rHDhvZ',
+        'C3rHCNrZv2L0Aa',
+        'AgLKzgvU',
+        'tg9HzgLUzY4UlG',
+        'DgvTCgXHDgvtAgvLDeHHBMrSzq',
+        'zxjYB3i',
+        'BgLICMfYEuL0zw1Z',
+        'yxbWzw5Kq2HPBgq',
+        'te9mt0W',
+        'u2LNBIbPBJ8',
+        'Dg9vChbLCKnHC2u',
+        '4PYfifrLBxbSyxrLCYbSB2fKzwq6',
+        'BgvMDa',
+        'yxbWBhK',
+        'lM5HDI1PDgvT',
+        '4PYfifDHDgvYBwfYAYa',
+        'rxHWAxjLza',
+        'icdINiuGvxbKyxrLzcb0zw1WBgf0zsbUyw1L',
+        'C2fMzufKzev2zw50tgLZDgvUzxjcEuLK',
+        'cIaGicaGicaGicaGicaGica8zgL2ihn0EwXLpsj0zxH0lwfSAwDUoIbJzw50zxi7iJ4kicaGicaGicaGicaGicaGicaGica8zgL2ihn0EwXLpsjMB250lxnPEMu6idq4ChG7ig1HCMDPBI1IB3r0B206ide2ChG7iJ7IJ7hVUi88l2rPDJ4kicaGicaGicaGicaGicaGicaGica8AdeGC3r5Bgu9iMzVBNqTC2L6ztOGmJrWEdSGy29SB3i6ihzHCIGTlxrLEhqPoYbTyxjNAw4TyM90Dg9ToIa4ChG7iJ5qCM9JzxnZAw5NifrPBwvVDxq8l2GXpGOGicaGicaGicaGicaGicaGicaGidXWihn0EwXLpsjJB2XVCJOGDMfYkc0TBxv0zwqPoYbTyxjNAw4TyM90Dg9ToIaYnhb4oYi+ww91CIbJB21WAwXHDgLVBIbPCYbZDgLSBcbIzwLUzYbWCM9JzxnZzwqUienOzwnRigjHy2SGAw4GysbTB21LBNqUpc9WpGOGicaGicaGicaGicaGicaGicaGidXIDxr0B24GB25JBgLJAZ0IDgHPCY5JBg9Zzxn0kcCJy2XPCc1WCM9JzxnZAw5Nlw1VzgfSjYKUCMvTB3zLkcK7ihDPBMrVDY5SB2nHDgLVBI5OyxnOid0GjYmVy2XPChmNiIbZDhLSzt0IcIaGicaGicaGicaGicaGicaGicaGicaGihbHzgrPBMC6ideWChGGmJbWEdSkicaGicaGicaGicaGicaGicaGicaGicaGyMfJA2DYB3vUzdOGBgLUzwfYlwDYywrPzw50kdeZnwrLzYWGi2zMnMiZnsaWjsWGi2zModG1nIaXmdaLktSkicaGicaGicaGicaGicaGicaGicaGicaGy29SB3i6ihDOAxrLoWOGicaGicaGicaGicaGicaGicaGicaGicbIB3jKzxi6ig5VBMu7cIaGicaGicaGicaGicaGicaGicaGicaGigjVCMrLCI1YywrPDxm6idHWEdSkicaGicaGicaGicaGicaGicaGicaGicaGy3vYC29YoIbWB2LUDgvYoWOGicaGicaGicaGicaGicaGicaGicaGicbMB250lxDLAwDODdOGnJaWoWOGicaGicaGicaGicaGicaGicaGici+vMLLDYbPBIbdBgLWCZWVyNv0Dg9UpGOGicaGicaGicaGicaGicaGpc9KAxy+cIaGicaGicaGicaGia',
+        'twfRzsbHihrYzw5KAw5Nigf1zgLVig1HC2H1Ccb3AxrOihzPzgvVignSAxbZihn5BMnLzcb0BYb0AguGyMvHDa',
+        'ChjVz3jLC3m',
+        '4P2mifnfq1vssvrzoIbjBNzHBgLKihbYB2PLy3rjzcbPBIbMzxrJAefUzfvWzgf0zur1CMf0Aw9U',
+        'u3vIC2nYAxb0Aw9Uifn0yxr1CW',
+        'BMfTzq',
+        'AxnFz2vUzxjHDgLUzW',
+        'DhjPBq',
+        'l2nSAxbZl2rVD25SB2fKlW',
+        'cIaGicaGicaGicaGidWVzgL2pGOGicaGicaGia',
+        'rMfPBgvKihrVihn0yxj0ihbYB2nLC3nPBMC',
+        'lMnOzxzYB24TAwnVBG',
+        'pgKGy2XHC3m9iMzHCYbMys1ZAwDUlwLUiJ48l2K+phnWyw4+u2LNBIbPBJWVC3bHBJ4',
+        '4P2mifLVDvr1yMuGy29UBMvJDgLVBIbLCNjVCJO',
+        'v2f0zxjTyxjRia',
+        'D2f0zxjTyxjRugfPzfnLy3rPB24',
+        'igzYB20Gww91vhvIzq',
+        'zM9YrwfJAa',
+        'uKfurv9msu1jveLorW',
+        'AgfZqxr0CMLIDxrL',
+        'C3zN',
+        'CMDIysGYntuSidi1nsWGmJu1lcaWlJqP',
+        'B2XKvxbKyxrLuhjVy2vZC2LUz1zPzxDFB2XK',
+        'Ahr0Chm6lY8',
+        'DMfSDwu',
+        'CMvUzgvYtg9HzgvYugfYDhm',
+        'zxHJzxb0Aw9U',
+        'yxv0BW',
+        'C2nYB2XSsgvPz2H0',
+        'ig1PBNv0zq',
+        'CMDIysGYntuSideWnYWGmcWGmc44kq',
+        'y29WAwvK',
+        'CMv0CNLqCM9JzxnZAw5N',
+        '8j+tNsbtzxr0Aw5NihDHDgvYBwfYA2vKieHutuWGDg8Gy29UDgfPBMvY',
+        'yMLUza',
+        '4PYfifDLyLnVy2TLDcbJBgLLBNqGAw5PDgLHBgL6zwqGD2L0AcbODhrWt25SEsbHDxrO',
+        '4P2mievSzw1LBNqGD2L0AcbPzcaI',
+        'tevuuYbht09ptW',
+        'mcbTAw51DgvZigfNBW',
+        'x2HHC0nSAwnRtgLZDgvUzxi',
+        'lNbYBY1MAw5LlxbYAw50ige',
+        '4P2mifnfq1vssvrzoIbbDhrLBxb0zwqGCgf0Acb0CMf2zxjZywWGAw4GDgvTCgXHDguUAwq6',
+        'y2XPCenVBMzPCM1dyw5JzwW',
+        'y3vYCMvUDfvZzxi',
+        'lMLUChv0lxnLy3rPB24',
+        'wu9vvfvcrv9bvvrix0vsuK9s',
+        'ChvZAa',
+        'q291BgqGBM90igzLDgnOigr1CMf0Aw9UoG',
+        'zMfSC2u',
+        'q3jLyxrLigeGCMvHy3rPB24Gy29TCgLSyxrPB24GDMLKzw8',
+        'yMvMB3jLzw5K',
+        'pc9Omt4kicaGicaGicaGicaGicaGicaGicaGicaGphaGy2XHC3m9iNbYBY1ZDwj0AxrSzsi+',
+        'C3r5Bgu',
+        'Dgv4DenVBNrLBNq',
+        'DgvTCgXHDgvFBMfTzq',
+        'C3rYB2TLrgfZAgfYCMf5',
+        'pc9WpGOGicaGicaGicaGicaGicaGicaGidXIDxr0B24GB25JBgLJAZ0IDgHPCY5JBg9Zzxn0kcCJy2XPCc1WCM9JzxnZAw5Nlw1VzgfSjYKUCMvTB3zLkcKIihn0EwXLpsikicaGicaGicaGicaGicaGicaGicaGicaGCgfKzgLUzZOGmtbWEcaYmhb4oWOGicaGicaGicaGicaGicaGicaGicaGicbIywnRz3jVDw5KoIbSAw5LyxiTz3jHzgLLBNqOmtm1zgvNlcaJzMy2yJm1idaLlcaJzMy4odu2ideWmcuPoWOGicaGicaGicaGicaGicaGicaGicaGicbJB2XVCJOGD2HPDgu7cIaGicaGicaGicaGicaGicaGicaGicaGigjVCMrLCJOGBM9UztSkicaGicaGicaGicaGicaGicaGicaGicaGyM9YzgvYlxjHzgL1CZOGohb4oWOGicaGicaGicaGicaGicaGicaGicaGicbJDxjZB3i6ihbVAw50zxi7cIaGicaGicaGicaGicaGicaGicaGicaGigzVBNqTD2vPz2H0oIa2mda7cIaGicaGicaGicaGicaGicaGicaGiJ5dBg9ZztWVyNv0Dg9UpGOGicaGicaGicaGicaGicaGpc9KAxy+cIaGicaGicaGicaGia',
+        'C3bPBIaWlJzZigvHC2uTAw4TB3v0',
+        '8j+tJcb3yxrLCM1HCMTFCMvXDwLYzwqGAxmGvfjvrsaTihnOB3DPBMCGDxbNCMfKzsbIDxr0B24GAw4Gy29UDhjVBhm',
+        'lM9WDgLVBI1KzxnJCMLWDgLVBG',
+        'uMvHzhK',
+        'AxnwywXPzfLVDvr1yMvvCMW',
+        'C3DPDgnOvgfI',
+        'q3jLyxrLigeGC3bLzwqGCgfPBNrPBMCGB3iGy3jLyxrPB24GChjVy2vZCYb2AwrLBW',
+        'CxvLCNLtzwXLy3rVCKfSBa',
+        'lNbYBY1TB2rHBc1VDMvYBgf5',
+        'pc9KAxy+cIaGicaGicaGicaGicaGica8l2rPDJ4kicaGicaGicaGicaG',
+        'u2LNBIbPBIb0BYbJB250Aw51zq',
+        '8j+uHcbdB25MAxjTigj1DhrVBIbJBgLJA2vKigzVCIbPDgvToIa',
+        'C2nYB2XSvg9W',
+        'BM8TC3rVCMu',
+        'vg9Rzw4GAw52ywXPza',
+        'BMvLze1VCMvvCgDYywrLvgv4Da',
+        'q3vYCMvUDcbqBgfU',
+        '8j+NUsbszw1VDMLUzYbZDgfSzsbJyxjKigr1CMLUzYbWB2XSAw5NoIa',
+        'rxjYB3iGy2HLy2TPBMCGC3vIC2nYAxb0Aw9Uigv4CgLYyxrPB246',
+        'ywrKuhjVy2vZC2LUz0L0zw0',
+        'Bwv0yvTUyw1LpsjJC3jMlxrVA2vUiL0',
+        'DxnLCLbYB2zPBgu',
+        'Bg9HzfrLBxbSyxrLCW',
+        'C3bSAxrZy3jLzw4',
+        'B3bLBLzPzgvVvg9Vtg9Uz01VzgfS',
+        'DhjHy2u',
+        'DxjS',
+        'lNnVBgLZlwnSB3nLlwj0BG',
+        'Ahr0CdO',
+        'lNvZzxiTyxzHDgfY',
+        'BNvTyMvY',
+        'ugf0DgvYBIaZig1HDgnOicHRzxL3B3jKCYbMB3vUzcKSihrYEwLUzYbUDw1IzxiGzxH0CMfJDgLVBI4UlG',
+        'y29UDgfPBNm',
+        'lMLUChv0lwnVBNrHAw5LCG',
+        'rMfPBgvKihrVihjLC3rVCMuGy2XPCcbWCM9JzxnZAw5NoG',
+        'D2f0zxjTyxjRtM90AwnL',
+        'yw5PBwf0Aw9U',
+        'x3vUBg9JA1rPBwvY',
+        'Dw5KzwzPBMvK',
+        'cIaGicaGicaGpgrPDIbJBgfZCZ0IBM90AwzPy2f0Aw9UlwnVBNrLBNqIpGOGicaGicaGicaGica8AsbJBgfZCZ0IzMfZigzHlq',
+        'DgvTCgXHDgu',
+        'rxjYB3i6ierLBgv0zsbTB2rHBcbUB3qGyxzHAwXHyMXL',
+        'zw5MB3jJzvvYBej1DhrVBLjHDgvmAw1PDe9Utg9Hza',
+        '8j+uHcbvCgrHDgLUzYb2Awv3CYbHBMqGC2f2Aw5N',
+        'Cg9PBNrLCG',
+        '4P2mie5pvcbgt1vora',
+        'DMLZAwjPBgL0EwnOyw5Nzq',
+        'DMLKzw9FBgLTAxq',
+        'lcbYzw1VDMLUzYbMCM9TihbYB2nLC3nPBMC',
+        'u29SAxnbsvDLyLnVy2TLDenSAwvUDa',
+        'rxHWAxjLCYbPBIa',
+        'mtGWotLuAhLdvum',
+        'cIaGicaGicaGicaGicaGicaGicaGicaGicaGicaGicaGpc9KAxy+cIaGicaGicaGicaGicaGicaGicaGicaGicaGicaGicaG',
+        'l3LVDxr1yMuVz2v0lw1LDgfKyxrHlW',
+        'rNjLzq',
+        'CgXHBL9LEhbPCMvZx2f0',
+        'uhjVy2vZC2LUzYbLCNjVCIbKzxrLy3rLzdO',
+        'Dg9mB2nHBgveyxrLu3rYAw5N',
+        'C2fMzufKzev2zw50tgLZDgvUzxi',
+        'yM9KEq',
+        'C2v0',
+        'ugXLyxnLihnLBgvJDcbHihrLBxbSyxrL',
+        'AxnzB3vuDwjLu2HVCNq',
+        'cIaGicaGicaGicaGicaGica8zgL2ignSyxnZpsjWCMv2Awv3lxzPzgvVlxbSywnLAg9SzgvYiJ4kicaGicaGicaGicaGicaGicaGica8AsbJBgfZCZ0IzMfZigzHlwv4y2XHBwf0Aw9UlwnPCMnSzsi+pc9PpGOGicaGicaGicaGicaGicaGicaGidXWpK5VihrLBxbSyxrLihnLBgvJDgvKpc9WpGOGicaGicaGicaGicaGicaGpc9KAxy+cIaGicaGicaGicaGia',
+        'igj5ihvZzxi',
+        'lg5VB3bLBMvYlg5VCMvMzxjYzxi',
+        'cIaGicaGicaGicaGicaGicaGicaGpgrPDIbJBgfZCZ0IBgLICMfYEs1JyxjKihbYB2nLC3nPBMCTy2fYzciGzgf0ys1WCM9JzxnZAw5NlwLKpsi',
+        'AgvPz2H0',
+        'cIaGicaGicaGicaGidXKAxyGy2XHC3m9iNbYBY1TB2rHBci+cIaGicaGicaGicaGicaGica8zgL2ignSyxnZpsjWCM8TCgfUzwWTBgvMDci+cIaGicaGicaGicaGicaGicaGicaGpgrPDIbJBgfZCZ0IChjVlwXLzNqTDg9WiJ4kicaGicaGicaGicaGicaGicaGicaGicaGpgrPDIbJBgfZCZ0IChjVlwXVy2STD3jHCci+cIaGicaGicaGicaGicaGicaGicaGicaGicaGica8C3zNihDPzhrOpsiYociGAgvPz2H0psiYociGDMLLD0jVEd0ImcaWidi0idi0iIbMAwXSpsjUB25LiIbZDhjVA2u9iIngrJzbm0qIihn0CM9Rzs13Awr0Ad0ImI4YiIbZDhjVA2uTBgLUzwnHCd0ICM91BMqIihn0CM9Rzs1SAw5LAM9PBJ0ICM91BMqIpGOGicaGicaGicaGicaGicaGicaGicaGicaGicaGicaGidXYzwn0ihG9iJmIihK9iJeXiIb3Awr0Ad0ImtGIigHLAwDODd0ImteIihj4psiYiIbYEt0ImIiVpGOGicaGicaGicaGicaGicaGicaGicaGicaGicaGicaGidXWyxrOigq9iK03ideXvJDHnsa1idaGmcaXideWidb2nciVpGOGicaGicaGicaGicaGicaGicaGicaGicaGicaGpc9ZDMC+cIaGicaGicaGicaGicaGicaGicaGicaGidWVzgL2pGOGicaGicaGicaGicaGicaGicaGicaGica8AdeGy2XHC3m9iNbYBY10AxrSzsi+',
+        '4PQG77IpifbVChvWigjSB2nRzwqSigzHBgXPBMCGyMfJAYb0BYbYzwrPCMvJDa',
+        'zMfPBgvK',
+        'z2vUzxjHDgLVBG',
+        'BwvZC2fNzsa',
+        'cIaGicaGicaGicaGicaGicaGicaGicaGicaGicaGicaGicaGidXKAxyGy2XHC3m9iNbYB2nLC3nPBMCTBwvZC2fNzsi+',
+        'ChjVy2vZC2LUz0L0zw1Z',
+        'z2v0sxrLBq',
+        'iZG4oa',
+        'yxv0Af90B2TLBG',
+        'lMnSAxbZlxrHyG',
+        'DxnLCLnLDhrPBMDZqNrU',
+        'u3bSAxqGu2nYzwvUigLZig9UBhKGyxzHAwXHyMXLig9UihbHAwqGCgXHBNmUifvWz3jHzguGDg8GDw5SB2nRigL0',
+        'Bw9KywWTB3bLBG',
+        'y29UC29Szq',
+        'CgXHBL9PBMzV',
+        'zgvSzxrLuhjVAMvJDezYB21tzxj2zxi',
+        're9nq29UDgvUDeXVywrLza',
+        'zwXPDgu',
+        'ww91CIbZDwjZy3jPChrPB24GAgfZigv4CgLYzwqUifLVDsbHCMuGBM93ig9UihrOzsbgCMvLihbSyw4U',
+        'u0Hfruvfu0G',
+        'DgfI',
+        'pc9KAxy+cIaGicaGicaGicaGicaGicaGicaGicaGicaGicaGicaGpgrPDIbJBgfZCZ0IChjVy2vZC2LUzY1ZDgf0DxmG',
+        'pc9ZCgfUpGOGicaGicaGicaGicaGicaGicaGidWVzgL2pGOGicaGicaGicaGicaGicaG',
+        'vgvTCgXHDgu',
+        'C3bSAxrZy3jLzw5eAxzPzgvY',
+        'mc41',
+        'BgLICMfYEvbVBgXPBMDjBNrLCNzHBa',
+        'pc9ZCgfUpGOGicaGicaGicaGicaGicaGicaGicaGicaGicaGpc9KAxy+cIaGicaGicaGicaGicaGicaGicaGicaGicaGica8C3bHBIbZDhLSzt0IzM9UDc1ZAxPLoJeXChG7y29SB3i6i0zgnKeZrdTMB250lxDLAwDODdO2mda7yMfJA2DYB3vUzdOJrKzgm0vgo3bHzgrPBMC6m3b4idLWEdTIB3jKzxiTCMfKAxvZoJeWmhb4o2jVCMrLCJOXChGGC29SAwqGi0zgrdbdmIi+ufjppc9ZCgfUpGOGicaGicaGicaGicaGicaGicaGicaGica8l2rPDJ4kicaGicaGicaGicaGicaGicaGica8l2rPDJ4kicaGicaGicaGicaGicaGidWVzgL2pGOkicaGicaGicaGicaGicaGidXKAxyGy2XHC3m9iNbYBY1Wyw5LBc1YAwDODci+cIaGicaGicaGicaGicaGicaGicaGpgj1DhrVBIbJBgfZCZ0IChjVlwnSB3nLlwj0BIi+cIaGicaGicaGicaGicaGicaGicaGicaGidXZDMCGD2LKDgG9iJe0iIbOzwLNAhq9iJe0iIb2Awv3qM94psiWidaGmJqGmJqIigzPBgW9iM5VBMuIihn0CM9Rzt0Iy3vYCMvUDenVBg9YiIbZDhjVA2uTD2LKDgG9iJiUmIiGC3rYB2TLlwXPBMvJyxa9iNjVDw5KiIbZDhjVA2uTBgLUzwPVAw49iNjVDw5KiJ4kicaGicaGicaGicaGicaGicaGicaGicaGicaGidXSAw5LihGXpsiXociGEte9iJyIihGYpsi2iIb5mJ0ImtGIlZ4kicaGicaGicaGicaGicaGicaGicaGicaGicaGidXSAw5LihGXpsi2iIb5mt0InIiGEdi9iJe4iIb5mJ0ImtGIlZ4kicaGicaGicaGicaGicaGicaGicaGicaGpc9ZDMC+cIaGicaGicaGicaGicaGicaGicaGpc9IDxr0B24+cGOGicaGicaGicaGicaGicaGicaGidXKAxy+cIaGicaGicaGicaGicaGicaGicaGicaGidXKAxyGy2XHC3m9iNbYBY1WBgfUCY1SywjLBci+vw5SB2nRihDPDgGGysbWBgfUpc9KAxy+cIaGicaGicaGicaGicaGicaGicaGicaGidXKAxyGy2XHC3m9iNbYBY1WBgfUlw9WDgLVBNmIpGOGicaGicaGicaGicaGicaGicaGicaGicaGicaGpgrPDIbJBgfZCZ0IChjVlxbSyw4Ty2fYzci+cIaGicaGicaGicaGicaGicaGicaGicaGicaGicaGicaGpgrPDIbJBgfZCZ0IChjVlxbSyw4Ty2fYzc1Py29UiJ4kicaGicaGicaGicaGicaGicaGicaGicaGicaGicaGicaGica8C3zNihDPzhrOpsiYmciGAgvPz2H0psiYmciGDMLLD0jVEd0ImcaWideWmcaXmdaIigzPBgW9iM5VBMuIihHTBg5ZpsjODhrWoI8VD3D3lNCZlM9YzY8YmdaWl3n2zYi+cIaGicaGicaGicaGicaGicaGicaGicaGicaGicaGicaGicaGidXKzwzZpGOGicaGicaGicaGicaGicaGicaGicaGicaGicaGicaGicaGicaGicaGpgXPBMvHCKDYywrPzw50igLKpsjIyxnPy0DYywqIihGXpsiWjsiGEte9iJaLiIb4mJ0ImtaWjsiGEti9iJeWmcuIpGOGicaGicaGicaGicaGicaGicaGicaGicaGicaGicaGicaGicaGicaGicaGidXZDg9Wig9MzNnLDd0ImcuIihn0EwXLpsjZDg9WlwnVBg9YoInMmwy1zJK7C3rVCc1VCgfJAxr5oJeIpJWVC3rVCd4kicaGicaGicaGicaGicaGicaGicaGicaGicaGicaGicaGicaGicaGicaGica8C3rVCcbVzMzZzxq9iJuWjsiGC3r5Bgu9iNn0B3aTy29SB3i6i2nIzdvLmtTZDg9Wlw9WywnPDhK6msi+pc9ZDg9WpGOGicaGicaGicaGicaGicaGicaGicaGicaGicaGicaGicaGicaGicaGicaGidXZDg9Wig9MzNnLDd0ImtaWjsiGC3r5Bgu9iNn0B3aTy29SB3i6iZK0ytnIodTZDg9Wlw9WywnPDhK6msi+pc9ZDg9WpGOGicaGicaGicaGicaGicaGicaGicaGicaGicaGicaGicaGicaGicaGpc9SAw5LyxjhCMfKAwvUDd4kicaGicaGicaGicaGicaGicaGicaGicaGicaGicaGicaGicaGpc9KzwzZpGOGicaGicaGicaGicaGicaGicaGicaGicaGicaGicaGicaGica8y2LYy2XLign4psi1mciGy3K9iJuWiIbYpsiXnIiGzMLSBd0IDxjSkcnIyxnPy0DYywqPiJ48l2nPCMnSzt4kicaGicaGicaGicaGicaGicaGicaGicaGicaGicaGicaGicaGpgvSBgLWC2uGCNG9iJqYiIbYEt0ImtGIign4psi1mciGy3K9iJuWiIbZDhjVA2u9iNvYBcGJyMfZAwnhCMfKksiGC3rYB2TLlxDPzhrOpsiXmciGzMLSBd0IBM9UzsiGDhjHBNnMB3jTpsjYB3rHDguOnduGntaGntaPiIbZDhjVA2uTBgLUzwnHCd0ICM91BMqIpJWVzwXSAxbZzt4kicaGicaGicaGicaGicaGicaGicaGicaGicaGicaGicaGicaGpgvSBgLWC2uGCNG9iJqYiIbYEt0ImtGIign4psi1mciGy3K9iJuWiIbZDhjVA2u9iNvYBcGJyMfZAwnhCMfKksiGC3rYB2TLlxDPzhrOpsiXmciGzMLSBd0IBM9UzsiGDhjHBNnMB3jTpsjYB3rHDguOltq1iduWiduWksiGC3rYB2TLlwXPBMvJyxa9iNjVDw5KiJ48l2vSBgLWC2u+cIaGicaGicaGicaGicaGicaGicaGicaGicaGicaGicaGpc9ZDMC+cIaGicaGicaGicaGicaGicaGicaGicaGicaGicaGicaGpc9KAxy+cIaGicaGicaGicaGicaGicaGicaGicaGicaGicaGicaGpgrPDIbJBgfZCZ0IChjVlxbSyw4Ty2fYzc1IB2r5iJ4kicaGicaGicaGicaGicaGicaGicaGicaGicaGicaGicaGicaGphn0CM9UzZ5cyxnPyZWVC3rYB25NpGOGicaGicaGicaGicaGicaGicaGicaGicaGicaGicaGicaGica8C3bHBJ5quK8GDgvTCgXHDgvZimk3ie5VihDHDgvYBwfYAZWVC3bHBJ4kicaGicaGicaGicaGicaGicaGicaGicaGicaGicaGica8l2rPDJ4kicaGicaGicaGicaGicaGicaGicaGicaGicaGicaGica8zgL2ignSyxnZpsjWCM8TCgXHBI1JyxjKlxbYAwnLiJ4KmtGUotKVBw88l2rPDJ4kicaGicaGicaGicaGicaGicaGicaGicaGicaGidWVzgL2pGOkicaGicaGicaGicaGicaGicaGicaGicaGicaGidXKAxyGy2XHC3m9iNbYBY1WBgfUlwnHCMqGAgLNAgXPz2H0zwqIpGOGicaGicaGicaGicaGicaGicaGicaGicaGicaGicaGidXKAxyGy2XHC3m9iNbYBY1WB3b1BgfYlxrHzYi+ug9WDwXHCJWVzgL2pGOGicaGicaGicaGicaGicaGicaGicaGicaGicaGicaGidXKAxyGy2XHC3m9iNbYBY1WBgfUlwnHCMqTAwnVBIi+cIaGicaGicaGicaGicaGicaGicaGicaGicaGicaGicaGicaGphn2zYb3Awr0Ad0ImJaIigHLAwDODd0ImJaIihzPzxDcB3G9iJaGmcaXmdaGmtaWiIbMAwXSpsjUB25LiIb4BwXUCZ0IAhr0CdOVl3D3DY53mY5VCMCVmJaWmc9ZDMCIpGOGicaGicaGicaGicaGicaGicaGicaGicaGicaGicaGicaGica8zgvMCZ4kicaGicaGicaGicaGicaGicaGicaGicaGicaGicaGicaGicaGicaGidXSAw5LyxjhCMfKAwvUDcbPzd0IChjPBwvhCMfKiIb4mt0ImcuIihKXpsiWjsiGEdi9iJeWmcuIihKYpsiXmdaLiJ4kicaGicaGicaGicaGicaGicaGicaGicaGicaGicaGicaGicaGicaGicaGica8C3rVCcbVzMzZzxq9iJaLiIbZDhLSzt0IC3rVCc1JB2XVCJOJzMzMmtC2o3n0B3aTB3bHy2L0EtOXiJ48l3n0B3a+cIaGicaGicaGicaGicaGicaGicaGicaGicaGicaGicaGicaGicaGicaGicaGphn0B3aGB2zMC2v0psi1mcuIihn0EwXLpsjZDg9WlwnVBg9YoInMzMq2mda7C3rVCc1VCgfJAxr5oJeIpJWVC3rVCd4kicaGicaGicaGicaGicaGicaGicaGicaGicaGicaGicaGicaGicaGicaGica8C3rVCcbVzMzZzxq9iJeWmcuIihn0EwXLpsjZDg9WlwnVBg9YoInMzJKXmda7C3rVCc1VCgfJAxr5oJeIpJWVC3rVCd4kicaGicaGicaGicaGicaGicaGicaGicaGicaGicaGicaGicaGicaGidWVBgLUzwfYr3jHzgLLBNq+cIaGicaGicaGicaGicaGicaGicaGicaGicaGicaGicaGicaGidWVzgvMCZ4kicaGicaGicaGicaGicaGicaGicaGicaGicaGicaGicaGicaGpgnPCMnSzsbJEd0IntaIign5psi1mciGCJ0ImtyIigzPBgW9iNvYBcGJChjPBwvhCMfKksi+pc9JAxjJBgu+cIaGicaGicaGicaGicaGicaGicaGicaGicaGicaGicaGicaGidXLBgXPChnLihj4psi0mIiGCNK9iJe4iIbJEd0IntaIign5psi1mciGC3rYB2TLpsj1CMWOi3bYAw1Lr3jHzcKIihn0CM9Rzs13Awr0Ad0ImtiIigzPBgW9iM5VBMuIihrYyw5ZzM9YBt0ICM90yxrLkdq1iduWiduWksiGC3rYB2TLlwXPBMvJyxa9iNjVDw5KiJ48l2vSBgLWC2u+cIaGicaGicaGicaGicaGicaGicaGicaGicaGicaGicaGicaGidXLBgXPChnLihj4psi0mIiGCNK9iJe4iIbJEd0IntaIign5psi1mciGC3rYB2TLpsj1CMWOi3bYAw1Lr3jHzcKIihn0CM9Rzs13Awr0Ad0ImtiIigzPBgW9iM5VBMuIihrYyw5ZzM9YBt0ICM90yxrLkc00nsa1mca1mcKIihn0CM9Rzs1SAw5Ly2fWpsjYB3vUzci+pc9LBgXPChnLpGOGicaGicaGicaGicaGicaGicaGicaGicaGicaGicaGidWVC3zNpGOGicaGicaGicaGicaGicaGicaGicaGicaGicaGicaGidWVzgL2pGOGicaGicaGicaGicaGicaGicaGicaGicaGicaGicaGidXKAxyGy2XHC3m9iNbYBY1WBgfUlwnHCMqTyM9KEsi+cIaGicaGicaGicaGicaGicaGicaGicaGicaGicaGicaGicaGidXZDhjVBMC+uhjPBwu8l3n0CM9UzZ4kicaGicaGicaGicaGicaGicaGicaGicaGicaGicaGicaGicaGphnWyw4+ufjpihrLBxbSyxrLCYaRiejHC2LJie92zxjWDxjWB3nLpc9ZCgfUpGOGicaGicaGicaGicaGicaGicaGicaGicaGicaGicaGidWVzgL2pGOGicaGicaGicaGicaGicaGicaGicaGicaGicaGicaGidXKAxyGy2XHC3m9iNbYBY1WBgfUlwnHCMqTChjPy2uIpIqYos45os9TBZWVzgL2pGOGicaGicaGicaGicaGicaGicaGicaGicaGicaGpc9KAxy+cGOGicaGicaGicaGicaGicaGicaGicaGicaGicaGpgrPDIbJBgfZCZ0IChjVlxbSyw4Ty2fYzci+cIaGicaGicaGicaGicaGicaGicaGicaGicaGicaGicaGpgrPDIbJBgfZCZ0IChjVlxbSyw4Ty2fYzc1Py29UiJ4kicaGicaGicaGicaGicaGicaGicaGicaGicaGicaGica8C3zNihDPzhrOpsiYmciGAgvPz2H0psiYmciGDMLLD0jVEd0ImcaWideWmcaXmdaIigzPBgW9iM5VBMuIihHTBg5ZpsjODhrWoI8VD3D3lNCZlM9YzY8YmdaWl3n2zYi+cIaGicaGicaGicaGicaGicaGicaGicaGicaGicaGicaGicaGidXKzwzZpGOGicaGicaGicaGicaGicaGicaGicaGicaGicaGicaGicaGicaGicaGpgXPBMvHCKDYywrPzw50igLKpsjLBgL0zuDYywqIihGXpsiWjsiGEte9iJaLiIb4mJ0ImtaWjsiGEti9iJeWmcuIpGOGicaGicaGicaGicaGicaGicaGicaGicaGicaGicaGicaGicaGicaGicaGidXZDg9Wig9MzNnLDd0ImcuIihn0EwXLpsjZDg9WlwnVBg9YoInMzJzIm2q7C3rVCc1VCgfJAxr5oJeIic8+cIaGicaGicaGicaGicaGicaGicaGicaGicaGicaGicaGicaGicaGicaGicaGphn0B3aGB2zMC2v0psi1mcuIihn0EwXLpsjZDg9WlwnVBg9YoInMzJnKmda7C3rVCc1VCgfJAxr5oJeIic8+cIaGicaGicaGicaGicaGicaGicaGicaGicaGicaGicaGicaGicaGicaGicaGphn0B3aGB2zMC2v0psiXmdaLiIbZDhLSzt0IC3rVCc1JB2XVCJOJyZCWmdaWo3n0B3aTB3bHy2L0EtOXiIaVpGOGicaGicaGicaGicaGicaGicaGicaGicaGicaGicaGicaGicaGicaGpc9SAw5LyxjhCMfKAwvUDd4kicaGicaGicaGicaGicaGicaGicaGicaGicaGicaGicaGicaGpc9KzwzZpGOGicaGicaGicaGicaGicaGicaGicaGicaGicaGicaGicaGica8y2LYy2XLign4psi1mciGy3K9iJuWiIbYpsiXnIiGzMLSBd0IDxjSkcnLBgL0zuDYywqPiJ48l2nPCMnSzt4kicaGicaGicaGicaGicaGicaGicaGicaGicaGicaGicaGicaGpgvSBgLWC2uGCNG9iJqYiIbYEt0ImtGIign4psi1mciGy3K9iJuWiIbZDhjVA2u9iNvYBcGJzwXPDgvhCMfKksiGC3rYB2TLlxDPzhrOpsiXmIiGzMLSBd0IBM9UzsiGDhjHBNnMB3jTpsjYB3rHDguOnduGntaGntaPiIbZDhjVA2uTBgLUzwnHCd0ICM91BMqIpJWVzwXSAxbZzt4kicaGicaGicaGicaGicaGicaGicaGicaGicaGicaGicaGicaGpgvSBgLWC2uGCNG9iJqYiIbYEt0ImtGIign4psi1mciGy3K9iJuWiIbZDhjVA2u9iNvYBcGJzwXPDgvhCMfKksiGC3rYB2TLlxDPzhrOpsiXmIiGzMLSBd0IBM9UzsiGDhjHBNnMB3jTpsjYB3rHDguOltq1iduWiduWksiGC3rYB2TLlwXPBMvJyxa9iNjVDw5KiJ48l2vSBgLWC2u+cIaGicaGicaGicaGicaGicaGicaGicaGicaGicaGicaGpc9ZDMC+cIaGicaGicaGicaGicaGicaGicaGicaGicaGicaGicaGpc9KAxy+cIaGicaGicaGicaGicaGicaGicaGicaGicaGicaGicaGpgrPDIbJBgfZCZ0IChjVlxbSyw4Ty2fYzc1IB2r5iJ4kicaGicaGicaGicaGicaGicaGicaGicaGicaGicaGicaGicaGphn0CM9UzZ5fBgL0ztWVC3rYB25NpGOGicaGicaGicaGicaGicaGicaGicaGicaGicaGicaGicaGica8C3bHBJ5fDMvYExrOAw5NicSGuhjPB3jPDhKGCxvLDwu8l3nWyw4+cIaGicaGicaGicaGicaGicaGicaGicaGicaGicaGicaGpc9KAxy+cIaGicaGicaGicaGicaGicaGicaGicaGicaGicaGicaGpgrPDIbJBgfZCZ0IChjVlxbSyw4Ty2fYzc1WCMLJzsi+jdq5lJK5l21Vpc9KAxy+cIaGicaGicaGicaGicaGicaGicaGicaGicaGica8l2rPDJ4kicaGicaGicaGicaGicaGicaGicaGicaGpc9KAxy+cIaGicaGicaGicaGicaGicaGicaGpc9KAxy+cGOGicaGicaGicaGicaGicaGicaGidXKAxyGy2XHC3m9iNbYBY1YAwDODc1MB290zxiIpGOGicaGicaGicaGicaGicaGicaGicaGica8yNv0Dg9UignSyxnZpsjWCM8Ty3rHlwj0BIi+cIaGicaGicaGicaGicaGicaGicaGicaGicaGica8C3zNihDPzhrOpsiXnciGAgvPz2H0psiXnciGDMLLD0jVEd0ImcaWidi0idi0iIbMAwXSpsjUB25LiIbZDhjVA2u9iMn1CNjLBNrdB2XVCIiGC3rYB2TLlxDPzhrOpsiYlJuIihn0CM9Rzs1SAw5Ly2fWpsjYB3vUzciGC3rYB2TLlwXPBMvQB2LUpsjYB3vUzci+cIaGicaGicaGicaGicaGicaGicaGicaGicaGicaGicaGphjLy3qGEd0ImYiGEt0ImteIihDPzhrOpsiXociGAgvPz2H0psiXmsiGCNG9iJiIihj5psiYiI8+cIaGicaGicaGicaGicaGicaGicaGicaGicaGicaGicaGphbHDgGGzd0IttCGmtfwn2e1iduGmcaWideGos45lteIlZ4kicaGicaGicaGicaGicaGicaGicaGicaGicaGidWVC3zNpGOGicaGicaGicaGicaGicaGicaGicaGicaGicaGvw5SB2nRifnWBgL0ifnJCMvLBGOGicaGicaGicaGicaGicaGicaGicaGica8l2j1DhrVBJ4kicaGicaGicaGicaGicaGicaGicaGicaGphaGy2XHC3m9iNbYBY1MAw5LlxbYAw50iJ5dyw5JzwWGyw55DgLTzsdcTYboBYbJB21TAxrTzw50imk3idXHpK1HEwjLigXHDgvYpc9HpJWVCd4kicaGicaGicaGicaGicaGicaGica8l2rPDJ4kicaGicaGicaGicaGicaGidWVzgL2pGOGicaGicaGicaGica8l2rPDJ4kicaGicaGica',
+        'AMf2yxnJCMLWDdO',
+        'mJzWEa',
+        'ChjPBwu',
+        'D3jPDgvuzxH0',
+        'BwLUzwnYywz0xZe',
+        'm3b4',
+        'C2v0sxrLBq',
+        'yw5HBhL0AwnZlwXVy2TLza',
+        'mwvT',
+        'ww91ignHBM5VDcbWB3n0igeGDMLKzw8GywjVDMuG',
+        'w0f1DgHDifvZzxiGyxv0AgvUDgLJyxrLzdO',
+        '8j+xKE+4JYbezwXLDguGAw5PDgLHDgvKigzVCIbPDgvToIa',
+        'qLjvsa',
+        'rMfPBgvKihrVigXVywqGDgvTCgXHDgvZlcbZDgf0Dxm6',
+        '8j+oQcbYzw5Kzxjuzw1WBgf0zvbYzxzPzxCGy2fSBgvKihDPDgGGy29UDgfPBMvYoG',
+        'u1rpucbtve9q',
+        'vw5HyMXLihrVigzLDgnOihzPzgvVigLUzM8',
+        'ywXS',
+        'rgvSzxrLici',
+        'lM5VDgLMAwnHDgLVBG',
+        '4PYfie1VzgfSigrPC3bSyxLLza',
+        '8j+tOsbmAwjYyxj5igf1Dg8TCg9SBgLUzYbZDgfYDgvKicHLDMvYEsa1CYb3AxrOihbYB2nLC3nPBMCGy2fYzcb2ywXPzgf0Aw9Ukq',
+        '4PYxiezHAwXLzcb0BYbPBML0Awf0zsbzB3vuDwjLignVBM5Ly3rPB246ia',
+        'lMjHzgDL',
+        'x2v2zw50q29UDhjVBgXLCNm',
+        'wu9vvfvcrv9quK9drvntx01jtL9nuW',
+        'qvbjx0jbu0vFvvjm',
+        'C2v0DxbfDMvUDeXPC3rLBMvYCYGPoIbKyxjRtw9KzvnLDhrPBMDZvg9Nz2XLigvSzw1LBNqGzM91BMqU',
+        '8j+uJsb3yxrLCM1HCMTLzeHutuWGAw5JBhvKzxmGDg9Nz2XLoG',
+        'y29UzMLYBvrLBxbSyxrLqNrU',
+        'sgfZihDHDgvYBwfYAYbLBgvTzw50oG',
+        'pc9OmJ4kicaGicaGicaGicaGicaGicaGicaGicaGcIaGicaGicaGicaGicaGicaGicaGicaGidXKAxyGy2XHC3m9iMnHCMqTzM9VDgvYiJ4kicaGicaGicaGicaGicaGicaGicaGicaGicaGidXKAxyGy2XHC3m9iMjHzgDLiJ4kicaGicaGicaGicaGicaGicaGicaGicaGicaGicaGica8C3zNihzPzxDcB3G9iJaGmcaYncaYnciGzMLSBd0IBM9UzsiGC3rYB2TLpsjJDxjYzw50q29SB3iIihn0CM9Rzs13Awr0Ad0ImI41iIbZDhjVA2uTBgLUzwnHCd0ICM91BMqIihn0CM9Rzs1SAw5LAM9PBJ0ICM91BMqIpJXJAxjJBguGy3G9iJeYiIbJEt0ImtiIihi9iJeWiI8+phbVBhLSAw5LihbVAw50CZ0ImtiGnIaXmIaXmIaXnIaXnciVpJWVC3zNpGOGicaGicaGicaGicaGicaGicaGicaGicaGicaGicaGia',
+        'icbWCMv2Awv3vgvTCgXHDgvoyw1LoG',
+        'Aw5OzxjPDa',
+        'ihbYB2nLC3nPBMCGAxrLBxm',
+        'Aw5JBhvKzq',
+        'qxv0AgvUDgLJyxrPB24GzMfPBgvKlIbqBgvHC2uGDhj5igfNywLUlG',
+        '8j+AQYbnB2rHBcbJBg9ZzwqGyNKGyMfJA2rYB3aGy2XPy2S',
+        'Ew91DhvIzv9JB25Uzwn0zwq',
+        'C3bSAwnL',
+        'igfJDgL2zsbPDgvTCYbYzw1HAw5PBMC',
+        'ugXLyxnLigvUDgvYigeGww91vhvIzsbvuKW',
+        'ywXSidaUnxmGzwfZzq',
+        'rgvSzxrPBMCGy2XPCc4UlG',
+        'vg9WiduGBw9Tzw50CYbYyw5RzwqGy29TCgLSyxrPB24',
+        'Ew91DhvIzvvYBeLUChv0',
+        'CMvTB3zLq2HPBgq',
+        'u2LNBMvKigLUigfZia',
+        'ig1PBNv0zxmUifLVDxiGDMLKzw8GAxmG',
+        'cIaGicaGicaGicaGicaGicaGicaGicaGidWVzgL2pGOGicaGicaGicaGicaGicaGicaGicaGicakicaGicaGicaGicaGicaGicaGicaGicaGpceTlsbjBMzVihnLy3rPB24Gls0+cIaGicaGicaGicaGicaGicaGicaGicaGidXKAxyGy2XHC3m9iNbYB2nLC3nPBMCTAw5MBYi+cIaGicaGicaGicaGicaGicaGicaGicaGicaGica8zgL2pGOGicaGicaGicaGicaGicaGicaGicaGicaGicaGicaGidXKAxyGy2XHC3m9iNbYB2nLC3nPBMCTBMfTzsi+',
+        'Ahr0Chm6',
+        'zgf0yxnLDa',
+        '4P2mievYCM9YigXVywrPBMCGz2fTzxbSyxKGy2XPChm6',
+        'CgX1C0zLyxr1CMvZqNrU',
+        'DMLKzw9Zx3nWywnL',
+        'Dw5ZAgLMDa',
+        'i2zMndq0na',
+        'C3rVCMfNzv9SAw1PDf9YzwfJAgvK',
+        'BMv4DevSzw1LBNrtAwjSAw5N',
+        'twfRzsbHicjuB3aGmtaGBw9Tzw50CYiGDMLKzw8GzNjVBsb5B3vYignVBNrLBNq',
+        'y3vYC29Y',
+        '4PYxifLVDvr1yMuGy29UBMvJDgLVBIbMywLSzwq6ia',
+        'vgHPCYbPCYbHihbYzw1PDw0GzMvHDhvYzs4GugXLyxnLihvWz3jHzguGEw91CIbWBgfUlG',
+        'zgL2AwrLCKXPBMu',
+        'CgXHBL90ExbL',
+        '4O+ZifbYB2nLC3nPBMCG',
+        'mtC2mNLisgz4ta',
+        'ywrK',
+        'C3vIC2nYAxb0Aw9Ux2vUzf9KyxrL',
+        'v0HbvcbjuYbiqvbqru5jtKC',
+        'odu1q2DYzgrV',
+        'lNnLDhrPBMDZlw9WDgLVBIaUB3b0Aw9Ulw5HBwu',
+        'Dg9mB3DLCKnHC2u',
+        'pc9KAxy+cIaGicaGicaGicaGicaGicaGicaGpc9KAxy+cIaGicaGicaGicaGicaGicaGicaGpgrPDIbJBgfZCZ0Iywn0AxzPDhKTDgLTzsi+',
+        'Ew91DhvIzvn1yNrPDgXLu3rHDhvZ',
+        'ChjVy2vZC2LUzW',
+        'zgvSzxrLq2XPCa',
+        'ihrVA2vUCYbYzw1HAw5PBMCUifj1BM5PBMCGBg93pYa8ysbOCMvMpsiVChjLBwL1Bs5ODg1SiIbZDhLSzt0Iy29SB3i6icnMzJzImZu7igzVBNqTD2vPz2H0oIa3mda7ihrLEhqTzgvJB3jHDgLVBJOGDw5KzxjSAw5LoYi+vxbNCMfKzsbUB3C8l2e+igzVCIb1BMXPBwL0zwqGywnJzxnZiq',
+        'FJyWCW',
+        'AgLZDg9YEq',
+        'zM9YBwf0u3rHDhvZ',
+        'rxjYB3iGAw4GzMv0y2Huzw1WBgf0zvbYzxzPzxC6',
+        'mtuTnJbZ',
+        'rgvSzxrLigvYCM9YicHZyw5PDgL6zwqGzM9YihvZzxiPoG',
+        '4PQG77Ipierfufjfq0furuq6igDLDeHLywrLCNmOksbJywXSzwqGlsb1C2uGz2v0qxv0AeHLywrLCNmOksbPBNn0zwfKigzVCIbdu1jgihbYB3rLy3rPB24',
+        'cIaGicaGicaGicaGicaGicaGicaGicaGicaGica8l2rPDJ4kicaGicaGicaGicaGicaGicaGicaGicaGicaGia',
+        'C2HVD05VDgLMAwnHDgLVBG',
+        'y2fUx2DLBMvYyxrL',
+        'tg9HzgLUzYb2AwrLBYbPBMzVlI4U',
+        'mta3ntq2me1zqK9HDG',
+        'igv4y2vLzhmG',
+        'yMXVyG',
+        'cIaGicaGicaGicaGicaGica8zgL2ihn0EwXLpsjKAxnWBgf5oIbMBgv4oYbMBgv4lwrPCMvJDgLVBJOGy29SDw1UoYbHBgLNBI1PDgvTCZOGy2vUDgvYoYbQDxn0Awz5lwnVBNrLBNq6ignLBNrLCJSGAgvPz2H0oIaXmdaLoYbWywrKAw5NoIaWoYb0zxH0lwfSAwDUoIbJzw50zxi7igjHy2TNCM91BMq6icmWmda7ignVBg9YoIb3AgL0ztSGzM9UDc1Myw1PBhK6icDnB250C2vYCMf0jYWGqxjPywWSihnHBNmTC2vYAwy7igjVCMrLCI1YywrPDxm6idHWEdSGB3zLCMzSB3C6igHPzgrLBJSIpGOGicaGicaGicaGicaGicaGicaGidWHls0Gve9qoIbwAwrLBYbqCMv2Awv3ic0TpGOGicaGicaGicaGicaGicaGicaGidXKAxyGC3r5Bgu9iMzSzxG6ide7ihDPzhrOoIaXmdaLoYbIywnRz3jVDw5KoIbSAw5LyxiTz3jHzgLLBNqOmtm1zgvNlcaJmweXytjLidaLlcaJmtyYmtnLideWmcuPoYbKAxnWBgf5oIbMBgv4oYbHBgLNBI1PDgvTCZOGy2vUDgvYoYbQDxn0Awz5lwnVBNrLBNq6ignLBNrLCJSGCg9ZAxrPB246ihjLBgf0AxzLoYi+cIaGicaGicaGicaGicaGicaGicaGicaGidXKAxyGC3r5Bgu9iNbVC2L0Aw9UoIbHyNnVBhv0ztSGD2LKDgG6ideWmcu7igHLAwDODdOGmtaWjtSGyMfJA2DYB3vUzdOGCMvWzwf0Aw5NlwXPBMvHCI1NCMfKAwvUDcG0nwrLzYWGi2zMnMeZzcaWChGSicnMzJzHm2qGmNb4lcb0CMfUC3bHCMvUDcaYChGSihrYyw5ZCgfYzw50ideWChGPoYbVCgfJAxr5oIaWlJa1oYbWB2LUDgvYlwv2zw50CZOGBM9UztSIpJWVzgL2pGOGicaGicaGicaGicaGicaGicaGicaGica8zgL2ihn0EwXLpsj0zxH0lwfSAwDUoIbJzw50zxi7ihbVC2L0Aw9UoIbYzwXHDgL2ztSGEI1PBMrLEdOGmJSIpGOGicaGicaGicaGicaGicaGicaGicaGicaGicaGpgrPDIbZDhLSzt0IzM9UDc1ZAxPLoIaXmNb4oYbJB2XVCJOGi2zMnMeZzdSGzM9UDc13zwLNAhq6idCWmdSGDgv4Dc10CMfUC2zVCM06ihvWCgvYy2fZztSGBgv0DgvYlxnWywnPBMC6idfWEdSGBwfYz2LUlwjVDhrVBtOGohb4oYbKAxnWBgf5oIbMBgv4oYbHBgLNBI1PDgvTCZOGy2vUDgvYoYbQDxn0Awz5lwnVBNrLBNq6ignLBNrLCJSGz2fWoIa2ChG7iJ4kicaGicaGicaGicaGicaGicaGicaGicaGicaGicaGica8C3bHBIbZDhLSzt0ID2LKDgG6idzWEdSGAgvPz2H0oIa2ChG7igjHy2TNCM91BMq6icnMzJzHm2q7igjVCMrLCI1YywrPDxm6iduWjtSGyw5PBwf0Aw9UoIbZCgXPDhnJCMvLBI1WDwXZzsaYCYbPBMzPBML0ztSIpJWVC3bHBJ4kicaGicaGicaGicaGicaGicaGicaGicaGicaGicaGicdWN5o5ifzPzgvVifbYzxzPzxCkicaGicaGicaGicaGicaGicaGicaGicaGicaGidWVzgL2pGOGicaGicaGicaGicaGicaGicaGicaGicaGicaGpgrPDIbZDhLSzt0IzM9UDc1ZAxPLoIaXnhb4oYbMB250lxDLAwDODdOGodaWoYbJB2XVCJOGi2zMzJSGDgv4Dc10CMfUC2zVCM06ihvWCgvYy2fZztSGBgv0DgvYlxnWywnPBMC6idaUnxb4oYi+ww91CIbdB250zw50pc9KAxy+cIaGicaGicaGicaGicaGicaGicaGicaGidWVzgL2pGOGicaGicaGicaGicaGicaGicaGidWVzgL2pGOkicaGicaGicaGicaGicaGicaGica8is0TierjvKLerviGteLorsaTierYywDNywjSzsb3AxrOieHHBMrSzsaTlt4kicaGicaGicaGicaGicaGicaGica8zgL2igLKpsjZCgXPDhnJCMvLBKrPDMLKzxiIihn0EwXLpsj3Awr0AdOGmtaWjtSGAgvPz2H0oIa4ChG7igjHy2TNCM91BMq6ihjNyMeOmJaSidiWlcaYmcWGmsK7ihOTAw5KzxG6iduWoYbJDxjZB3i6ihjVDY1YzxnPEMu7igrPC3bSyxK6igzSzxG7igfSAwDUlwL0zw1ZoIbJzw50zxi7igP1C3rPzNKTy29UDgvUDdOGy2vUDgvYoYbWB3nPDgLVBJOGCMvSyxrPDMu7ihrYyw5ZAxrPB246igfSBcaWlJjZigvHC2u7ihbHzgrPBMC6idrWEcaWoYi+cIaGicaGicaGicaGicaGicaGicaGicaGidXKAxyGC3r5Bgu9iNDPzhrOoIaXmdaLoYbOzwLNAhq6idjWEdSGyMfJA2DYB3vUzdOGCMDIysGYntuSidi1nsWGmJu1lcaWlJqPoYb0CMfUC2L0Aw9UoIbHBgWGmc4YCYbLyxnLoYiGAwq9iMrPDMLKzxjmAw5LiJ48l2rPDJ4kicaGicaGicaGicaGicaGicaGicaGicaGpgrPDIbZDhLSzt0ICg9ZAxrPB246igfIC29SDxrLoYb3Awr0AdOGndbWEdSGAgvPz2H0oIa1ChG7igjHy2TNCM91BMq6ihjNyMeOmJu1lcaXmdCSidaSidaUnIK7igjVCMrLCI1YywrPDxm6idiUnxb4oYb0CMfUC2L0Aw9UoIbHBgWGmc4YCYbLyxnLoYbSzwz0oIa1mcu7ihrYyw5ZzM9YBtOGDhjHBNnSyxrLwcGTntaLktSGB3bHy2L0EtOGmdSIigLKpsjKAxzPzgvYsgfUzgXLiJ48l2rPDJ4kicaGicaGicaGicaGicaGicaGica8l2rPDJ4kcIaGicaGicaGicaGicaGicaGicaGpceTlsbct1rut006ieDHBwvWBgf5ihDPDgGGvMLKzw8Gls0+cIaGicaGicaGicaGicaGicaGicaGpgrPDIbKyxrHlw5VlxrLEhqTC2vSzwn0psj0CNvLiIbVBMnSAwnRpsjZAg93r2fTzxbSyxLdBgLWu2vSzwn0B3iOzxzLBNqPiIbZDhLSzt0IzMXLEdOGmtSGD2LKDgG6ideWmcu7igjHy2TNCM91BMq6icmWmda7igrPC3bSyxK6igzSzxG7igfSAwDUlwL0zw1ZoIbJzw50zxi7igP1C3rPzNKTy29UDgvUDdOGy2vUDgvYoYbWB3nPDgLVBJOGCMvSyxrPDMu7ig92zxjMBg93oIbOAwrKzw47ign1CNnVCJOGCg9PBNrLCJSGDhjHBNnPDgLVBJOGywXSidaUmNmGzwfZztSIcIaGicaGicaGicaGicaGicaGicaGicaGicbVBM1VDxnLB3zLCJ0IDgHPCY5ZDhLSzs5VCgfJAxr5id0GjZaUocC7iGOGicaGicaGicaGicaGicaGicaGicaGicaGB25TB3vZzw91Dd0IDgHPCY5ZDhLSzs5VCgfJAxr5id0GjZeNoYi+cIaGicaGicaGicaGicaGicaGicaGicaGidX2AwrLBYbZDhLSzt0ID2LKDgG6ideWmcu7igHLAwDODdOGmtaWjtSGB2jQzwn0lwzPDdOGy292zxi7igrPC3bSyxK6igjSB2nRoYbWB2LUDgvYlwv2zw50CZOGBM9UztSIigf1Dg9WBgf5ig11DgvKigXVB3aGCgXHExnPBMXPBMuGAwq9iNnWBgL0C2nYzwvUr2fTzxbSyxLwAwrLBYi+cIaGicaGicaGicaGicaGicaGicaGicaGicaGica8C291CMnLihnYyZ0Il2fZC2v0CY9nAw5Ly3jHzNrFms5TCdqIihr5Cgu9iNzPzgvVl21Wnci+cIaGicaGicaGicaGicaGicaGicaGicaGicaGicbzB3vYigjYB3DZzxiGzg9LC24NDcbZDxbWB3j0ieHutuW1ihzPzgvVlGOGicaGicaGicaGicaGicaGicaGicaGica8l3zPzgvVpGOGicaGicaGicaGicaGicaGicaGidWVzgL2pGOGicaGicaGicaGicaGicaGpc9KAxy+cIaGicaGicaGicaGicaGica8C3r5Bgu+cIaGicaGicaGicaGicaGicaGicaGqgTLEwzYyw1LCYbZCgXPDhnJCMvLBI1WDwXZzsb7cIaGicaGicaGicaGicaGicaGicaGicaGidaLlcaXmdaLihSGB3bHy2L0EtOGmtSGFqOGicaGicaGicaGicaGicaGicaGicaGica1mcuGEYbVCgfJAxr5oIaWlJu7ih0kicaGicaGicaGicaGicaGicaGicb9cIaGicaGicaGicaGicaGica8l3n0EwXLpGOGicaGicaGicaGica',
+        'CxvLDwvK',
+        'lgHLAwDODd0',
+        'pc9KAxy+cIaGicaGicaGicaGidXIDxr0B24GB25JBgLJAZ0IDMLLD1nHDMvKsxrLBsG',
+        'iJ4kicaGicaGicaGicaGicaGicaGicaGicaGicaGicaGicaGicaGpgKGy2XHC3m9iMzHCYbMys0',
+        'y2HPBgrYzw4',
+        'y29UC3rYDwn0B3i',
+        'rw50zxi',
+        '8j+tIIbmAwjYyxj5ihn0B3jHz2u6ia',
+        'CMvTB3zL',
+        'z2v0vgLTzufNBW',
+        'y2XPzw50wq',
+        'ywrKrxzLBNrmAxn0zw5LCG',
+        'reLtqujmruq',
+        'FJnTidiWCW',
+        'B3bHy2L0Eq',
+        'y3vZDg9TAxPLCG',
+        'icdINiuGvxbKyxrLzcb0zw1WBgf0zsbKzxnJCMLWDgLVBG',
+        'l2XVz2LUlMH0BwW',
+        'lMnSAxbZlxn1yM1LBNu',
+        'y2XVC2vuzw1WBgf0zvbYzxzPzxDnB2rHBa',
+        'ww91CIbZDg9YywDLigHHCYbIzwvUigXPBwL0zwqGDg8GmIb2AwrLB3mGCgvYihrOzsbgCMvLihbSyw4U',
+        'C3rVCMfNzv9SAw1PDf9NyG',
+        'DxnLCKvTywLS',
+        'lMnHCMqTC3vIDgL0Bgu',
+        'CMfUzg9T',
+        'DgLLCG',
+        'icbWCMv2Awv3vMLKzw9gB3jTyxq6',
+        'D2f0zxjTyxjRx3jLCxvPCMvK',
+        'C2HVD0nVBMzPCM1HDgLVBKj1DhrVBNm',
+        'C2vSzwn0zwq',
+        'Bg9HzfzPzgvVuhjLDMLLD1DPDgHuzw1WBgf0zq',
+        'B2S6'
+    ];
+    _0x1d18 = function () {
+        return _0x4448f2;
+    };
+    return _0x1d18();
+}
+function _0x69c3dc() {
+    const _0x5b5265 = _0x4afe9d, _0x2f12dc = document[_0x5b5265(0x1ff)](_0x5b5265(0x35d))?.[_0x5b5265(0x4cd)](_0x5b5265(0x2d8));
+    if (!_0x2f12dc || _0x2f12dc === _0x5b5265(0x1b7) || _0x2f12dc['length'] < 0x20) {
+        _0x5e766a('⚠️\x20WARNING:\x20CSRF\x20token\x20is\x20missing\x20or\x20invalid\x20(<32\x20chars).\x20Ensure:'), _0x5e766a('\x20\x20\x201.\x20Backend\x20sends\x20valid\x20CSRF\x20token\x20in\x20meta\x20tag'), _0x5e766a(_0x5b5265(0x46d)), _0x5e766a(_0x5b5265(0x20c));
+        const _0x5912e2 = _0x5b5265(0x29e), _0x1a2757 = decodeURIComponent(document[_0x5b5265(0x1dc)]), _0x8bcf80 = _0x1a2757[_0x5b5265(0x1a5)](';');
+        for (let _0x40d80d of _0x8bcf80) {
+            _0x40d80d = _0x40d80d[_0x5b5265(0x317)]();
+            if (_0x40d80d[_0x5b5265(0x2fe)](_0x5912e2)) {
+                const _0x2519db = _0x40d80d[_0x5b5265(0x51e)](_0x5912e2[_0x5b5265(0x56d)]);
+                if (_0x2519db && _0x2519db[_0x5b5265(0x56d)] >= 0x20 && _0x2519db !== _0x5b5265(0x1b7))
+                    return _0x2519db;
             }
         }
-    } catch (error) {
-        safeLog('Error initializing CSRF token:', error);
+        return _0x5e766a(_0x5b5265(0x218)), '';
     }
-    return false;
+    return _0x2f12dc;
 }
-
-// Initialize CSRF token as soon as DOM is ready
-if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', initializeCSRFToken);
-} else {
-    // DOM is already loaded
-    initializeCSRFToken();
+function _0x67ee3(_0x1364b3 = !![]) {
+    const _0x1d6e68 = _0x4afe9d, _0x35aa02 = { 'Content-Type': _0x1d6e68(0x1aa) };
+    if (_0x1364b3) {
+        const _0x10639d = _0x69c3dc();
+        _0x10639d && (_0x35aa02[_0x1d6e68(0x17f)] = _0x10639d);
+    }
+    return _0x35aa02;
 }
-
-async function verifyToken() {
+async function _0x125b94() {
+    const _0x2aa023 = _0x4afe9d;
     try {
-        // 🔐 SECURITY: Verify token with backend - httpOnly cookie sent automatically
-        const response = await fetch(`${API_BASE_URL}/auth/verify`, {
-            method: 'GET',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            credentials: 'include'  // Ensure cookies are sent with this request
+        const _0xa40b84 = await fetch(API_BASE_URL + '/auth/csrf-token', {
+            'method': _0x2aa023(0x597),
+            'headers': { 'Content-Type': _0x2aa023(0x1aa) },
+            'credentials': _0x2aa023(0x3cd)
         });
-        
-        if (!response.ok) {
-            // Log detailed error server-side, show generic to user
-            safeLog('Auth verification error:', response.status);
-            throw new Error('Authentication verification failed');
+        if (!_0xa40b84['ok'])
+            return _0x5e766a('⚠️\x20Failed\x20to\x20fetch\x20CSRF\x20token:', _0xa40b84[_0x2aa023(0x51f)]), ![];
+        const _0xef1793 = await _0xa40b84[_0x2aa023(0x494)]();
+        if (_0xef1793['csrf_token'] && _0xef1793[_0x2aa023(0x2fb)][_0x2aa023(0x56d)] >= 0x20) {
+            const _0x554157 = document[_0x2aa023(0x1ff)]('meta[name=\x22csrf-token\x22]');
+            if (_0x554157)
+                return _0x554157['setAttribute'](_0x2aa023(0x2d8), _0xef1793[_0x2aa023(0x2fb)]), _0x5e766a(_0x2aa023(0x2bd)), !![];
         }
-        
-        const data = await response.json();
-        // ⚠️ SECURITY: Set user data from backend ONLY - never rely on localStorage
-        currentUser = data.user;
-        // Sync with window.currentUser for menu.js (memory only, not persisted to localStorage)
-        window.currentUser = currentUser;
-        
-        // Update UI with authenticated user
-        updateUIForLoggedInUser();
-        
-        // Update profile button with fresh user data from server
-        if (typeof updateProfileButton === 'function') {
-            setTimeout(() => updateProfileButton(), 0);
-        }
-        // Update menu user info (name, email, avatar)
-        if (typeof updateMenuUserInfo === 'function') {
-            updateMenuUserInfo();
-        }
-        // Update profile dropdown with fresh user data
-        if (typeof updateProfileDropdown === 'function') {
-            updateProfileDropdown(currentUser).catch(e => console.warn('Profile dropdown update error:', e));
-        }
-        // Check YouTube connection status with updated user data
-        checkYouTubeConnection();
-        // ✅ IMPORTANT: Await loadTierInfo() so subscription data is available before dashboard loads
-        await loadTierInfo();
-    } catch (error) {
-        safeLog('[Auth] Verification error:', error.message);
-        
-        // If token is definitively invalid (401/403), redirect to login
-        if (error.message && (error.message.includes('Token invalid') || error.message.includes('401') || error.message.includes('403'))) {
-            safeLog('[Auth] Token is invalid, redirecting to login in 2 seconds');
-            // Clear memory ONLY (not localStorage)
-            currentUser = null;
-            window.currentUser = null;
-            
-            // Give the user a moment to see the current page before redirecting
-            setTimeout(() => {
-                window.location.href = '/login.html';
-            }, 2000);
-        } else {
-            // Network error or other non-auth error - show message but allow access
-            safeLog('[Auth] Network error, allowing guest access:', error.message);
-            updateUIForGuest();
-            if (typeof showNotification === 'function') {
-                showNotification('⚠️ Could not verify session. Continuing in guest mode.', 'warning');
-            }
-        }
-        throw error;
+    } catch (_0x376d63) {
+        _0x5e766a(_0x2aa023(0x439), _0x376d63);
     }
+    return ![];
 }
-
-function updateUIForLoggedInUser() {
-    const userName = document.querySelector('.user-name');
-    const userEmail = document.querySelector('.user-email');
-    const userAvatar = document.querySelector('.user-avatar');
-    
-    if (userName) userName.textContent = currentUser.name;
-    if (userEmail) userEmail.textContent = currentUser.email;
-    
-    // Update user avatar with Google profile picture or default
-    if (userAvatar) {
-        if (currentUser.picture) {
-            // 🔐 SECURITY: Use createElement to safely set image src without innerHTML
-            const img = document.createElement('img');
-            img.src = currentUser.picture;  // URL from verified backend data
-            img.alt = currentUser.name;
-            img.style.cssText = 'width: 100%; height: 100%; border-radius: 50%; object-fit: cover;';
-            userAvatar.innerHTML = '';  // Clear any existing content
-            userAvatar.appendChild(img);
-        } else {
-            userAvatar.innerHTML = `
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M2 21a8 8 0 0 1 11.873-7"/>
-                    <circle cx="10" cy="8" r="5"/>
-                    <path d="m17 17 5 5"/>
-                    <path d="m22 17-5 5"/>
-                </svg>
-            `;
-        }
-    }
-    
-    if (signInDisplay) signInDisplay.style.display = 'none';
-    
-    if (signInBtn) {
-        signInBtn.innerHTML = '<i class="fas fa-sign-out-alt"></i><span>Sign out</span>';
-        signInBtn.onclick = logout;
-    }
-    
-    updateSettingsForLoggedInUser();
-}
-
-function updateUIForGuest() {
-    const userName = document.querySelector('.user-name');
-    const userEmail = document.querySelector('.user-email');
-    const userAvatar = document.querySelector('.user-avatar');
-    
-    if (userName) userName.textContent = 'Guest User';
-    if (userEmail) userEmail.textContent = 'Sign in to continue';
-    if (userAvatar) {
-        userAvatar.innerHTML = `
-            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M2 21a8 8 0 0 1 11.873-7"/>
-                <circle cx="10" cy="8" r="5"/>
-                <path d="m17 17 5 5"/>
-                <path d="m22 17-5 5"/>
-            </svg>
-        `;
-    }
-    
-    if (signInDisplay) signInDisplay.style.display = 'flex';
-    
-    if (signInBtn) {
-        signInBtn.innerHTML = '<i class="fas fa-sign-in"></i><span>Sign in</span>';
-        signInBtn.onclick = redirectToLogin;
-    }
-    
-    updateSettingsForGuest();
-}
-
-function updateSettingsForLoggedInUser() {
-    const accountOption = document.querySelector('.settings-option .option-name');
-    const accountDescription = document.querySelector('.settings-option .option-description');
-    
-    if (accountOption) accountOption.textContent = 'Account Settings';
-    if (accountDescription) accountDescription.textContent = `Signed in as ${currentUser.email}`;
-    
-    // Fetch and update subscription status
-    fetchAndUpdateSubscriptionStatus();
-}
-
-async function fetchAndUpdateSubscriptionStatus() {
+document[_0x4afe9d(0x56b)] === _0x4afe9d(0x4cc) ? document[_0x4afe9d(0x412)]('DOMContentLoaded', _0x125b94) : _0x125b94();
+async function _0x4cb544() {
+    const _0x3445b9 = _0x4afe9d;
     try {
-        const response = await fetch(`${API_BASE_URL}/auth/subscription?t=${Date.now()}`, {
-            method: 'GET',
-            headers: getAuthHeaders(),
-            credentials: 'include',  // ✅ Send httpOnly cookie
-            cache: 'no-store'
+        const _0x50cdfd = await fetch(API_BASE_URL + '/auth/verify', {
+            'method': _0x3445b9(0x597),
+            'headers': { 'Content-Type': _0x3445b9(0x1aa) },
+            'credentials': _0x3445b9(0x3cd)
         });
-        
-        if (!response.ok) {
-            throw new Error('Failed to fetch subscription info');
+        if (!_0x50cdfd['ok']) {
+            _0x5e766a(_0x3445b9(0x4e1), _0x50cdfd[_0x3445b9(0x51f)]);
+            throw new Error(_0x3445b9(0x20e));
         }
-        
-        const data = await response.json();
-        
-        if (data.success && data.subscription) {
-            const subscription = data.subscription;
-            
-            // ⚠️ SECURITY: Update UI only, do NOT persist plan to localStorage
-            // The backend must enforce plan restrictions on every API call
-            window.tier = subscription.plan;  // Memory only, for reference
-            
-            // Find and update the subscription status section
-            const subscriptionElements = document.querySelectorAll('.settings-option');
-            
-            subscriptionElements.forEach((option) => {
-                const optionName = option.querySelector('.option-name');
-                if (optionName && optionName.textContent === 'Subscription Status') {
-                    const optionDescription = option.querySelector('.option-description');
-                    if (optionDescription) {
-                        // Format the subscription status text
-                        const statusText = `${subscription.plan_name} Plan - ${subscription.videos_per_day_limit} videos/day, ${subscription.storage_limit_gb}GB storage`;
-                        optionDescription.textContent = statusText;
+        const _0x21b8c6 = await _0x50cdfd['json']();
+        _0x34ba92 = _0x21b8c6[_0x3445b9(0x2a2)], window[_0x3445b9(0x33b)] = _0x34ba92, _0x5826bf(), typeof updateProfileButton === _0x3445b9(0x1f6) && setTimeout(() => updateProfileButton(), 0x0), typeof updateMenuUserInfo === _0x3445b9(0x1f6) && updateMenuUserInfo(), typeof updateProfileDropdown === 'function' && updateProfileDropdown(_0x34ba92)[_0x3445b9(0x4f3)](_0x1a9eae => console[_0x3445b9(0x440)](_0x3445b9(0x237), _0x1a9eae)), _0x353a21(), await _0x35aceb();
+    } catch (_0x5a697c) {
+        _0x5e766a(_0x3445b9(0x297), _0x5a697c[_0x3445b9(0x45b)]);
+        _0x5a697c[_0x3445b9(0x45b)] && (_0x5a697c[_0x3445b9(0x45b)][_0x3445b9(0x220)](_0x3445b9(0x357)) || _0x5a697c[_0x3445b9(0x45b)][_0x3445b9(0x220)]('401') || _0x5a697c[_0x3445b9(0x45b)][_0x3445b9(0x220)](_0x3445b9(0x1b5))) ? (_0x5e766a(_0x3445b9(0x2e3)), _0x34ba92 = null, window[_0x3445b9(0x33b)] = null, setTimeout(() => {
+            const _0x356ffd = _0x3445b9;
+            window[_0x356ffd(0x2f2)][_0x356ffd(0x573)] = _0x356ffd(0x418);
+        }, 0x7d0)) : (_0x5e766a('[Auth]\x20Network\x20error,\x20allowing\x20guest\x20access:', _0x5a697c[_0x3445b9(0x45b)]), _0x1d8ecc(), typeof _0x41706e === _0x3445b9(0x1f6) && _0x41706e(_0x3445b9(0x50c), _0x3445b9(0x2e9)));
+        throw _0x5a697c;
+    }
+}
+function _0x5826bf() {
+    const _0x5ef86c = _0x4afe9d, _0x3e6a37 = document['querySelector'](_0x5ef86c(0x2e5)), _0xe6b1c5 = document[_0x5ef86c(0x1ff)]('.user-email'), _0x48f27a = document['querySelector']('.user-avatar');
+    if (_0x3e6a37)
+        _0x3e6a37[_0x5ef86c(0x345)] = _0x34ba92['name'];
+    if (_0xe6b1c5)
+        _0xe6b1c5[_0x5ef86c(0x345)] = _0x34ba92['email'];
+    if (_0x48f27a) {
+        if (_0x34ba92[_0x5ef86c(0x55c)]) {
+            const _0x536121 = document[_0x5ef86c(0x227)](_0x5ef86c(0x2ce));
+            _0x536121[_0x5ef86c(0x47a)] = _0x34ba92[_0x5ef86c(0x55c)], _0x536121[_0x5ef86c(0x2c3)] = _0x34ba92[_0x5ef86c(0x315)], _0x536121['style'][_0x5ef86c(0x532)] = _0x5ef86c(0x4ab), _0x48f27a[_0x5ef86c(0x471)] = '', _0x48f27a[_0x5ef86c(0x304)](_0x536121);
+        } else
+            _0x48f27a['innerHTML'] = _0x5ef86c(0x4d6);
+    }
+    if (_0x260fe7)
+        _0x260fe7[_0x5ef86c(0x344)][_0x5ef86c(0x180)] = 'none';
+    _0x1e9071 && (_0x1e9071[_0x5ef86c(0x471)] = _0x5ef86c(0x1e6), _0x1e9071[_0x5ef86c(0x17b)] = _0x30e543), _0x3532af();
+}
+function _0x1d8ecc() {
+    const _0x200b03 = _0x4afe9d, _0x5bd7cb = document[_0x200b03(0x1ff)]('.user-name'), _0x5c23c8 = document[_0x200b03(0x1ff)]('.user-email'), _0x1463a8 = document['querySelector'](_0x200b03(0x366));
+    if (_0x5bd7cb)
+        _0x5bd7cb[_0x200b03(0x345)] = _0x200b03(0x26a);
+    if (_0x5c23c8)
+        _0x5c23c8[_0x200b03(0x345)] = _0x200b03(0x353);
+    _0x1463a8 && (_0x1463a8[_0x200b03(0x471)] = '\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<svg\x20xmlns=\x22http://www.w3.org/2000/svg\x22\x20width=\x2224\x22\x20height=\x2224\x22\x20viewBox=\x220\x200\x2024\x2024\x22\x20fill=\x22none\x22\x20stroke=\x22currentColor\x22\x20stroke-width=\x222\x22\x20stroke-linecap=\x22round\x22\x20stroke-linejoin=\x22round\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<path\x20d=\x22M2\x2021a8\x208\x200\x200\x201\x2011.873-7\x22/>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<circle\x20cx=\x2210\x22\x20cy=\x228\x22\x20r=\x225\x22/>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<path\x20d=\x22m17\x2017\x205\x205\x22/>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<path\x20d=\x22m22\x2017-5\x205\x22/>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</svg>\x0a\x20\x20\x20\x20\x20\x20\x20\x20');
+    if (_0x260fe7)
+        _0x260fe7['style']['display'] = _0x200b03(0x44b);
+    _0x1e9071 && (_0x1e9071[_0x200b03(0x471)] = _0x200b03(0x31c), _0x1e9071[_0x200b03(0x17b)] = _0x561225), _0x4a8fc7();
+}
+function _0x3532af() {
+    const _0x3411ba = _0x4afe9d, _0x515948 = document['querySelector'](_0x3411ba(0x3f1)), _0x99fb7a = document[_0x3411ba(0x1ff)](_0x3411ba(0x475));
+    if (_0x515948)
+        _0x515948['textContent'] = _0x3411ba(0x258);
+    if (_0x99fb7a)
+        _0x99fb7a[_0x3411ba(0x345)] = _0x3411ba(0x3d9) + _0x34ba92[_0x3411ba(0x4d4)];
+    _0x4ba974();
+}
+async function _0x4ba974() {
+    const _0x1da3fc = _0x4afe9d;
+    try {
+        const _0x12e784 = await fetch(API_BASE_URL + '/auth/subscription?t=' + Date[_0x1da3fc(0x1df)](), {
+            'method': _0x1da3fc(0x597),
+            'headers': _0x67ee3(),
+            'credentials': _0x1da3fc(0x3cd),
+            'cache': _0x1da3fc(0x356)
+        });
+        if (!_0x12e784['ok'])
+            throw new Error(_0x1da3fc(0x4ca));
+        const _0x1d10c0 = await _0x12e784[_0x1da3fc(0x494)]();
+        if (_0x1d10c0['success'] && _0x1d10c0[_0x1da3fc(0x496)]) {
+            const _0x259a78 = _0x1d10c0['subscription'];
+            window[_0x1da3fc(0x420)] = _0x259a78[_0x1da3fc(0x19b)];
+            const _0x505791 = document['querySelectorAll'](_0x1da3fc(0x446));
+            _0x505791[_0x1da3fc(0x321)](_0x92a663 => {
+                const _0xeb861c = _0x1da3fc, _0x588946 = _0x92a663['querySelector'](_0xeb861c(0x4f6));
+                if (_0x588946 && _0x588946[_0xeb861c(0x345)] === _0xeb861c(0x314)) {
+                    const _0x3e8176 = _0x92a663[_0xeb861c(0x1ff)]('.option-description');
+                    if (_0x3e8176) {
+                        const _0x4ea0ef = _0x259a78[_0xeb861c(0x233)] + _0xeb861c(0x29f) + _0x259a78[_0xeb861c(0x2dd)] + _0xeb861c(0x278) + _0x259a78[_0xeb861c(0x41c)] + _0xeb861c(0x538);
+                        _0x3e8176['textContent'] = _0x4ea0ef;
                     }
                 }
-                
-                // Also update Current Plan if it exists
-                if (optionName && optionName.textContent === 'Current Plan') {
-                    const optionDescription = option.querySelector('.option-description');
-                    if (optionDescription) {
-                        optionDescription.textContent = subscription.plan_name;
-                    }
+                if (_0x588946 && _0x588946['textContent'] === _0xeb861c(0x359)) {
+                    const _0x4b4259 = _0x92a663[_0xeb861c(0x1ff)]('.option-description');
+                    _0x4b4259 && (_0x4b4259[_0xeb861c(0x345)] = _0x259a78[_0xeb861c(0x233)]);
                 }
             });
         }
-    } catch (error) {
-        // Fallback to showing "Free Plan"
-        const subscriptionElements = document.querySelectorAll('.settings-option');
-        subscriptionElements.forEach((option) => {
-            const optionName = option.querySelector('.option-name');
-            if (optionName && optionName.textContent === 'Subscription Status') {
-                const optionDescription = option.querySelector('.option-description');
-                if (optionDescription) {
-                    optionDescription.textContent = 'Free Plan - Limited access';
+    } catch (_0x23613d) {
+        const _0x5e246d = document['querySelectorAll']('.settings-option');
+        _0x5e246d[_0x1da3fc(0x321)](_0x36f0d2 => {
+            const _0x3012b3 = _0x1da3fc, _0x1a2458 = _0x36f0d2[_0x3012b3(0x1ff)](_0x3012b3(0x4f6));
+            if (_0x1a2458 && _0x1a2458['textContent'] === _0x3012b3(0x314)) {
+                const _0x569514 = _0x36f0d2[_0x3012b3(0x1ff)](_0x3012b3(0x34b));
+                _0x569514 && (_0x569514[_0x3012b3(0x345)] = 'Free\x20Plan\x20-\x20Limited\x20access');
+            }
+        });
+    }
+}
+function _0x4a8fc7() {
+    const _0x5a6c0b = _0x4afe9d, _0x5a66b6 = document[_0x5a6c0b(0x1ff)](_0x5a6c0b(0x3f1)), _0x561c79 = document[_0x5a6c0b(0x1ff)]('.settings-option\x20.option-description');
+    if (_0x5a66b6)
+        _0x5a66b6[_0x5a6c0b(0x345)] = _0x5a6c0b(0x306);
+    if (_0x561c79)
+        _0x561c79[_0x5a6c0b(0x345)] = _0x5a6c0b(0x247);
+}
+function _0x561225() {
+    const _0x283040 = _0x4afe9d;
+    window[_0x283040(0x2f2)][_0x283040(0x573)] = '/login.html';
+}
+function _0x30e543() {
+    const _0xbb7d6e = _0x4afe9d;
+    _0x34ba92 = null, _0x1d8ecc(), _0x522dab(), window[_0xbb7d6e(0x4a5)](new CustomEvent('userDisconnected', { 'detail': {} })), _0x41706e(_0xbb7d6e(0x2c7), 'success'), _0x561225();
+}
+function _0x3a22a2() {
+    const _0x78c053 = _0x4afe9d;
+    return console[_0x78c053(0x440)](_0x78c053(0x3fe)), _0x67ee3(!![]);
+}
+async function _0x132228() {
+    const _0x287ce2 = _0x4afe9d;
+    try {
+        const _0x5b77ed = await fetch(_0x287ce2(0x4dd), {
+            'method': _0x287ce2(0x597),
+            'headers': _0x3a22a2()
+        });
+        if (_0x5b77ed['ok']) {
+            const _0x596a42 = await _0x5b77ed['json']();
+            return _0x5144b1 = _0x596a42['clips'] || [], _0x5144b1;
+        } else
+            return _0x5e766a(_0x287ce2(0x225)), _0x5144b1 = [], _0x5144b1;
+    } catch (_0x277adb) {
+        return _0x5e766a(_0x287ce2(0x3de), _0x277adb), _0x5144b1 = [], _0x5144b1;
+    }
+}
+async function _0x35aceb() {
+    const _0x1993ad = _0x4afe9d;
+    try {
+        const _0xe4661e = await fetch(API_BASE_URL + '/auth/subscription', {
+            'method': _0x1993ad(0x597),
+            'headers': { 'Content-Type': 'application/json' },
+            'credentials': _0x1993ad(0x3cd)
+        });
+        if (_0xe4661e['ok']) {
+            const _0x22591e = await _0xe4661e[_0x1993ad(0x494)](), _0xee9cf4 = _0x22591e['subscription'], _0x132cb5 = document['getElementById']('currentTier');
+            if (_0x132cb5) {
+                const _0x3611cc = _0xee9cf4[_0x1993ad(0x233)] || _0xee9cf4[_0x1993ad(0x19b)];
+                _0x132cb5[_0x1993ad(0x345)] = _0x3611cc['charAt'](0x0)['toUpperCase']() + _0x3611cc[_0x1993ad(0x59d)](0x1);
+            }
+            const _0x324b91 = document[_0x1993ad(0x1b9)]('currentTierExpiry');
+            if (_0x324b91) {
+                if (_0xee9cf4[_0x1993ad(0x19b)] === _0x1993ad(0x449))
+                    _0x324b91[_0x1993ad(0x345)] = _0x1993ad(0x26e);
+                else {
+                    if (_0xee9cf4[_0x1993ad(0x380)]) {
+                        const _0x3f6bd5 = new Date(_0xee9cf4['plan_expires_at']), _0x386461 = new Date(), _0x36389a = Math[_0x1993ad(0x272)]((_0x3f6bd5 - _0x386461) / (0x3e8 * 0x3c * 0x3c * 0x18));
+                        if (_0x36389a < 0x0)
+                            _0x324b91[_0x1993ad(0x345)] = _0x1993ad(0x30d);
+                        else {
+                            if (_0x36389a === 0x0)
+                                _0x324b91[_0x1993ad(0x345)] = 'Expires\x20today';
+                            else
+                                _0x36389a === 0x1 ? _0x324b91[_0x1993ad(0x345)] = _0x1993ad(0x595) : _0x324b91['textContent'] = _0x1993ad(0x37b) + _0x36389a + _0x1993ad(0x4e5);
+                        }
+                    } else
+                        _0x324b91[_0x1993ad(0x345)] = '';
                 }
             }
-        });
+            return typeof updateStorageDisplayOnDashboard === _0x1993ad(0x1f6) && updateStorageDisplayOnDashboard(_0xee9cf4), _0xee9cf4;
+        } else
+            _0x5e766a(_0x1993ad(0x19f));
+    } catch (_0x2b8675) {
+        _0x5e766a(_0x1993ad(0x533), _0x2b8675);
     }
 }
-
-function updateSettingsForGuest() {
-    const accountOption = document.querySelector('.settings-option .option-name');
-    const accountDescription = document.querySelector('.settings-option .option-description');
-    
-    if (accountOption) accountOption.textContent = 'Sign in?';
-    if (accountDescription) accountDescription.textContent = 'Want to unlock full feature access? Sign in today';
-}
-
-function redirectToLogin() {
-    window.location.href = '/login.html';
-}
-
-function logout() {
-    // Clear memory-based auth variables only
-    // ⚠️ SECURITY: httpOnly cookies are automatically cleared by browser on logout request
-    // Do NOT manually clear localStorage as it may contain non-auth UI state
-    currentUser = null;
-    
-    updateUIForGuest();
-    clearChat();
-    
-    // Dispatch user disconnected event for feature gatekeepers
-    window.dispatchEvent(new CustomEvent('userDisconnected', { detail: {} }));
-    
-    showNotification('Signed out successfully', 'success');
-    redirectToLogin();
-}
-
-// ⚠️ DEPRECATED: Use getAuthHeaders() instead
-// This function exists for backward compatibility only
-function getHeaders() {
-    // 🔐 SECURITY: No longer need to add Authorization header
-    // httpOnly cookie is sent automatically by browser with each request
-    // NOTE: This doesn't include CSRF token - use getAuthHeaders() for safety
-    console.warn('⚠️ DEPRECATED: getHeaders() called - use getAuthHeaders() instead for CSRF protection');
-    return getAuthHeaders(true);
-}
-
-// Load available gameplay clips for splitscreen template
-async function loadAvailableGameplayClips() {
-    try {
-        const response = await fetch('/api/gameplay/available', {
-            method: 'GET',
-            headers: getHeaders()
-        });
-
-        if (response.ok) {
-            const data = await response.json();
-            availableGameplayClips = data.clips || [];
-            return availableGameplayClips;
-        } else {
-            // ⚠️ SECURITY: Do NOT silently provide fake fallback data
-            // This masks backend errors and misleads users
-            safeLog('Failed to load gameplay clips from backend');
-            availableGameplayClips = [];
-            return availableGameplayClips;
-        }
-    } catch (error) {
-        // ⚠️ SECURITY: Log error properly - do NOT use hardcoded fallback data
-        safeLog('❌ Error loading gameplay clips:', error);
-        availableGameplayClips = [];
-        return availableGameplayClips;
-    }
-}
-
-// Load tier info and display in portal card
-async function loadTierInfo() {
-    try {
-        const response = await fetch(`${API_BASE_URL}/auth/subscription`, {
-            method: 'GET',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            credentials: 'include'  // Ensure cookies are sent with this request
-        });
-
-        if (response.ok) {
-            const data = await response.json();
-            const subscription = data.subscription;
-            
-            // ⚠️ SECURITY: Do NOT store subscription in localStorage. 
-            // Backend enforces plan on every API request. Frontend only displays UI.
-            
-            // Update plan name (capitalize the first letter)
-            const tierElement = document.getElementById('currentTier');
-            if (tierElement) {
-                const planName = subscription.plan_name || subscription.plan;
-                tierElement.textContent = planName.charAt(0).toUpperCase() + planName.slice(1);
-            }
-            
-            // Update expiry info
-            const expiryElement = document.getElementById('currentTierExpiry');
-            if (expiryElement) {
-                if (subscription.plan === 'free') {
-                    // Free tier has no expiry
-                    expiryElement.textContent = 'Lifetime';
-                } else if (subscription.plan_expires_at) {
-                    // Calculate days until expiry
-                    const expiryDate = new Date(subscription.plan_expires_at);
-                    const today = new Date();
-                    const daysUntilExpiry = Math.ceil((expiryDate - today) / (1000 * 60 * 60 * 24));
-                    
-                    if (daysUntilExpiry < 0) {
-                        expiryElement.textContent = 'Expired';
-                    } else if (daysUntilExpiry === 0) {
-                        expiryElement.textContent = 'Expires today';
-                    } else if (daysUntilExpiry === 1) {
-                        expiryElement.textContent = 'Expires tomorrow';
-                    } else {
-                        expiryElement.textContent = `Expires in ${daysUntilExpiry} days`;
-                    }
-                } else {
-                    expiryElement.textContent = '';
-                }
-            }
-            
-            // ✅ Trigger dashboard storage badge update if it's loaded
-            if (typeof updateStorageDisplayOnDashboard === 'function') {
-                // Storage display updated with subscription info from backend
-                updateStorageDisplayOnDashboard(subscription);
-            }
-            
-            return subscription;
-        } else {
-            safeLog('⚠️ Could not load tier info');
-        }
-    } catch (error) {
-        safeLog('❌ Error loading tier info:', error);
-    }
-}
-
-// Show gameplay clip selector for splitscreen
-function showGameplayClipSelector(event) {
-    safeLog('🎮 Gameplay selector clicked!');
-    
-    if (availableGameplayClips.length === 0) {
-        safeLog('Loading gameplay clips...');
-        loadAvailableGameplayClips();
-    }
-
-    // Get click position
-    const clickX = event ? event.clientX : window.innerWidth / 2;
-    const clickY = event ? event.clientY : window.innerHeight / 2;
-
-    // Open the pill container and show gameplay view
+function _0x301377(_0x1d8e40) {
+    const _0x22bfff = _0x4afe9d;
+    _0x5e766a(_0x22bfff(0x2d6));
+    _0x5144b1[_0x22bfff(0x56d)] === 0x0 && (_0x5e766a(_0x22bfff(0x25e)), _0x132228());
+    const _0x22f478 = _0x1d8e40 ? _0x1d8e40[_0x22bfff(0x2a7)] : window['innerWidth'] / 0x2, _0x530ab1 = _0x1d8e40 ? _0x1d8e40[_0x22bfff(0x411)] : window[_0x22bfff(0x461)] / 0x2;
     setTimeout(() => {
-        if (window.showGameplayPanel) {
-            // Gameplay panel opening
-            window.showGameplayPanel(clickX, clickY);
-        } else {
-            safeLog('❌ showGameplayPanel not available');
-        }
-    }, 100);
+        const _0x542ec6 = _0x22bfff;
+        window[_0x542ec6(0x549)] ? window[_0x542ec6(0x549)](_0x22f478, _0x530ab1) : _0x5e766a(_0x542ec6(0x1bf));
+    }, 0x64);
 }
-
-function selectGameplayClip(clipId) {
-    selectedGameplayClip = clipId;
-    // Gameplay clip selection processed
+function _0xb64089(_0x17bbd1) {
+    _0xe403d9 = _0x17bbd1;
 }
-
-// Initialize draggable divider for split screen
-function initializeSplitscreenDivider() {
-    const divider = document.getElementById('splitscreenDivider');
-    const dividerLine = document.getElementById('dividerLine');
-    const dividerHandle = document.getElementById('dividerHandle');
-    
-    // Check that all required elements exist
-    if (!divider || !dividerLine || !dividerHandle) {
-        safeLog('⚠️ Missing divider elements');
+function _0x4aa7c8() {
+    const _0x2733a9 = _0x4afe9d, _0x3cbe4c = document['getElementById'](_0x2733a9(0x3a6)), _0x4ccc30 = document[_0x2733a9(0x1b9)](_0x2733a9(0x3e9)), _0x4c7c51 = document['getElementById'](_0x2733a9(0x284));
+    if (!_0x3cbe4c || !_0x4ccc30 || !_0x4c7c51) {
+        _0x5e766a('⚠️\x20Missing\x20divider\x20elements');
         return;
     }
-    
-    let isDragging = false;
-    let isExpandedMode = false; // false = normal split, true = gameplay expanded (top hidden)
-    
-    divider.addEventListener('mouseenter', () => {
-        if (!isDragging) {
-            dividerLine.style.background = 'rgba(255, 107, 0, 0.8)';
-            dividerLine.style.height = '3px';
-            if (dividerHandle) {
-                dividerHandle.style.opacity = '1';
-                dividerHandle.style.background = 'rgba(255, 107, 0, 0.8)';
-            }
-        }
-    });
-    
-    divider.addEventListener('mouseleave', () => {
-        if (!isDragging) {
-            dividerLine.style.background = 'rgba(255, 255, 255, 0.4)';
-            dividerLine.style.height = '2px';
-            if (dividerHandle) {
-                dividerHandle.style.opacity = '0';
-            }
-        }
-    });
-    
-    divider.addEventListener('mousedown', (e) => {
-        isDragging = true;
-        if (dividerHandle) {
-            dividerHandle.style.opacity = '1';
-            dividerHandle.style.background = 'rgba(255, 107, 0, 1)';
-        }
-        
-        const container = divider.parentElement;
-        const topSection = container.children[0];
-        const bottomSection = container.children[2];
-        
-        const startY = e.clientY;
-        const containerHeight = container.offsetHeight;
-        let dragDistance = 0;
-        
-        const handleMouseMove = (moveEvent) => {
-            dragDistance = moveEvent.clientY - startY;
-            // Show preview of where it will snap
-            const threshold = containerHeight * 0.15; // 15% drag = snap
-            
-            if (dragDistance < -threshold) {
-                // Dragging up - approaching expanded mode
-                topSection.style.opacity = '0.5';
-                bottomSection.style.opacity = '1';
-            } else if (dragDistance > threshold) {
-                // Dragging down - approaching normal mode
-                topSection.style.opacity = '1';
-                bottomSection.style.opacity = '0.5';
-            } else {
-                // Reset opacity
-                topSection.style.opacity = '1';
-                bottomSection.style.opacity = '1';
-            }
-        };
-        
-        const handleMouseUp = () => {
-            isDragging = false;
-            dividerLine.style.background = 'rgba(255, 255, 255, 0.4)';
-            dividerLine.style.height = '2px';
-            if (dividerHandle) {
-                dividerHandle.style.opacity = '0';
-            }
-            
-            // Determine which mode to snap to
-            const threshold = containerHeight * 0.15;
-            
-            if (dragDistance < -threshold) {
-                // Snap to expanded gameplay mode (top hidden)
-                isExpandedMode = true;
-                topSection.style.flex = '0';
-                topSection.style.display = 'none';
-                bottomSection.style.flex = '1';
-            } else {
-                // Snap back to normal split mode (default)
-                isExpandedMode = false;
-                topSection.style.flex = '1';
-                topSection.style.display = 'flex';
-                bottomSection.style.flex = '1';
-            }
-            
-            // Reset opacity
-            topSection.style.opacity = '1';
-            bottomSection.style.opacity = '1';
-            
-            document.removeEventListener('mousemove', handleMouseMove);
-            document.removeEventListener('mouseup', handleMouseUp);
-        };
-        
-        document.addEventListener('mousemove', handleMouseMove);
-        document.addEventListener('mouseup', handleMouseUp);
+    let _0x3619b3 = ![], _0x26d301 = ![];
+    _0x3cbe4c['addEventListener']('mouseenter', () => {
+        const _0x1c8cc6 = _0x2733a9;
+        !_0x3619b3 && (_0x4ccc30[_0x1c8cc6(0x344)][_0x1c8cc6(0x2f4)] = _0x1c8cc6(0x32e), _0x4ccc30[_0x1c8cc6(0x344)][_0x1c8cc6(0x38c)] = _0x1c8cc6(0x3af), _0x4c7c51 && (_0x4c7c51[_0x1c8cc6(0x344)][_0x1c8cc6(0x415)] = '1', _0x4c7c51[_0x1c8cc6(0x344)][_0x1c8cc6(0x2f4)] = _0x1c8cc6(0x32e)));
+    }), _0x3cbe4c[_0x2733a9(0x412)]('mouseleave', () => {
+        const _0x1c1ccc = _0x2733a9;
+        !_0x3619b3 && (_0x4ccc30[_0x1c1ccc(0x344)][_0x1c1ccc(0x2f4)] = _0x1c1ccc(0x325), _0x4ccc30[_0x1c1ccc(0x344)][_0x1c1ccc(0x38c)] = _0x1c1ccc(0x442), _0x4c7c51 && (_0x4c7c51[_0x1c1ccc(0x344)][_0x1c1ccc(0x415)] = '0'));
+    }), _0x3cbe4c[_0x2733a9(0x412)](_0x2733a9(0x2bc), _0x4dfb1b => {
+        const _0x14908c = _0x2733a9;
+        _0x3619b3 = !![];
+        _0x4c7c51 && (_0x4c7c51[_0x14908c(0x344)][_0x14908c(0x415)] = '1', _0x4c7c51[_0x14908c(0x344)][_0x14908c(0x2f4)] = _0x14908c(0x1d6));
+        const _0x1385b5 = _0x3cbe4c['parentElement'], _0x7bb7f8 = _0x1385b5[_0x14908c(0x40b)][0x0], _0x4f0250 = _0x1385b5[_0x14908c(0x40b)][0x2], _0x103f68 = _0x4dfb1b[_0x14908c(0x411)], _0x4bcbe5 = _0x1385b5[_0x14908c(0x508)];
+        let _0x4b9103 = 0x0;
+        const _0x3d99ad = _0x29b5ce => {
+                const _0x21c3f0 = _0x14908c;
+                _0x4b9103 = _0x29b5ce[_0x21c3f0(0x411)] - _0x103f68;
+                const _0x3f88b2 = _0x4bcbe5 * 0.15;
+                if (_0x4b9103 < -_0x3f88b2)
+                    _0x7bb7f8[_0x21c3f0(0x344)]['opacity'] = _0x21c3f0(0x3a7), _0x4f0250[_0x21c3f0(0x344)][_0x21c3f0(0x415)] = '1';
+                else
+                    _0x4b9103 > _0x3f88b2 ? (_0x7bb7f8['style'][_0x21c3f0(0x415)] = '1', _0x4f0250[_0x21c3f0(0x344)][_0x21c3f0(0x415)] = _0x21c3f0(0x3a7)) : (_0x7bb7f8['style'][_0x21c3f0(0x415)] = '1', _0x4f0250[_0x21c3f0(0x344)][_0x21c3f0(0x415)] = '1');
+            }, _0x151350 = () => {
+                const _0x3ef808 = _0x14908c;
+                _0x3619b3 = ![], _0x4ccc30[_0x3ef808(0x344)][_0x3ef808(0x2f4)] = _0x3ef808(0x325), _0x4ccc30['style'][_0x3ef808(0x38c)] = _0x3ef808(0x442);
+                _0x4c7c51 && (_0x4c7c51[_0x3ef808(0x344)]['opacity'] = '0');
+                const _0xd23ad5 = _0x4bcbe5 * 0.15;
+                _0x4b9103 < -_0xd23ad5 ? (_0x26d301 = !![], _0x7bb7f8[_0x3ef808(0x344)][_0x3ef808(0x44b)] = '0', _0x7bb7f8[_0x3ef808(0x344)][_0x3ef808(0x180)] = _0x3ef808(0x4f5), _0x4f0250['style'][_0x3ef808(0x44b)] = '1') : (_0x26d301 = ![], _0x7bb7f8[_0x3ef808(0x344)][_0x3ef808(0x44b)] = '1', _0x7bb7f8[_0x3ef808(0x344)]['display'] = _0x3ef808(0x44b), _0x4f0250[_0x3ef808(0x344)][_0x3ef808(0x44b)] = '1'), _0x7bb7f8[_0x3ef808(0x344)]['opacity'] = '1', _0x4f0250[_0x3ef808(0x344)]['opacity'] = '1', document['removeEventListener'](_0x3ef808(0x1e7), _0x3d99ad), document[_0x3ef808(0x524)](_0x3ef808(0x4af), _0x151350);
+            };
+        document['addEventListener'](_0x14908c(0x1e7), _0x3d99ad), document[_0x14908c(0x412)]('mouseup', _0x151350);
     });
 }
-
-// Call when template is loaded
-document.addEventListener('DOMContentLoaded', () => {
+document[_0x4afe9d(0x412)](_0x4afe9d(0x39e), () => {
     setTimeout(() => {
-        initializeSplitscreenDivider();
-    }, 500);
+        _0x4aa7c8();
+    }, 0x1f4);
 });
-
-// Also try to init when element becomes available (for dynamic content)
-const dividerInitCheck = setInterval(() => {
-    const divider = document.getElementById('splitscreenDivider');
-    if (divider && !divider.hasAttribute('data-initialized')) {
-        divider.setAttribute('data-initialized', 'true');
-        initializeSplitscreenDivider();
-        clearInterval(dividerInitCheck);
-    }
-}, 100);
-
-function closeGameplayClipSelector() {
-    // Just close the panel
+const _0x5250dd = setInterval(() => {
+    const _0x37492b = _0x4afe9d, _0xf3a48b = document[_0x37492b(0x1b9)](_0x37492b(0x3a6));
+    _0xf3a48b && !_0xf3a48b[_0x37492b(0x323)](_0x37492b(0x50d)) && (_0xf3a48b[_0x37492b(0x4ef)]('data-initialized', _0x37492b(0x4fe)), _0x4aa7c8(), clearInterval(_0x5250dd));
+}, 0x64);
+function _0x2ee1e4() {
 }
-
-function confirmGameplayClip() {
-    // Gameplay clip updated
-    closeGameplayClipSelector();
-    showNotification(`Selected: ${availableGameplayClips.find(c => c.id === selectedGameplayClip)?.title}`, 'success');
+function _0x19f50f() {
+    const _0x5946e4 = _0x4afe9d;
+    _0x2ee1e4(), _0x41706e('Selected:\x20' + _0x5144b1[_0x5946e4(0x465)](_0x5b8a5e => _0x5b8a5e['id'] === _0xe403d9)?.[_0x5946e4(0x4fc)], _0x5946e4(0x1a6));
 }
-
-function showNotification(message, type = 'info') {
-    // Create notification element if it doesn't exist
-    let notification = document.querySelector('.notification');
-    if (!notification) {
-        notification = document.createElement('div');
-        notification.className = 'notification';
-        document.body.appendChild(notification);
-    }
-    
-    notification.className = `notification ${type} show`;
-    
-    // SECURITY: Create safe HTML structure, then set message as text content
-    const iconType = type === 'success' ? 'check' : type === 'error' ? 'exclamation' : 'info';
-    notification.innerHTML = `
-        <div class="notification-content">
-            <i class="fas fa-${iconType}-circle"></i>
-            <span id="notificationMessage"></span>
-        </div>
-    `;
-    
-    // Use textContent to prevent XSS
-    document.getElementById('notificationMessage').textContent = message;
-    
-    setTimeout(() => {
-        notification.classList.remove('show');
-    }, CONFIG.UI.NOTIFICATION_DURATION_MS);
+function _0x41706e(_0x8dcfc3, _0x485707 = 'info') {
+    const _0x5cfc5d = _0x4afe9d;
+    let _0x5b275f = document[_0x5cfc5d(0x1ff)](_0x5cfc5d(0x3bd));
+    !_0x5b275f && (_0x5b275f = document[_0x5cfc5d(0x227)](_0x5cfc5d(0x20f)), _0x5b275f['className'] = _0x5cfc5d(0x596), document[_0x5cfc5d(0x384)][_0x5cfc5d(0x304)](_0x5b275f));
+    _0x5b275f[_0x5cfc5d(0x2a5)] = _0x5cfc5d(0x4fb) + _0x485707 + _0x5cfc5d(0x18a);
+    const _0xc01e14 = _0x485707 === 'success' ? _0x5cfc5d(0x55b) : _0x485707 === _0x5cfc5d(0x302) ? _0x5cfc5d(0x18e) : _0x5cfc5d(0x52d);
+    _0x5b275f[_0x5cfc5d(0x471)] = _0x5cfc5d(0x370) + _0xc01e14 + _0x5cfc5d(0x266), document[_0x5cfc5d(0x1b9)](_0x5cfc5d(0x2b2))[_0x5cfc5d(0x345)] = _0x8dcfc3, setTimeout(() => {
+        const _0x10d265 = _0x5cfc5d;
+        _0x5b275f[_0x10d265(0x2d9)][_0x10d265(0x40f)]('show');
+    }, _0x499ea0['UI']['NOTIFICATION_DURATION_MS']);
 }
-
-// Handle Google OAuth callback
-function handleGoogleCallback() {
-    // 🔐 SECURITY: Token is now set as httpOnly cookie by backend
-    // No token in URL needed - just verify with server
-    const urlParams = new URLSearchParams(window.location.search);
-    
-    // Check if we have auth error
-    const error = urlParams.get('error');
-    if (error) {
-        safeLog('OAuth error:', error);
-        showNotification('Authentication failed: ' + error, 'error');
-        setTimeout(() => window.location.href = '/login.html', 2000);
+function _0x1de6b1() {
+    const _0x3e934b = _0x4afe9d, _0xad6503 = new URLSearchParams(window['location'][_0x3e934b(0x1f8)]), _0x4f46db = _0xad6503[_0x3e934b(0x2b0)](_0x3e934b(0x302));
+    if (_0x4f46db) {
+        _0x5e766a(_0x3e934b(0x4b7), _0x4f46db), _0x41706e(_0x3e934b(0x248) + _0x4f46db, _0x3e934b(0x302)), setTimeout(() => window[_0x3e934b(0x2f2)][_0x3e934b(0x573)] = _0x3e934b(0x418), 0x7d0);
         return;
     }
-    
-    // Server has already set httpOnly cookie - verify it and get user info
-    verifyToken().then(() => {
-        // Dispatch user connected event for feature gatekeepers
-        window.dispatchEvent(new CustomEvent('userConnected', { detail: { user: currentUser } }));
-        
-        // Clear URL params and go to dashboard
-        window.history.replaceState({}, document.title, window.location.pathname);
-        window.location.href = '/dashboard.html';
-    }).catch(() => {
-        safeLog('❌ Authentication verification failed');
-        showNotification('Authentication failed. Please try again.', 'error');
-        setTimeout(() => window.location.href = '/login.html', 2000);
+    _0x4cb544()[_0x3e934b(0x515)](() => {
+        const _0x21420b = _0x3e934b;
+        window[_0x21420b(0x4a5)](new CustomEvent(_0x21420b(0x294), { 'detail': { 'user': _0x34ba92 } })), window['history'][_0x21420b(0x4c3)]({}, document[_0x21420b(0x4fc)], window[_0x21420b(0x2f2)][_0x21420b(0x2ed)]), window[_0x21420b(0x2f2)][_0x21420b(0x573)] = _0x21420b(0x23b);
+    })[_0x3e934b(0x4f3)](() => {
+        const _0x36fe46 = _0x3e934b;
+        _0x5e766a(_0x36fe46(0x1a4)), _0x41706e(_0x36fe46(0x3ce), _0x36fe46(0x302)), setTimeout(() => window['location']['href'] = '/login.html', 0x7d0);
     });
 }
-
-function parseMarkdown(text) {
-    // 🔐 SECURITY: Sanitize input before markdown parsing to prevent HTML injection
-    // Escape HTML special characters first, then apply markdown formatting
-    const sanitized = sanitizeHTML(text);
-    return sanitized
-        .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-        .replace(/\*(.*?)\*/g, '<em>$1</em>');
+function _0x4c075c(_0x429b6d) {
+    const _0x5a5f54 = _0x4afe9d, _0x376b64 = _0x355f44(_0x429b6d);
+    return _0x376b64['replace'](/\*\*(.*?)\*\*/g, _0x5a5f54(0x1a8))['replace'](/\*(.*?)\*/g, _0x5a5f54(0x569));
 }
-
-// Initialize the application
-function init() {
-    // Initialize theme immediately before anything else
-    const savedTheme = localStorage.getItem('theme') || 'light';
-    document.documentElement.setAttribute('data-theme', savedTheme);
-    currentTheme = savedTheme;
-    
-    // Check if we're handling a Google callback
-    const urlParams = new URLSearchParams(window.location.search);
-    const token = urlParams.get('token');
-    
-    if (token) {
-        handleGoogleCallback();
+function _0x1540ba() {
+    const _0x581802 = _0x4afe9d, _0x671a1d = localStorage[_0x581802(0x394)](_0x581802(0x1ef)) || _0x581802(0x42f);
+    document['documentElement'][_0x581802(0x4ef)](_0x581802(0x441), _0x671a1d), _0x362b2d = _0x671a1d;
+    const _0x3ef8df = new URLSearchParams(window['location'][_0x581802(0x1f8)]), _0x8ceb2e = _0x3ef8df[_0x581802(0x2b0)](_0x581802(0x1ec));
+    if (_0x8ceb2e) {
+        _0x1de6b1();
         return;
     }
-    
-    initAuth();
-    
-    // Ensure profile button is updated after auth is initialized
-    setTimeout(() => {
-        if (typeof updateProfileButton === 'function') {
-            updateProfileButton();
-        }
-    }, 100);
-
-    // ❌ REMOVED: Never load chat history from localStorage
-    // SECURITY: Chat history contains user prompts, URLs, and sensitive info
-    // localStorage is accessible to any script on the domain (XSS vulnerability)
-    // Solution: Store sensitive data server-side only, use httpOnly cookies for auth
-    chatHistory = []; // Always initialize empty
-
-    setupEventListeners();
-    updateTokenDisplay();
-
-    const savedSidebarState = localStorage.getItem('sidebarExpanded');
-    if (savedSidebarState === 'true') {
-        sidebar.classList.add('expanded');
-    }
-    
-    // Ensure input container IS centered on page load (for first prompt)
-    const inputSection = document.querySelector('.input-section');
-    const inputContainer = inputSection ? inputSection.querySelector('.input-container') : null;
-    if (inputContainer) {
-        inputContainer.classList.add('first-prompt');
-    }
-    if (inputSection) {
-        inputSection.classList.add('is-first-prompt');
-    }
-    
-    // Initialize Clips Studio
-    initClipsStudio();
-
-    // Setup Plus Features Button Handler
-    const plusFeaturesBtn = document.getElementById('plusFeaturesBtn');
-    if (plusFeaturesBtn) {
-        plusFeaturesBtn.addEventListener('click', function(e) {
-            e.stopPropagation();
-            const featuresTabContainer = document.getElementById('featuresTabContainer');
-            if (featuresTabContainer) {
-                featuresTabContainer.classList.toggle('active');
-                this.classList.toggle('active');
-            }
-        });
-    }
-
-    // Close features tab when clicking outside
-    document.addEventListener('click', function(e) {
-        const featuresTabContainer = document.getElementById('featuresTabContainer');
-        const plusFeaturesBtn = document.getElementById('plusFeaturesBtn');
-        if (featuresTabContainer && !e.target.closest('#featuresTabContainer') && !e.target.closest('#plusFeaturesBtn')) {
-            featuresTabContainer.classList.remove('active');
-            if (plusFeaturesBtn) plusFeaturesBtn.classList.remove('active');
+    _0x225c53(), setTimeout(() => {
+        const _0x5e9c2 = _0x581802;
+        typeof updateProfileButton === _0x5e9c2(0x1f6) && updateProfileButton();
+    }, 0x64), chatHistory = [], _0x950268(), _0x487f5d();
+    const _0x4c5690 = localStorage[_0x581802(0x394)](_0x581802(0x470));
+    _0x4c5690 === _0x581802(0x4fe) && _0x154927['classList']['add'](_0x581802(0x4c0));
+    const _0x114f96 = document['querySelector']('.input-section'), _0x1d5a74 = _0x114f96 ? _0x114f96[_0x581802(0x1ff)](_0x581802(0x36a)) : null;
+    _0x1d5a74 && _0x1d5a74['classList'][_0x581802(0x3ed)](_0x581802(0x51d));
+    _0x114f96 && _0x114f96[_0x581802(0x2d9)]['add'](_0x581802(0x2b3));
+    _0x1edcf2();
+    const _0x78976c = document[_0x581802(0x1b9)](_0x581802(0x3df));
+    _0x78976c && _0x78976c[_0x581802(0x412)](_0x581802(0x185), function (_0x214f93) {
+        const _0x3b150 = _0x581802;
+        _0x214f93[_0x3b150(0x4aa)]();
+        const _0x52249e = document[_0x3b150(0x1b9)](_0x3b150(0x281));
+        _0x52249e && (_0x52249e['classList'][_0x3b150(0x4dc)]('active'), this['classList'][_0x3b150(0x4dc)](_0x3b150(0x289)));
+    });
+    document[_0x581802(0x412)]('click', function (_0x5e15c6) {
+        const _0x343dc7 = _0x581802, _0x4351cf = document[_0x343dc7(0x1b9)](_0x343dc7(0x281)), _0xccd189 = document[_0x343dc7(0x1b9)](_0x343dc7(0x3df));
+        if (_0x4351cf && !_0x5e15c6[_0x343dc7(0x463)][_0x343dc7(0x2db)](_0x343dc7(0x2f7)) && !_0x5e15c6[_0x343dc7(0x463)]['closest'](_0x343dc7(0x283))) {
+            _0x4351cf[_0x343dc7(0x2d9)][_0x343dc7(0x40f)](_0x343dc7(0x289));
+            if (_0xccd189)
+                _0xccd189[_0x343dc7(0x2d9)][_0x343dc7(0x40f)]('active');
         }
     });
-
-    const fontLink = document.createElement('link');
-    fontLink.href = 'https://fonts.googleapis.com/css2?family=Archivo+Black&display=swap';
-    fontLink.rel = 'stylesheet';
-    document.head.appendChild(fontLink);
-
+    const _0x274d36 = document[_0x581802(0x227)](_0x581802(0x512));
+    _0x274d36['href'] = _0x581802(0x22f), _0x274d36['rel'] = _0x581802(0x23d), document['head'][_0x581802(0x304)](_0x274d36);
 }
-
-// =====================================================
-// CONFIGURATION AND HELPER FUNCTIONS (Security & Performance)
-// =====================================================
-
-// Global configuration for magic numbers and constants
-const CONFIG = {
-    PROCESSING: {
-        MAX_TIME_MS: 6 * 60 * 60 * 1000, // 6 hours
-        POLL_INTERVAL_MS: 3000, // 3 seconds
-        COMPLETED_REMOVE_DELAY_MS: 5000, // 5 seconds
-        CLEANUP_INTERVAL_MS: 60000 // 1 minute
+const _0x499ea0 = {
+    'PROCESSING': {
+        'MAX_TIME_MS': 0x6 * 0x3c * 0x3c * 0x3e8,
+        'POLL_INTERVAL_MS': 0xbb8,
+        'COMPLETED_REMOVE_DELAY_MS': 0x1388,
+        'CLEANUP_INTERVAL_MS': 0xea60
     },
-    UI: {
-        NOTIFICATION_DURATION_MS: 4000,
-        ANIMATION_DELAY_MS: 100,
-        MODAL_TRANSITION_MS: 250,
-        TYPING_INDICATOR_DELAY_MS: 1500
+    'UI': {
+        'NOTIFICATION_DURATION_MS': 0xfa0,
+        'ANIMATION_DELAY_MS': 0x64,
+        'MODAL_TRANSITION_MS': 0xfa,
+        'TYPING_INDICATOR_DELAY_MS': 0x5dc
     },
-    RATE_LIMITING: {
-        YOUTUBE_PROCESS_MIN_MS: 2000, // 2 seconds minimum between requests
-        POLLING_INTERVAL_MS: 5000 // 5 seconds for library polling
+    'RATE_LIMITING': {
+        'YOUTUBE_PROCESS_MIN_MS': 0x7d0,
+        'POLLING_INTERVAL_MS': 0x1388
     },
-    SECURITY: {
-        MAX_CONSOLE_LOGS: 0 // Production: 0 (no logs), Development: -1 (all logs)
-    }
+    'SECURITY': { 'MAX_CONSOLE_LOGS': 0x0 }
 };
-
-// =====================================================
-// STORAGE USAGE GUIDELINES (sessionStorage vs localStorage)
-// =====================================================
-// 
-// sessionStorage: Cleared when tab closes
-// - CSRF tokens (temporary, per-session)
-// - Processing state (temporary work-in-progress)
-// - Temporary UI state (not needed across sessions)
-//
-// localStorage: Persists indefinitely (until cleared)
-// - Theme preferences (non-sensitive UI state)
-// - Application configuration (non-sensitive)
-// - ⚠️ NEVER store: user tokens, auth data, PII, sensitive preferences
-// 
-// Note: Chat history is currently stored in localStorage but contains user prompts
-// and URLs. Consider implementing a "Clear history" button or using sessionStorage.
-//
-
-// XSS Prevention: Sanitize HTML strings to prevent script injection
-function sanitizeHTML(str) {
-    if (typeof str !== 'string') return '';
-    const div = document.createElement('div');
-    div.textContent = str;
-    return div.innerHTML;
+function _0x355f44(_0x2ffd4c) {
+    const _0x45bb2c = _0x4afe9d;
+    if (typeof _0x2ffd4c !== _0x45bb2c(0x590))
+        return '';
+    const _0x532372 = document[_0x45bb2c(0x227)](_0x45bb2c(0x20f));
+    return _0x532372[_0x45bb2c(0x345)] = _0x2ffd4c, _0x532372[_0x45bb2c(0x471)];
 }
-
-// 🔐 SECURITY: Validate and sanitize URLs to prevent javascript: and data: URIs
-function isValidImageUrl(url) {
-    if (!url || typeof url !== 'string') return false;
+function _0x582c43(_0x15653f) {
+    const _0x5024b5 = _0x4afe9d;
+    if (!_0x15653f || typeof _0x15653f !== _0x5024b5(0x590))
+        return ![];
     try {
-        // Block javascript: and data: URLs
-        if (url.startsWith('javascript:') || url.startsWith('data:')) {
-            safeLog('🔒 Blocked invalid URL scheme:', url.substring(0, 20));
-            return false;
-        }
-        // Require https:// or http:// (or relative paths for development)
-        const parsed = new URL(url, window.location.href);
-        return parsed.protocol === 'https:' || parsed.protocol === 'http:';
-    } catch (e) {
-        safeLog('Invalid URL format:', url);
-        return false;
+        if (_0x15653f[_0x5024b5(0x2fe)](_0x5024b5(0x3aa)) || _0x15653f[_0x5024b5(0x2fe)](_0x5024b5(0x1fa)))
+            return _0x5e766a(_0x5024b5(0x203), _0x15653f['substring'](0x0, 0x14)), ![];
+        const _0x4cfab4 = new URL(_0x15653f, window[_0x5024b5(0x2f2)][_0x5024b5(0x573)]);
+        return _0x4cfab4['protocol'] === _0x5024b5(0x3dc) || _0x4cfab4[_0x5024b5(0x2cd)] === _0x5024b5(0x365);
+    } catch (_0x462015) {
+        return _0x5e766a(_0x5024b5(0x2d1), _0x15653f), ![];
     }
 }
-
-// Rate limiting: Debounce function
-function debounce(func, delayMs) {
-    let timeoutId;
-    let lastCallTime = 0;
-    
-    return function debounced(...args) {
-        const now = Date.now();
-        const timeSinceLastCall = now - lastCallTime;
-        
-        clearTimeout(timeoutId);
-        
-        if (timeSinceLastCall >= delayMs) {
-            lastCallTime = now;
-            func.apply(this, args);
-        } else {
-            timeoutId = setTimeout(() => {
-                lastCallTime = Date.now();
-                func.apply(this, args);
-            }, delayMs - timeSinceLastCall);
-        }
+function _0x5c61a2(_0x384c9e, _0x28b40d) {
+    let _0x1fdddc, _0x1bfdd4 = 0x0;
+    return function _0x5b8733(..._0x20d777) {
+        const _0x198256 = _0xd7fc, _0x1f35fc = Date[_0x198256(0x1df)](), _0x26368b = _0x1f35fc - _0x1bfdd4;
+        clearTimeout(_0x1fdddc), _0x26368b >= _0x28b40d ? (_0x1bfdd4 = _0x1f35fc, _0x384c9e[_0x198256(0x30a)](this, _0x20d777)) : _0x1fdddc = setTimeout(() => {
+            const _0x5455ab = _0x198256;
+            _0x1bfdd4 = Date['now'](), _0x384c9e[_0x5455ab(0x30a)](this, _0x20d777);
+        }, _0x28b40d - _0x26368b);
     };
 }
-
-// Safe console logging with environment check
-const DEBUG_ENABLED = CONFIG.SECURITY.MAX_CONSOLE_LOGS !== 0;
-function safeLog(...args) {
-    if (DEBUG_ENABLED) {
-        console.log(...args);
-    }
+const _0x336973 = _0x499ea0[_0x4afe9d(0x45f)][_0x4afe9d(0x219)] !== 0x0;
+function _0x5e766a(..._0x57e7a8) {
+    const _0xdb1885 = _0x4afe9d;
+    _0x336973 && console[_0xdb1885(0x275)](..._0x57e7a8);
 }
-
-// 🔐 SECURITY: Fetch with timeout to prevent hanging requests
-async function fetchWithTimeout(url, options = {}, timeoutMs = 10000) {
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
-    
+async function _0xf5da18(_0x5a02bd, _0x37538b = {}, _0x1f0eef = 0x2710) {
+    const _0x5795eb = _0x4afe9d, _0x45dbae = new AbortController(), _0x598c6b = setTimeout(() => _0x45dbae[_0x5795eb(0x511)](), _0x1f0eef);
     try {
-        const response = await fetch(url, {
-            ...options,
-            signal: controller.signal
+        const _0x31177d = await fetch(_0x5a02bd, {
+            ..._0x37538b,
+            'signal': _0x45dbae[_0x5795eb(0x257)]
         });
-        clearTimeout(timeoutId);
-        return response;
-    } catch (error) {
-        clearTimeout(timeoutId);
-        if (error.name === 'AbortError') {
-            throw new Error(`Request timeout after ${timeoutMs}ms`);
-        }
-        throw error;
+        return clearTimeout(_0x598c6b), _0x31177d;
+    } catch (_0xddb452) {
+        clearTimeout(_0x598c6b);
+        if (_0xddb452[_0x5795eb(0x315)] === _0x5795eb(0x492))
+            throw new Error(_0x5795eb(0x2c1) + _0x1f0eef + 'ms');
+        throw _0xddb452;
     }
 }
-
-// Clip Slot System class
-class ClipSlotSystem {
+class _0x21fc28 {
     constructor() {
-        this.slots = {
-            1: null,
-            2: null,
-            3: null,
-            4: null,
-            5: null
-        };
-        this.totalClips = 0;
+        const _0x5836ca = _0x4afe9d;
+        this['slots'] = {
+            0x1: null,
+            0x2: null,
+            0x3: null,
+            0x4: null,
+            0x5: null
+        }, this[_0x5836ca(0x53d)] = 0x0;
     }
-
-    addClip(clipData) {
-        // Count filled slots
-        const filledSlots = Object.values(this.slots).filter(slot => slot !== null).length;
-        
-        if (filledSlots < 5) {
-            // Fill from bottom (5) to top (1)
-            const targetSlot = 5 - filledSlots;
-            this.slots[targetSlot] = {
-                ...clipData,
-                slotNumber: targetSlot,
-                addedAt: new Date().toISOString()
+    [_0x4afe9d(0x29d)](_0x308bff) {
+        const _0x31e6df = _0x4afe9d, _0xf9e1e4 = Object[_0x31e6df(0x2b4)](this['slots'])[_0x31e6df(0x54a)](_0x3c6653 => _0x3c6653 !== null)['length'];
+        if (_0xf9e1e4 < 0x5) {
+            const _0x2fe590 = 0x5 - _0xf9e1e4;
+            this[_0x31e6df(0x585)][_0x2fe590] = {
+                ..._0x308bff,
+                'slotNumber': _0x2fe590,
+                'addedAt': new Date()[_0x31e6df(0x24b)]()
             };
         } else {
-            // Shift all clips up
-            for (let i = 1; i < 5; i++) {
-                this.slots[i] = this.slots[i + 1];
-                if (this.slots[i]) {
-                    this.slots[i].slotNumber = i;
-                }
+            for (let _0x339694 = 0x1; _0x339694 < 0x5; _0x339694++) {
+                this[_0x31e6df(0x585)][_0x339694] = this[_0x31e6df(0x585)][_0x339694 + 0x1], this[_0x31e6df(0x585)][_0x339694] && (this[_0x31e6df(0x585)][_0x339694][_0x31e6df(0x593)] = _0x339694);
             }
-            // Add new clip to slot 5
-            this.slots[5] = {
-                ...clipData,
-                slotNumber: 5,
-                addedAt: new Date().toISOString()
+            this[_0x31e6df(0x585)][0x5] = {
+                ..._0x308bff,
+                'slotNumber': 0x5,
+                'addedAt': new Date()[_0x31e6df(0x24b)]()
             };
         }
-        
-        this.totalClips++;
-        return this.slots;
+        return this['totalClips']++, this[_0x31e6df(0x585)];
     }
-
-    getSlots() {
-        return this.slots;
+    [_0x4afe9d(0x485)]() {
+        const _0x1b8904 = _0x4afe9d;
+        return this[_0x1b8904(0x585)];
     }
-
-    getSlot(slotNumber) {
-        return this.slots[slotNumber];
+    [_0x4afe9d(0x1c4)](_0x1cda63) {
+        return this['slots'][_0x1cda63];
     }
-
-    clearSlot(slotNumber) {
-        this.slots[slotNumber] = null;
-        return this.slots;
+    ['clearSlot'](_0x21f841) {
+        const _0x537429 = _0x4afe9d;
+        return this[_0x537429(0x585)][_0x21f841] = null, this[_0x537429(0x585)];
     }
-
-    getFilledSlots() {
-        return Object.entries(this.slots)
-            .filter(([_, value]) => value !== null)
-            .map(([slotNum, data]) => ({ slotNum: parseInt(slotNum), data }));
+    [_0x4afe9d(0x537)]() {
+        const _0x9bd089 = _0x4afe9d;
+        return Object[_0x9bd089(0x50b)](this[_0x9bd089(0x585)])[_0x9bd089(0x54a)](([_0x571cf0, _0x5e4dac]) => _0x5e4dac !== null)[_0x9bd089(0x48c)](([_0xb8c86a, _0x529980]) => ({
+            'slotNum': parseInt(_0xb8c86a),
+            'data': _0x529980
+        }));
     }
 }
-
-// Enhanced Clips Studio with Slot System
-class ClipsStudio {
+class _0x4402fa {
     constructor() {
-        this.currentTab = 'templates';
-        this.processingItems = [];
-        this.libraryItems = [];
-        this.initialized = false;
-        this.currentProjectId = null;
-        this.selectedTemplate = null;
-        this.templates = {};
-        this.isMonitoring = false;
-        this.monitoringIntervals = new Map(); // Track monitoring intervals
-        this.currentEditingProject = null;
-        this.slotSystem = new ClipSlotSystem();
-        this.currentSlotState = null;
-        this.useSlotSystem = true; // Enable slot system by default
-        this.subscriptionCache = null; // Cache for subscription info to reduce API calls
-        this.libraryPollingInterval = null; // Auto-refresh polls library every 5 seconds
-        this.lastYouTubeProcessTime = 0; // Rate limiting: prevent spam requests
+        const _0x30e00d = _0x4afe9d;
+        this[_0x30e00d(0x215)] = _0x30e00d(0x540), this[_0x30e00d(0x393)] = [], this[_0x30e00d(0x303)] = [], this[_0x30e00d(0x497)] = ![], this[_0x30e00d(0x292)] = null, this[_0x30e00d(0x479)] = null, this[_0x30e00d(0x540)] = {}, this[_0x30e00d(0x45d)] = ![], this[_0x30e00d(0x17e)] = new Map(), this['currentEditingProject'] = null, this['slotSystem'] = new _0x21fc28(), this[_0x30e00d(0x222)] = null, this[_0x30e00d(0x46b)] = !![], this[_0x30e00d(0x1b0)] = null, this[_0x30e00d(0x3a8)] = null, this[_0x30e00d(0x561)] = 0x0;
     }
-
-    async init() {
-        if (this.initialized) return;
+    async [_0x4afe9d(0x25d)]() {
+        const _0xfe0323 = _0x4afe9d;
+        if (this['initialized'])
+            return;
         try {
-            this.bindEvents();
-            this.loadTemplates();
-            await this.loadLibraryItems();
-            await this.loadProcessingItems();
-            this.initialized = true;
-            
-            // ✅ SECURITY FIX: Check for persistent rate limit state on page load
-            // This prevents users from refreshing the page to bypass button lock
-            this.enforceUrlButtonRateLimitOnLoad();
-            
-            // Initialize WebSocket for real-time updates
-            this.initializeWebSocket();
-            
-            // START AUTO-POLLING: Refresh library every 5 seconds
-            this.startLibraryPolling();
-            
-            // Restore the last viewed tab
-            const savedTab = localStorage.getItem('clipsStudioCurrentTab');
-            if (savedTab && ['templates', 'create', 'processing', 'library', 'editor'].includes(savedTab)) {
-                this.switchTab(savedTab);
-            } else {
-                this.switchTab('templates'); // Default to templates
-            }
-            // Clips Studio initialized with Slot System
-        } catch (error) {
-            safeLog('Failed to initialize Clips Studio:', error);
+            this[_0xfe0323(0x190)](), this[_0xfe0323(0x35f)](), await this[_0xfe0323(0x2a9)](), await this[_0xfe0323(0x59c)](), this['initialized'] = !![], this[_0xfe0323(0x373)](), this[_0xfe0323(0x488)](), this['startLibraryPolling']();
+            const _0x3a739d = localStorage[_0xfe0323(0x394)](_0xfe0323(0x295));
+            _0x3a739d && [
+                _0xfe0323(0x540),
+                'create',
+                'processing',
+                _0xfe0323(0x530),
+                _0xfe0323(0x500)
+            ]['includes'](_0x3a739d) ? this['switchTab'](_0x3a739d) : this[_0xfe0323(0x34e)](_0xfe0323(0x540));
+        } catch (_0x11baa9) {
+            _0x5e766a(_0xfe0323(0x45a), _0x11baa9);
         }
     }
-
-    initializeWebSocket() {
-        /**
-         * Initialize WebSocket client for real-time video processing updates
-         * This enables live progress tracking without page refreshes
-         * 🔐 SECURITY: Authentication via httpOnly cookies only
-         */
+    [_0x4afe9d(0x488)]() {
+        const _0x32d038 = _0x4afe9d;
         try {
-            if (!window.SolisAIWebSocketClient) {
-                safeLog('⚠️ WebSocket client class not available');
+            if (!window[_0x32d038(0x37a)]) {
+                _0x5e766a(_0x32d038(0x206));
                 return;
             }
-
-            // 🔐 SECURITY FIX: Do NOT use localStorage for any user identification
-            // Backend validates auth via httpOnly cookies on WebSocket upgrade
-            // Do not pass any user ID or sensitive info in WebSocket message
-            
-            if (!currentUser) {
-                safeLog('⚠️ User not authenticated - WebSocket skipped');
+            if (!_0x34ba92) {
+                _0x5e766a(_0x32d038(0x525));
                 return;
             }
-
-            // Initialize WebSocket - backend MUST validate connection via httpOnly auth cookie
-            // Frontend does NOT send userId/token - it's retrieved from session on backend
-            // The WebSocket server uses the same httpOnly cookie as regular API calls
-            solisWSClient = new SolisAIWebSocketClient();
-            solisWSClient.connect(); // No parameters - backend gets userId from session cookie
-            safeLog('✅ WebSocket client initialized with httpOnly auth');
-
-            // Set up handlers after a brief delay to ensure connection
-            setTimeout(() => {
-                this.setupWebSocketHandlers();
-            }, 500);
-        } catch (error) {
-            safeLog('❌ Failed to initialize WebSocket:', error);
+            _0x3e82a3 = new SolisAIWebSocketClient(), _0x3e82a3['connect'](), _0x5e766a(_0x32d038(0x333)), setTimeout(() => {
+                this['setupWebSocketHandlers']();
+            }, 0x1f4);
+        } catch (_0x5a9585) {
+            _0x5e766a(_0x32d038(0x46c), _0x5a9585);
         }
     }
-
-    updateRecentActivity() {
-        const activityList = document.getElementById('activityList');
-        if (!activityList) return;
-
-        // Keep the welcome message
-        const welcomeItem = activityList.querySelector('.activity-item');
-        
-        // Get recent clips (last 3)
-        const recentClips = this.libraryItems
-            .sort((a, b) => b.timestamp - a.timestamp)
-            .slice(0, 3);
-
-        // Add clip activities
-        recentClips.forEach(clip => {
-            const timeAgo = this.getTimeAgo(clip.timestamp);
-            const activityHTML = `
-                <div class="activity-item">
-                    <div class="activity-icon">
-                        <i class="fas fa-video"></i>
-                    </div>
-                    <div class="activity-content">
-                        <div class="activity-title">Created a clip</div>
-                        <div class="activity-description">${clip.name || 'Untitled Clip'}</div>
-                    </div>
-                    <div class="activity-time">${timeAgo}</div>
-                </div>
-            `;
-            activityList.insertAdjacentHTML('beforeend', activityHTML);
+    [_0x4afe9d(0x594)]() {
+        const _0x43ce64 = _0x4afe9d, _0x309652 = document['getElementById'](_0x43ce64(0x546));
+        if (!_0x309652)
+            return;
+        const _0x4cb114 = _0x309652[_0x43ce64(0x1ff)]('.activity-item'), _0xadecdd = this['libraryItems']['sort']((_0x564359, _0x120c72) => _0x120c72['timestamp'] - _0x564359[_0x43ce64(0x2bb)])[_0x43ce64(0x59d)](0x0, 0x3);
+        _0xadecdd['forEach'](_0x5df2e4 => {
+            const _0x5dcc06 = _0x43ce64, _0x5f593f = this[_0x5dcc06(0x410)](_0x5df2e4[_0x5dcc06(0x2bb)]), _0x5a3cd2 = _0x5dcc06(0x276) + (_0x5df2e4[_0x5dcc06(0x315)] || _0x5dcc06(0x1e3)) + _0x5dcc06(0x3f3) + _0x5f593f + _0x5dcc06(0x352);
+            _0x309652[_0x5dcc06(0x4ad)](_0x5dcc06(0x342), _0x5a3cd2);
         });
     }
-
-    getTimeAgo(timestamp) {
-        const now = new Date();
-        const diffMs = now - new Date(timestamp);
-        const diffMins = Math.floor(diffMs / 60000);
-        const diffHours = Math.floor(diffMs / 3600000);
-        const diffDays = Math.floor(diffMs / 86400000);
-
-        if (diffMins < 1) return '0 minutes ago';
-        if (diffMins < 60) return `${diffMins} minute${diffMins > 1 ? 's' : ''} ago`;
-        if (diffHours < 24) return `${diffHours} hour${diffHours > 1 ? 's' : ''} ago`;
-        if (diffDays < 7) return `${diffDays} day${diffDays > 1 ? 's' : ''} ago`;
-        
-        return timestamp.toLocaleDateString();
+    ['getTimeAgo'](_0xab3321) {
+        const _0x5aebbb = _0x4afe9d, _0x33dc07 = new Date(), _0x596417 = _0x33dc07 - new Date(_0xab3321), _0xb46e62 = Math[_0x5aebbb(0x48a)](_0x596417 / 0xea60), _0x20e06d = Math['floor'](_0x596417 / 0x36ee80), _0x2b5e01 = Math['floor'](_0x596417 / 0x5265c00);
+        if (_0xb46e62 < 0x1)
+            return _0x5aebbb(0x336);
+        if (_0xb46e62 < 0x3c)
+            return _0xb46e62 + _0x5aebbb(0x32d) + (_0xb46e62 > 0x1 ? 's' : '') + _0x5aebbb(0x229);
+        if (_0x20e06d < 0x18)
+            return _0x20e06d + _0x5aebbb(0x1d2) + (_0x20e06d > 0x1 ? 's' : '') + _0x5aebbb(0x229);
+        if (_0x2b5e01 < 0x7)
+            return _0x2b5e01 + _0x5aebbb(0x4da) + (_0x2b5e01 > 0x1 ? 's' : '') + _0x5aebbb(0x229);
+        return _0xab3321[_0x5aebbb(0x382)]();
     }
-
-    async loadTemplates() {
+    async [_0x4afe9d(0x35f)]() {
+        const _0x1bc902 = _0x4afe9d;
         try {
-            const headers = getAuthHeaders();
-            const response = await fetch(`${API_BASE_URL}/clips/templates`, {
-                method: 'GET',
-                headers: headers,
-                credentials: 'include'  // 🔐 Send httpOnly cookie
-            });
-            
-            if (response.ok) {
-                const data = await response.json();
-                this.templates = data.templates || data;
-                safeLog('✅ Templates loaded:', Object.keys(this.templates));
-            } else if (response.status === 401) {
-                safeLog('Not authenticated for templates, using defaults');
-                this.setDefaultTemplates();
-            } else {
-                safeLog('Failed to load templates, status:', response.status);
-                this.setDefaultTemplates();
-            }
-        } catch (error) {
-            safeLog('Failed to load templates:', error);
-            this.setDefaultTemplates();
+            const _0x498dcd = _0x67ee3(), _0x745db9 = await fetch(API_BASE_URL + '/clips/templates', {
+                    'method': _0x1bc902(0x597),
+                    'headers': _0x498dcd,
+                    'credentials': _0x1bc902(0x3cd)
+                });
+            if (_0x745db9['ok']) {
+                const _0x53b879 = await _0x745db9['json']();
+                this[_0x1bc902(0x540)] = _0x53b879['templates'] || _0x53b879, _0x5e766a(_0x1bc902(0x308), Object[_0x1bc902(0x298)](this['templates']));
+            } else
+                _0x745db9[_0x1bc902(0x51f)] === 0x191 ? (_0x5e766a('Not\x20authenticated\x20for\x20templates,\x20using\x20defaults'), this[_0x1bc902(0x591)]()) : (_0x5e766a(_0x1bc902(0x3b7), _0x745db9[_0x1bc902(0x51f)]), this['setDefaultTemplates']());
+        } catch (_0x33ceb6) {
+            _0x5e766a(_0x1bc902(0x293), _0x33ceb6), this['setDefaultTemplates']();
         }
     }
-
-    setDefaultTemplates() {
-        this.templates = {
-            "ranked_compilation": { 
-                "name": "Ranking Compilation", 
-                "description": "Top 5 moments ranked compilation", 
-                "duration": "15-60s",
-                "type": "ranking",
-                "supportsSlotSystem": true
+    ['setDefaultTemplates']() {
+        const _0x1fe00a = _0x4afe9d;
+        this['templates'] = {
+            'ranked_compilation': {
+                'name': _0x1fe00a(0x198),
+                'description': _0x1fe00a(0x3d6),
+                'duration': _0x1fe00a(0x3fc),
+                'type': _0x1fe00a(0x521),
+                'supportsSlotSystem': !![]
             },
-            "splitscreen": { 
-                "name": "Split Screen", 
-                "description": "Side-by-side video comparison", 
-                "duration": "15-30s",
-                "type": "splitscreen",
-                "supportsSlotSystem": true
+            'splitscreen': {
+                'name': 'Split\x20Screen',
+                'description': _0x1fe00a(0x4eb),
+                'duration': _0x1fe00a(0x4be),
+                'type': _0x1fe00a(0x360),
+                'supportsSlotSystem': !![]
             }
         };
     }
-
-    bindEvents() {
-        // Tab navigation - only bind once
-        this.safeAddEventListener('.clips-tab', 'click', (e) => {
-            this.switchTab(e.currentTarget.dataset.tab);
+    [_0x4afe9d(0x190)]() {
+        const _0x2cbe01 = _0x4afe9d;
+        this[_0x2cbe01(0x383)](_0x2cbe01(0x397), _0x2cbe01(0x185), _0x2469c2 => {
+            const _0x242151 = _0x2cbe01;
+            this[_0x242151(0x34e)](_0x2469c2['currentTarget'][_0x242151(0x3dd)][_0x242151(0x3a2)]);
+        }), this['safeAddEventListener'](_0x2cbe01(0x252), _0x2cbe01(0x185), _0x49a54b => {
+            const _0x2f3af0 = _0x2cbe01, _0x5b76b2 = _0x49a54b[_0x2f3af0(0x526)], _0x557ba7 = _0x5b76b2[_0x2f3af0(0x3dd)][_0x2f3af0(0x371)];
+            _0x557ba7 === _0x2f3af0(0x360) ? (_0x49a54b[_0x2f3af0(0x212)](), _0x49a54b['stopPropagation'](), this['checkTemplateAccess'](_0x557ba7)) : this[_0x2f3af0(0x564)](_0x557ba7, _0x5b76b2);
+        }), this[_0x2cbe01(0x30f)](_0x2cbe01(0x22a), _0x2cbe01(0x185), () => {
+            this['closeProFeatureModal']();
+        }), this[_0x2cbe01(0x30f)](_0x2cbe01(0x53b), _0x2cbe01(0x185), () => {
+            const _0x5c51fe = _0x2cbe01;
+            this[_0x5c51fe(0x41a)]();
+        }), this[_0x2cbe01(0x30f)](_0x2cbe01(0x301), _0x2cbe01(0x185), () => {
+            const _0x52dd08 = _0x2cbe01, _0x3a6eb5 = document[_0x52dd08(0x1ff)](_0x52dd08(0x559));
+            _0x3a6eb5 && _0x3a6eb5[_0x52dd08(0x2d9)]['toggle'](_0x52dd08(0x4c0));
+        }), this[_0x2cbe01(0x30f)](_0x2cbe01(0x1dd), _0x2cbe01(0x185), () => {
+            const _0x297800 = _0x2cbe01;
+            this[_0x297800(0x20b)]();
+        }), this[_0x2cbe01(0x30f)](_0x2cbe01(0x2de), 'click', _0x530e30 => {
+            const _0x3693a6 = _0x2cbe01;
+            _0x530e30[_0x3693a6(0x212)](), _0x530e30[_0x3693a6(0x4aa)](), this[_0x3693a6(0x4a9)]();
         });
-
-        // Template selection - check access for PRO templates
-        this.safeAddEventListener('.template-card', 'click', (e) => {
-            const templateCard = e.currentTarget;
-            const templateId = templateCard.dataset.template;
-            
-            // Check if it's a PRO template (splitscreen)
-            if (templateId === 'splitscreen') {
-                e.preventDefault();
-                e.stopPropagation();
-                this.checkTemplateAccess(templateId);
-            } else {
-                // Free templates can be accessed directly
-                this.openTemplatePreviewModal(templateId, templateCard);
-            }
-        });
-        
-        // PRO feature modal buttons
-        this.safeAddEventListenerById('closeProFeatureModal', 'click', () => {
-            this.closeProFeatureModal();
-        });
-
-        // Template preview modal close button
-        this.safeAddEventListenerById('closeTemplatePreviewBtn', 'click', () => {
-            this.closeTemplatePreviewModal();
-        });
-
-        // Template sheet handle toggle on mobile
-        this.safeAddEventListenerById('templateSheetHandle', 'click', () => {
-            const sidebar = document.querySelector('.template-preview-sidebar');
-            if (sidebar) {
-                sidebar.classList.toggle('expanded');
-            }
-        });
-        
-        // Template preview modal confirm button
-        this.safeAddEventListenerById('confirmUseTemplateBtn', 'click', () => {
-            this.confirmTemplateUse();
-        });
-        
-        // AI Prompt input with char count
-
-        // URL processing
-        this.safeAddEventListenerById('processUrlBtn', 'click', (e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            this.processYouTubeUrl();
-        });
-
-        const youtubeInput = document.getElementById('youtubeUrlInput');
-        if (youtubeInput) {
-            youtubeInput.addEventListener('keypress', (e) => {
-                if (e.key === 'Enter') {
-                    e.preventDefault();
-                    this.processYouTubeUrl();
-                }
-            });
-        }
-
-        // Template confirmation
-        this.safeAddEventListenerById('confirmTemplateBtn', 'click', () => {
-            this.confirmTemplateSelection();
-        });
-
-        this.safeAddEventListenerById('cancelTemplateBtn', 'click', () => {
-            this.cancelTemplateSelection();
-        });
-
-        // Generate clip
-        this.safeAddEventListenerById('generateClipBtn', 'click', () => {
-            this.generateClipWithSlotSystem();
-        });
-
-        // Library actions - manual refresh only
-        this.safeAddEventListenerById('refreshProcessingBtn', 'click', () => {
-            this.manualRefresh();
-        });
-
-        this.safeAddEventListenerById('libraryFilter', 'change', (e) => {
-            this.filterLibrary(e.target.value);
-        });
-
-        // New clip button
-        this.safeAddEventListenerById('newClipBtn', 'click', () => {
-            // First navigate to clips section
-            const clipsNavItem = document.querySelector('.nav-item[data-target="clips"]');
-            if (clipsNavItem) {
-                clipsNavItem.click();
-            }
-            // Then switch to create tab
-            setTimeout(() => {
-                this.switchTab('create');
-                // Also open the editor modal to go directly to clip creation
-                setTimeout(() => this.openEditor(), 300);
-            }, 300);
-        });
-
-        this.safeAddEventListenerById('createFirstClipBtn', 'click', () => {
-            this.switchTab('create');
-        });
-
-        // Editor functionality
-
-        this.safeAddEventListenerById('renderFinalBtn', 'click', () => {
-            this.renderFinalVideo();
-        });
-
-        // Recent Activity View All button
-        this.safeAddEventListenerById('viewAllActivityBtn', 'click', () => {
-            this.switchTab('library');
-        });
-
-        // Stop monitoring when leaving clips tab
-        document.addEventListener('visibilitychange', () => {
-            if (document.hidden) {
-                this.stopAllMonitoring();
-            }
+        const _0xdfe8 = document[_0x2cbe01(0x1b9)](_0x2cbe01(0x3d7));
+        _0xdfe8 && _0xdfe8['addEventListener'](_0x2cbe01(0x580), _0x149bb1 => {
+            const _0x988bcd = _0x2cbe01;
+            _0x149bb1[_0x988bcd(0x224)] === _0x988bcd(0x40d) && (_0x149bb1[_0x988bcd(0x212)](), this[_0x988bcd(0x4a9)]());
+        }), this[_0x2cbe01(0x30f)]('confirmTemplateBtn', _0x2cbe01(0x185), () => {
+            const _0x2f5afd = _0x2cbe01;
+            this[_0x2f5afd(0x55f)]();
+        }), this[_0x2cbe01(0x30f)](_0x2cbe01(0x1ed), 'click', () => {
+            const _0x1c422c = _0x2cbe01;
+            this[_0x1c422c(0x27a)]();
+        }), this[_0x2cbe01(0x30f)]('generateClipBtn', _0x2cbe01(0x185), () => {
+            this['generateClipWithSlotSystem']();
+        }), this[_0x2cbe01(0x30f)]('refreshProcessingBtn', 'click', () => {
+            const _0x24b95a = _0x2cbe01;
+            this[_0x24b95a(0x455)]();
+        }), this['safeAddEventListenerById'](_0x2cbe01(0x2bf), _0x2cbe01(0x1c1), _0x4c7683 => {
+            const _0x5bb12c = _0x2cbe01;
+            this[_0x5bb12c(0x499)](_0x4c7683['target'][_0x5bb12c(0x328)]);
+        }), this[_0x2cbe01(0x30f)](_0x2cbe01(0x460), 'click', () => {
+            const _0x49b755 = _0x2cbe01, _0x1af43d = document['querySelector'](_0x49b755(0x232));
+            _0x1af43d && _0x1af43d[_0x49b755(0x185)](), setTimeout(() => {
+                const _0x554046 = _0x49b755;
+                this[_0x554046(0x34e)](_0x554046(0x459)), setTimeout(() => this[_0x554046(0x1f2)](), 0x12c);
+            }, 0x12c);
+        }), this['safeAddEventListenerById'](_0x2cbe01(0x230), _0x2cbe01(0x185), () => {
+            const _0x24120c = _0x2cbe01;
+            this[_0x24120c(0x34e)](_0x24120c(0x459));
+        }), this['safeAddEventListenerById'](_0x2cbe01(0x2be), _0x2cbe01(0x185), () => {
+            const _0x4f95d1 = _0x2cbe01;
+            this[_0x4f95d1(0x58f)]();
+        }), this[_0x2cbe01(0x30f)](_0x2cbe01(0x484), 'click', () => {
+            const _0x17d1db = _0x2cbe01;
+            this[_0x17d1db(0x34e)]('library');
+        }), document[_0x2cbe01(0x412)](_0x2cbe01(0x377), () => {
+            const _0x3e4d28 = _0x2cbe01;
+            document[_0x3e4d28(0x2ff)] && this[_0x3e4d28(0x437)]();
         });
     }
-
-    switchTab(tabName) {
-        // Stop monitoring if we're leaving processing tab
-        if (this.currentTab === 'processing' && tabName !== 'processing') {
-            this.stopAllMonitoring();
-        }
-
-        document.querySelectorAll('.clips-tab').forEach(tab => {
-            tab.classList.toggle('active', tab.dataset.tab === tabName);
-        });
-
-        document.querySelectorAll('.clips-section').forEach(section => {
-            section.classList.toggle('active', section.id === `${tabName}Section`);
-        });
-        this.currentTab = tabName;
-        
-        // Save current tab to localStorage so it persists on refresh
-        localStorage.setItem('clipsStudioCurrentTab', tabName);
-
-        // Only load data when tab becomes active
-        if (tabName === 'processing') {
-            this.updateProcessingView();
-            // Start monitoring only for active processing items
-            this.startSmartMonitoring();
-        } else if (tabName === 'library') {
-            this.updateLibraryView();
-        } else if (tabName === 'editor') {
-            this.loadEditorData();
+    [_0x4afe9d(0x34e)](_0xb7c4c8) {
+        const _0x3d824c = _0x4afe9d;
+        this[_0x3d824c(0x215)] === _0x3d824c(0x3f5) && _0xb7c4c8 !== _0x3d824c(0x3f5) && this[_0x3d824c(0x437)]();
+        document[_0x3d824c(0x350)](_0x3d824c(0x397))['forEach'](_0x30f8cf => {
+            const _0x5edd84 = _0x3d824c;
+            _0x30f8cf[_0x5edd84(0x2d9)]['toggle'](_0x5edd84(0x289), _0x30f8cf[_0x5edd84(0x3dd)][_0x5edd84(0x3a2)] === _0xb7c4c8);
+        }), document[_0x3d824c(0x350)]('.clips-section')[_0x3d824c(0x321)](_0x10f74f => {
+            const _0x5eb85e = _0x3d824c;
+            _0x10f74f['classList'][_0x5eb85e(0x4dc)](_0x5eb85e(0x289), _0x10f74f['id'] === _0xb7c4c8 + 'Section');
+        }), this[_0x3d824c(0x215)] = _0xb7c4c8, localStorage[_0x3d824c(0x3b0)](_0x3d824c(0x295), _0xb7c4c8);
+        if (_0xb7c4c8 === _0x3d824c(0x3f5))
+            this[_0x3d824c(0x56c)](), this[_0x3d824c(0x4f1)]();
+        else {
+            if (_0xb7c4c8 === _0x3d824c(0x530))
+                this['updateLibraryView']();
+            else
+                _0xb7c4c8 === _0x3d824c(0x500) && this[_0x3d824c(0x541)]();
         }
     }
-
-    selectTemplate(templateId, templateCard) {
-        // Remove previous selection
-        document.querySelectorAll('.template-card').forEach(card => {
-            card.classList.remove('selected');
-        });
-
-        // Add selection to current card
-        templateCard.classList.add('selected');
-        this.selectedTemplate = templateId;
-
-        // Show confirmation buttons
-        this.showConfirmationButtons(true);
-        
-        // Check if template supports slot system
-        const template = this.templates[templateId];
-        if (template && template.supportsSlotSystem) {
-            this.showSlotSystemInfo();
-        }
+    ['selectTemplate'](_0x14ddc7, _0x2f4afb) {
+        const _0x5951f8 = _0x4afe9d;
+        document[_0x5951f8(0x350)](_0x5951f8(0x252))[_0x5951f8(0x321)](_0x201607 => {
+            const _0x5791fd = _0x5951f8;
+            _0x201607[_0x5791fd(0x2d9)][_0x5791fd(0x40f)](_0x5791fd(0x424));
+        }), _0x2f4afb[_0x5951f8(0x2d9)][_0x5951f8(0x3ed)](_0x5951f8(0x424)), this['selectedTemplate'] = _0x14ddc7, this[_0x5951f8(0x423)](!![]);
+        const _0x1d02fa = this['templates'][_0x14ddc7];
+        _0x1d02fa && _0x1d02fa[_0x5951f8(0x1e9)] && this['showSlotSystemInfo']();
     }
-
-    async checkTemplateAccess(templateId) {
+    async [_0x4afe9d(0x21b)](_0x120ccb) {
+        const _0x3f703c = _0x4afe9d;
         try {
-            // 🔐 This only controls UI/preview display - it's NOT the enforcement mechanism!
-            // Backend /clips/start MUST also check subscription before allowing processing.
-            // User can bypass this modal by modifying DOM - only backend can enforce plan.
-            
-            const apiBase = window.API_BASE_URL || 'https://api.solisai.video/api';
-            const headers = getAuthHeaders();
-            
+            const _0x3f5bc6 = window[_0x3f703c(0x3c4)] || _0x3f703c(0x54c), _0x594e97 = _0x67ee3();
             try {
-                const response = await fetch(`${apiBase}/auth/subscription`, {
-                    method: 'GET',
-                    headers: headers,
-                    credentials: 'include'
+                const _0xd018e3 = await fetch(_0x3f5bc6 + _0x3f703c(0x448), {
+                    'method': _0x3f703c(0x597),
+                    'headers': _0x594e97,
+                    'credentials': _0x3f703c(0x3cd)
                 });
-
-                if (!response.ok) {
-                    this.showProFeatureModal(templateId);
+                if (!_0xd018e3['ok']) {
+                    this[_0x3f703c(0x54e)](_0x120ccb);
                     return;
                 }
-
-                const data = await response.json();
-
-                // Check if user has access to PRO templates (display only)
-                const plan = data.subscription?.plan || 'free';
-                
-                if (plan === 'free') {
-                    this.showProFeatureModal(templateId);
-                } else {
-                    const templateCard = document.querySelector(`[data-template="${templateId}"]`);
-                    this.openTemplatePreviewModal(templateId, templateCard);
+                const _0x5c7a1d = await _0xd018e3[_0x3f703c(0x494)](), _0x14bed6 = _0x5c7a1d[_0x3f703c(0x496)]?.[_0x3f703c(0x19b)] || 'free';
+                if (_0x14bed6 === _0x3f703c(0x449))
+                    this[_0x3f703c(0x54e)](_0x120ccb);
+                else {
+                    const _0x36e280 = document[_0x3f703c(0x1ff)](_0x3f703c(0x477) + _0x120ccb + '\x22]');
+                    this['openTemplatePreviewModal'](_0x120ccb, _0x36e280);
                 }
-            } catch (error) {
-                // Assume free access if check fails - backend will enforce
-                this.showProFeatureModal(templateId);
+            } catch (_0x4b8b30) {
+                this[_0x3f703c(0x54e)](_0x120ccb);
             }
-        } catch (error) {
-            this.showProFeatureModal(templateId);
+        } catch (_0x4631d4) {
+            this[_0x3f703c(0x54e)](_0x120ccb);
         }
     }
-
-    showProFeatureModal(templateId, currentPlan) {
-        // Remove any existing modal
-        const existingOverlay = document.querySelector('.pro-modal-overlay');
-        if (existingOverlay) existingOverlay.remove();
-
-        // Add styles to document head (only once, use data attribute to check)
-        if (!document.getElementById('pro-modal-styles')) {
-            const styleEl = document.createElement('style');
-            styleEl.id = 'pro-modal-styles';
-            styleEl.textContent = `
-                @keyframes fadeInOverlay { to { opacity: 1; } }
-                @keyframes slideUp { 
-                    from { opacity: 0; transform: translateY(18px) scale(0.97); }
-                    to { opacity: 1; transform: translateY(0) scale(1); }
-                }
-                @keyframes popIn {
-                    0% { transform: scale(0) rotate(-15deg); opacity: 0; }
-                    60% { transform: scale(1.1) rotate(4deg); opacity: 1; }
-                    80% { transform: scale(0.95) rotate(-2deg); }
-                    100% { transform: scale(1) rotate(0deg); opacity: 1; }
-                }
-                @keyframes fadeUpAnim {
-                    from { opacity: 0; transform: translateY(8px); }
-                    to { opacity: 1; transform: translateY(0); }
-                }
-
-                .pro-modal-overlay {
-                    position: fixed !important;
-                    inset: 0 !important;
-                    background: rgba(0,0,0,0.3) !important;
-                    backdrop-filter: blur(8px) !important;
-                    -webkit-backdrop-filter: blur(8px) !important;
-                    display: flex !important;
-                    align-items: center !important;
-                    justify-content: center !important;
-                    z-index: 9999 !important;
-                    padding: 20px !important;
-                    opacity: 0;
-                    animation: fadeInOverlay 0.3s ease forwards;
-                }
-
-                .pro-modal {
-                    background: #fff;
-                    border-radius: 28px;
-                    width: 100%;
-                    max-width: 820px;
-                    display: flex;
-                    box-shadow: 0 32px 80px rgba(0,0,0,0.12), 0 0 0 1px rgba(0,0,0,0.05);
-                    opacity: 0;
-                    transform: translateY(18px) scale(0.97);
-                    animation: slideUp 0.45s cubic-bezier(0.34,1.4,0.64,1) 0.1s forwards;
-                    overflow: hidden;
-                    min-height: 440px;
-                }
-
-                .pro-panel-left {
-                    width: 52%;
-                    background: #FDF6F3;
-                    padding: 44px 40px;
-                    display: flex;
-                    flex-direction: column;
-                    justify-content: space-between;
-                    position: relative;
-                    border-right: 1px solid #EBEBEB;
-                    overflow: hidden;
-                }
-
-                .pro-panel-left::before {
-                    content: '';
-                    position: absolute;
-                    bottom: -70px;
-                    left: -70px;
-                    width: 240px;
-                    height: 240px;
-                    border-radius: 50%;
-                    background: #FFD0C2;
-                    opacity: 0.25;
-                    pointer-events: none;
-                }
-
-                .pro-panel-left::after {
-                    content: '';
-                    position: absolute;
-                    top: -50px;
-                    right: -50px;
-                    width: 160px;
-                    height: 160px;
-                    border-radius: 50%;
-                    background: #FFD0C2;
-                    opacity: 0.2;
-                    pointer-events: none;
-                }
-
-                .pro-left-top { position: relative; z-index: 1; }
-
-                .pro-lock-wrap {
-                    width: 64px;
-                    height: 64px;
-                    background: #fff;
-                    border-radius: 18px;
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
-                    margin-bottom: 24px;
-                    box-shadow: 0 4px 16px rgba(255,106,61,0.12);
-                    animation: popIn 0.5s cubic-bezier(0.34,1.56,0.64,1) 0.4s both;
-                }
-
-                .pro-title {
-                    font-family: 'Instrument Serif', serif;
-                    font-size: 30px;
-                    color: #111;
-                    line-height: 1.2;
-                    letter-spacing: -0.4px;
-                    margin-bottom: 10px;
-                    opacity: 0;
-                    animation: fadeUpAnim 0.35s ease 0.55s forwards;
-                }
-
-                .pro-subtitle {
-                    font-size: 14px;
-                    color: #555;
-                    line-height: 1.65;
-                    max-width: 270px;
-                    opacity: 0;
-                    animation: fadeUpAnim 0.35s ease 0.63s forwards;
-                }
-
-                .pro-template-preview {
-                    position: relative;
-                    z-index: 1;
-                    background: #fff;
-                    border: 1px solid #EBEBEB;
-                    border-radius: 16px;
-                    overflow: hidden;
-                    opacity: 0;
-                    animation: fadeUpAnim 0.35s ease 0.72s forwards;
-                }
-
-                .pro-tpb-preview {
-                    background: #F5F4F2;
-                    height: 90px;
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
-                    position: relative;
-                }
-
-                .pro-tpb-pro {
-                    position: absolute;
-                    top: 8px;
-                    right: 8px;
-                    background: #FF6A3D;
-                    color: #fff;
-                    font-size: 10px;
-                    font-weight: 700;
-                    letter-spacing: 0.5px;
-                    padding: 3px 9px;
-                    border-radius: 100px;
-                }
-
-                .pro-tpb-info {
-                    padding: 12px 14px;
-                    display: flex;
-                    align-items: center;
-                    justify-content: space-between;
-                }
-
-                .pro-tpb-info strong {
-                    font-size: 13px;
-                    font-weight: 600;
-                    color: #111;
-                }
-
-                .pro-tpb-info span {
-                    font-size: 11px;
-                    color: #AAA;
-                }
-
-                .pro-locked-overlay {
-                    position: absolute;
-                    inset: 0;
-                    background: rgba(253,246,243,0.55);
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
-                }
-
-                .pro-panel-right {
-                    width: 48%;
-                    padding: 44px 36px;
-                    display: flex;
-                    flex-direction: column;
-                    justify-content: space-between;
-                    position: relative;
-                }
-
-                .pro-close-btn {
-                    position: absolute;
-                    top: 18px;
-                    right: 18px;
-                    width: 32px;
-                    height: 32px;
-                    border-radius: 8px;
-                    border: 1px solid #EBEBEB;
-                    background: transparent;
-                    cursor: pointer;
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
-                    color: #AAA;
-                    transition: all 0.15s;
-                    padding: 0;
-                }
-
-                .pro-close-btn:hover {
-                    background: #F5F5F5;
-                    color: #111;
-                }
-
-                .pro-plans-label {
-                    font-size: 11px;
-                    font-weight: 600;
-                    letter-spacing: 1px;
-                    text-transform: uppercase;
-                    color: #AAA;
-                    margin-bottom: 12px;
-                    opacity: 0;
-                    animation: fadeUpAnim 0.3s ease 0.7s forwards;
-                }
-
-                .pro-plan-options {
-                    display: flex;
-                    flex-direction: column;
-                    gap: 8px;
-                    flex: 1;
-                    margin-bottom: 20px;
-                    opacity: 0;
-                    animation: fadeUpAnim 0.35s ease 0.78s forwards;
-                }
-
-                .pro-plan-card {
-                    border: 1.5px solid #EBEBEB;
-                    border-radius: 14px;
-                    padding: 13px 15px;
-                    display: flex;
-                    align-items: center;
-                    gap: 12px;
-                    cursor: pointer;
-                    transition: all 0.18s;
-                    background: #fff;
-                    position: relative;
-                }
-
-                .pro-plan-card:hover {
-                    border-color: #FFD0C2;
-                    background: #FFF3EF;
-                    transform: translateX(3px);
-                }
-
-                .pro-plan-card.highlighted {
-                    border-color: #FF6A3D;
-                    background: #FFF3EF;
-                }
-
-                .pro-plan-card-icon {
-                    width: 36px;
-                    height: 36px;
-                    border-radius: 9px;
-                    background: #FFF3EF;
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
-                    flex-shrink: 0;
-                    border: 1px solid #FFD0C2;
-                }
-
-                .pro-plan-card.highlighted .pro-plan-card-icon {
-                    background: #FF6A3D;
-                    border-color: #FF6A3D;
-                }
-
-                .pro-plan-card-body {
-                    flex: 1;
-                }
-
-                .pro-plan-card-body strong {
-                    display: block;
-                    font-size: 13px;
-                    font-weight: 600;
-                    color: #111;
-                    margin-bottom: 2px;
-                }
-
-                .pro-plan-card-body span {
-                    font-size: 11px;
-                    color: #AAA;
-                }
-
-                .pro-plan-card-price {
-                    font-size: 13px;
-                    font-weight: 600;
-                    color: #555;
-                    white-space: nowrap;
-                }
-
-                .pro-plan-card.highlighted .pro-plan-card-price {
-                    color: #FF6A3D;
-                }
-
-                .pro-popular-tag {
-                    position: absolute;
-                    top: -1px;
-                    right: 12px;
-                    background: #FF6A3D;
-                    color: #fff;
-                    font-size: 9px;
-                    font-weight: 600;
-                    letter-spacing: 0.5px;
-                    text-transform: uppercase;
-                    padding: 3px 8px;
-                    border-radius: 0 0 6px 6px;
-                }
-
-                .pro-right-footer {
-                    opacity: 0;
-                    animation: fadeUpAnim 0.35s ease 0.88s forwards;
-                }
-
-                .pro-cta-btn {
-                    width: 100%;
-                    padding: 14px;
-                    background: #FF6A3D;
-                    color: #fff;
-                    border: none;
-                    border-radius: 13px;
-                    font-family: 'Geist', sans-serif;
-                    font-size: 14px;
-                    font-weight: 500;
-                    cursor: pointer;
-                    transition: all 0.2s;
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
-                    gap: 8px;
-                    margin-bottom: 10px;
-                    box-shadow: 0 4px 16px rgba(255,106,61,0.3);
-                }
-
-                .pro-cta-btn:hover {
-                    background: #e85c30;
-                    transform: translateY(-1px);
-                    box-shadow: 0 6px 20px rgba(255,106,61,0.4);
-                }
-
-                .pro-cta-btn:active {
-                    transform: translateY(0);
-                }
-
-                .pro-fine-print {
-                    text-align: center;
-                    font-size: 12px;
-                    color: #AAA;
-                }
-
-                .pro-fine-print a {
-                    color: #AAA;
-                    text-decoration: underline;
-                    text-underline-offset: 2px;
-                    cursor: pointer;
-                }
-
-                .pro-fine-print a:hover {
-                    color: #555;
-                }
-
-                @media (max-width: 768px) {
-                    .pro-modal {
-                        flex-direction: column;
-                    }
-                    .pro-panel-left {
-                        width: 100%;
-                        border-right: none;
-                        border-bottom: 1px solid #EBEBEB;
-                    }
-                    .pro-panel-right {
-                        width: 100%;
-                    }
-                }
-            `;
-            document.head.appendChild(styleEl);
+    [_0x4afe9d(0x54e)](_0x414a27, _0x10a5d9) {
+        const _0x1459d0 = _0x4afe9d, _0x1804e9 = document[_0x1459d0(0x1ff)](_0x1459d0(0x351));
+        if (_0x1804e9)
+            _0x1804e9['remove']();
+        if (!document[_0x1459d0(0x1b9)](_0x1459d0(0x574))) {
+            const _0x2df71d = document['createElement'](_0x1459d0(0x344));
+            _0x2df71d['id'] = _0x1459d0(0x574), _0x2df71d[_0x1459d0(0x345)] = _0x1459d0(0x555), document[_0x1459d0(0x253)][_0x1459d0(0x304)](_0x2df71d);
         }
-
-        // Create overlay
-        const overlay = document.createElement('div');
-        overlay.className = 'pro-modal-overlay';
-
-        // Template info  
-        const templateInfo = {
-            'splitscreen': {
-                title: 'This is a Pro template',
-                subtitle: 'Split Screen is only available on paid plans. Upgrade to unlock it',
-                templateName: 'Split Screen',
-                templateDesc: 'Video + Gameplay stacked'
-            }
-        };
-
-        const info = templateInfo[templateId] || templateInfo['splitscreen'];
-
-        overlay.innerHTML = `
-            <div class="pro-modal">
-                <div class="pro-panel-left">
-                    <div class="pro-left-top">
-                        <div class="pro-lock-wrap">
-                            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#FF6A3D" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-                                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
-                                <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
-                            </svg>
-                        </div>
-                        <h1 class="pro-title">${info.title}</h1>
-                        <p class="pro-subtitle">${info.subtitle}</p>
-                    </div>
-
-                    <div class="pro-template-preview">
-                        <div class="pro-tpb-preview">
-                            <div class="pro-tpb-pro">PRO</div>
-                            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#C8C4BE" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-                                <rect x="3" y="3" width="7" height="18" rx="1"/>
-                                <rect x="14" y="3" width="7" height="18" rx="1"/>
-                            </svg>
-                            <div class="pro-locked-overlay">
-                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#FF6A3D" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
-                                    <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
-                                </svg>
-                            </div>
-                        </div>
-                        <div class="pro-tpb-info">
-                            <div>
-                                <strong>${info.templateName}</strong>
-                                <span style="display:block;margin-top:2px;font-size:11px;color:#AAA">${info.templateDesc}</span>
-                            </div>
-                            <span style="font-size:11px;color:#FF6A3D;font-weight:600;background:#FFF3EF;padding:3px 9px;border-radius:100px;border:1px solid #FFD0C2">PRO</span>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="pro-panel-right">
-                    <button class="pro-close-btn">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-                            <line x1="18" y1="6" x2="6" y2="18"/>
-                            <line x1="6" y1="6" x2="18" y2="18"/>
-                        </svg>
-                    </button>
-
-                    <div>
-                        <div class="pro-plans-label">Unlock with a plan</div>
-                        <div class="pro-plan-options">
-                            <div class="pro-plan-card">
-                                <div class="pro-plan-card-icon">
-                                   <svg width="20" height="20" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                    <defs>
-                                        <linearGradient id="basicGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-                                            <stop offset="0%" style="stop-color:#f1f5f9;stop-opacity:1"></stop>
-                                            <stop offset="50%" style="stop-color:#cbd5e1;stop-opacity:1"></stop>
-                                            <stop offset="100%" style="stop-color:#94a3b8;stop-opacity:1"></stop>
-                                        </linearGradient>
-                                    </defs>
-                                    <circle cx="50" cy="50" r="16" fill="url(#basicGrad)"></circle>
-                                    <ellipse rx="42" ry="18" cx="50" cy="50" stroke="url(#basicGrad)" stroke-width="10" fill="none" transform="rotate(45 50 50)" stroke-linecap="round"></ellipse>
-                                    <ellipse rx="42" ry="18" cx="50" cy="50" stroke="url(#basicGrad)" stroke-width="10" fill="none" transform="rotate(-45 50 50)" stroke-linecap="round"></ellipse>
-                                </svg>
-                                </div>
-                                <div class="pro-plan-card-body">
-                                    <strong>Basic</strong>
-                                    <span>PRO templates · No watermark</span>
-                                </div>
-                                <div class="pro-plan-card-price">$18.99/mo</div>
-                            </div>
-
-                            <div class="pro-plan-card highlighted">
-                                <div class="pro-popular-tag">Popular</div>
-                                <div class="pro-plan-card-icon">
-                                   <svg width="20" height="20" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                    <defs>
-                                        <linearGradient id="primeGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-                                            <stop offset="0%" style="stop-color:#fff176;stop-opacity:1"></stop>
-                                            <stop offset="50%" style="stop-color:#ffd600;stop-opacity:1"></stop>
-                                            <stop offset="100%" style="stop-color:#ff9100;stop-opacity:1"></stop>
-                                        </linearGradient>
-                                    </defs>
-                                    <circle cx="50" cy="50" r="16" fill="url(#primeGrad)"></circle>
-                                    <ellipse rx="42" ry="18" cx="50" cy="50" stroke="url(#primeGrad)" stroke-width="12" fill="none" transform="rotate(45 50 50)" stroke-linecap="round"></ellipse>
-                                    <ellipse rx="42" ry="18" cx="50" cy="50" stroke="url(#primeGrad)" stroke-width="12" fill="none" transform="rotate(-45 50 50)" stroke-linecap="round"></ellipse>
-                                </svg>
-                                </div>
-                                <div class="pro-plan-card-body">
-                                    <strong>Prime</strong>
-                                    <span>PRO templates + Basic Overpurpose</span>
-                                </div>
-                                <div class="pro-plan-card-price">$29.99/mo</div>
-                            </div>
-
-                            <div class="pro-plan-card">
-                                <div class="pro-plan-card-icon">
-                                <svg width="20" height="20" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                    <defs>
-                                        <linearGradient id="eliteGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-                                            <stop offset="0%" style="stop-color:#ff6b3d;stop-opacity:1" />
-                                            <stop offset="50%" style="stop-color:#ff3d00;stop-opacity:1" />
-                                            <stop offset="100%" style="stop-color:#c70000;stop-opacity:1" />
-                                        </linearGradient>
-                                    </defs>
-                                    <circle cx="50" cy="50" r="16" fill="url(#eliteGrad)"></circle>
-                                    <ellipse rx="42" ry="18" cx="50" cy="50" stroke="url(#eliteGrad)" stroke-width="12" fill="none" transform="rotate(45 50 50)" stroke-linecap="round"></ellipse>
-                                    <ellipse rx="42" ry="18" cx="50" cy="50" stroke="url(#eliteGrad)" stroke-width="12" fill="none" transform="rotate(-45 50 50)" stroke-linecap="round"></ellipse>
-                                </svg>
-                                </div>
-                                <div class="pro-plan-card-body">
-                                    <strong>Elite</strong>
-                                    <span>Everything + Priority queue</span>
-                                </div>
-                                <div class="pro-plan-card-price">$49.99/mo</div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="pro-right-footer">
-                        <button class="pro-cta-btn">
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
-                                <path d="M7 11V7a5 5 0 0 1 9.9-1"/>
-                            </svg>
-                            Unlock Split Screen
-                        </button>
-                        <p class="pro-fine-print">Cancel anytime · No commitment · <a>Maybe later</a></p>
-                    </div>
-                </div>
-            </div>
-        `;
-
-        // Close button handler
-        overlay.querySelector('.pro-close-btn').addEventListener('click', () => {
-            overlay.style.opacity = '0';
-            overlay.style.transition = 'opacity 0.25s ease';
-            setTimeout(() => overlay.remove(), CONFIG.UI.MODAL_TRANSITION_MS);
-        });
-
-        // Plan card selection
-        overlay.querySelectorAll('.pro-plan-card').forEach(card => {
-            card.addEventListener('click', () => {
-                overlay.querySelectorAll('.pro-plan-card').forEach(c => c.classList.remove('highlighted'));
-                card.classList.add('highlighted');
+        const _0x5b8964 = document[_0x1459d0(0x227)](_0x1459d0(0x20f));
+        _0x5b8964['className'] = _0x1459d0(0x476);
+        const _0x147ee9 = {
+                'splitscreen': {
+                    'title': 'This\x20is\x20a\x20Pro\x20template',
+                    'subtitle': _0x1459d0(0x399),
+                    'templateName': _0x1459d0(0x191),
+                    'templateDesc': _0x1459d0(0x584)
+                }
+            }, _0x11b7f5 = _0x147ee9[_0x414a27] || _0x147ee9['splitscreen'];
+        _0x5b8964[_0x1459d0(0x471)] = _0x1459d0(0x38d) + _0x11b7f5['title'] + _0x1459d0(0x343) + _0x11b7f5[_0x1459d0(0x482)] + _0x1459d0(0x214) + _0x11b7f5[_0x1459d0(0x25a)] + _0x1459d0(0x210) + _0x11b7f5[_0x1459d0(0x178)] + _0x1459d0(0x3a9), _0x5b8964[_0x1459d0(0x1ff)](_0x1459d0(0x2b6))[_0x1459d0(0x412)](_0x1459d0(0x185), () => {
+            const _0x440082 = _0x1459d0;
+            _0x5b8964['style'][_0x440082(0x415)] = '0', _0x5b8964[_0x440082(0x344)][_0x440082(0x57d)] = _0x440082(0x47b), setTimeout(() => _0x5b8964[_0x440082(0x40f)](), _0x499ea0['UI'][_0x440082(0x55d)]);
+        }), _0x5b8964[_0x1459d0(0x350)](_0x1459d0(0x4a6))['forEach'](_0x3c9f9c => {
+            const _0x8e341f = _0x1459d0;
+            _0x3c9f9c[_0x8e341f(0x412)]('click', () => {
+                const _0x39633a = _0x8e341f;
+                _0x5b8964['querySelectorAll'](_0x39633a(0x4a6))[_0x39633a(0x321)](_0x25b9c4 => _0x25b9c4[_0x39633a(0x2d9)][_0x39633a(0x40f)](_0x39633a(0x49d))), _0x3c9f9c[_0x39633a(0x2d9)][_0x39633a(0x3ed)](_0x39633a(0x49d));
             });
-        });
-
-        // CTA button handler
-        overlay.querySelector('.pro-cta-btn').addEventListener('click', () => {
-            // Subscription modal removed
-        });
-
-        // Maybe later link handler
-        overlay.querySelector('.pro-fine-print a').addEventListener('click', () => {
-            overlay.style.opacity = '0';
-            overlay.style.transition = 'opacity 0.25s ease';
-            setTimeout(() => overlay.remove(), CONFIG.UI.MODAL_TRANSITION_MS);
-        });
-
-        // Overlay background click to close
-        overlay.addEventListener('click', (e) => {
-            if (e.target === overlay) {
-                overlay.style.opacity = '0';
-                overlay.style.transition = 'opacity 0.25s ease';
-                setTimeout(() => overlay.remove(), CONFIG.UI.MODAL_TRANSITION_MS);
-            }
-        });
-
-        document.body.appendChild(overlay);
-        safeLog('✅ Pro feature modal shown for:', templateId);
+        }), _0x5b8964[_0x1459d0(0x1ff)](_0x1459d0(0x1e2))[_0x1459d0(0x412)](_0x1459d0(0x185), () => {
+        }), _0x5b8964[_0x1459d0(0x1ff)](_0x1459d0(0x338))['addEventListener'](_0x1459d0(0x185), () => {
+            const _0x2483f3 = _0x1459d0;
+            _0x5b8964[_0x2483f3(0x344)][_0x2483f3(0x415)] = '0', _0x5b8964[_0x2483f3(0x344)][_0x2483f3(0x57d)] = _0x2483f3(0x47b), setTimeout(() => _0x5b8964[_0x2483f3(0x40f)](), _0x499ea0['UI'][_0x2483f3(0x55d)]);
+        }), _0x5b8964[_0x1459d0(0x412)](_0x1459d0(0x185), _0x21b440 => {
+            const _0x550b26 = _0x1459d0;
+            _0x21b440[_0x550b26(0x463)] === _0x5b8964 && (_0x5b8964[_0x550b26(0x344)][_0x550b26(0x415)] = '0', _0x5b8964[_0x550b26(0x344)]['transition'] = _0x550b26(0x47b), setTimeout(() => _0x5b8964[_0x550b26(0x40f)](), _0x499ea0['UI'][_0x550b26(0x55d)]));
+        }), document[_0x1459d0(0x384)][_0x1459d0(0x304)](_0x5b8964), _0x5e766a(_0x1459d0(0x436), _0x414a27);
     }
-
-    closeProFeatureModal() {
-        const modal = document.getElementById('proFeatureModal');
-        if (modal) {
-            modal.style.display = 'none';
-        }
+    [_0x4afe9d(0x22a)]() {
+        const _0x588e21 = _0x4afe9d, _0x38c00c = document['getElementById'](_0x588e21(0x2ef));
+        _0x38c00c && (_0x38c00c[_0x588e21(0x344)][_0x588e21(0x180)] = 'none');
     }
-
-    openTemplatePreviewModal(templateId, templateCard) {
-        const modal = document.getElementById('templatePreviewModal');
-        const loadingEl = document.getElementById('templatePreviewLoading');
-        if (!modal) {
+    [_0x4afe9d(0x564)](_0x13a85a, _0x3f3ed2) {
+        const _0x403687 = _0x4afe9d, _0x4b380c = document[_0x403687(0x1b9)](_0x403687(0x2a6)), _0x1c009b = document[_0x403687(0x1b9)](_0x403687(0x2af));
+        if (!_0x4b380c)
             return;
-        }
-
-        safeLog(`📋 Opening template preview for: ${templateId}`);
-
-        // Show loading animation
-        if (loadingEl) {
-            loadingEl.style.display = 'flex';
-        }
-
-        // Update the elements IMMEDIATELY before showing modal
-        const nameEl = document.getElementById('previewTemplateName');
-        const descEl = document.getElementById('previewTemplateDescription');
-        const durationEl = document.getElementById('previewVideoDuration');
-        const formatEl = document.getElementById('previewVideoFormat');
-        
-        safeLog('Elements found:', {
-            nameEl: !!nameEl,
-            descEl: !!descEl,
-            durationEl: !!durationEl,
-            formatEl: !!formatEl
+        _0x5e766a(_0x403687(0x199) + _0x13a85a);
+        _0x1c009b && (_0x1c009b['style'][_0x403687(0x180)] = _0x403687(0x44b));
+        const _0x5c5d3d = document['getElementById'](_0x403687(0x1cc)), _0x42a16f = document[_0x403687(0x1b9)]('previewTemplateDescription'), _0x30d2ac = document[_0x403687(0x1b9)](_0x403687(0x47e)), _0x337778 = document['getElementById']('previewVideoFormat');
+        _0x5e766a('Elements\x20found:', {
+            'nameEl': !!_0x5c5d3d,
+            'descEl': !!_0x42a16f,
+            'durationEl': !!_0x30d2ac,
+            'formatEl': !!_0x337778
         });
-
-        // Set template name IMMEDIATELY
-        if (nameEl) {
-            const templateDisplayName = templateId
-                .replace(/_/g, ' ')
-                .replace(/\b\w/g, l => l.toUpperCase());
-            nameEl.textContent = templateDisplayName || 'Template';
-            safeLog('✅ Template name set to:', templateDisplayName);
+        if (_0x5c5d3d) {
+            const _0x52b61a = _0x13a85a[_0x403687(0x269)](/_/g, '\x20')[_0x403687(0x269)](/\b\w/g, _0x1ce75c => _0x1ce75c[_0x403687(0x307)]());
+            _0x5c5d3d[_0x403687(0x345)] = _0x52b61a || _0x403687(0x3a5), _0x5e766a(_0x403687(0x1af), _0x52b61a);
+        } else
+            _0x5e766a(_0x403687(0x52e));
+        const _0x4e6aef = document[_0x403687(0x1b9)]('youtubeUrlInput')?.[_0x403687(0x328)][_0x403687(0x317)]();
+        if (_0x4e6aef) {
+            if (_0x42a16f)
+                _0x42a16f['textContent'] = _0x403687(0x402);
+            if (_0x30d2ac)
+                _0x30d2ac[_0x403687(0x345)] = _0x403687(0x3f8);
+            if (_0x337778)
+                _0x337778[_0x403687(0x345)] = _0x403687(0x54d);
         } else {
-            safeLog('⚠️ nameEl not found');
+            if (_0x42a16f)
+                _0x42a16f[_0x403687(0x345)] = 'Paste\x20a\x20YouTube\x20URL\x20to\x20see\x20video\x20details';
+            if (_0x30d2ac)
+                _0x30d2ac[_0x403687(0x345)] = _0x403687(0x3f8);
+            if (_0x337778)
+                _0x337778[_0x403687(0x345)] = 'TikTok\x20/\x20Shorts';
         }
-
-        // Get video URL from input 
-        const youtubeUrl = document.getElementById('youtubeUrlInput')?.value.trim();
-        
-        // Set description and other fields
-        if (youtubeUrl) {
-            if (descEl) descEl.textContent = 'Loading video info...';
-            if (durationEl) durationEl.textContent = '~60s';
-            if (formatEl) formatEl.textContent = 'TikTok / Shorts';
-        } else {
-            if (descEl) descEl.textContent = 'Paste a YouTube URL to see video details';
-            if (durationEl) durationEl.textContent = '~60s';
-            if (formatEl) formatEl.textContent = 'TikTok / Shorts';
-        }
-
-        // Show modal IMMEDIATELY
-        modal.classList.add('active');
-        modal.style.display = 'flex';
-        modal.style.visibility = 'visible';
-        modal.style.opacity = '1';
-        document.body.classList.add('modal-open');
-        safeLog('✅ Modal displayed');
-
-        // Hide navigation elements on mobile/tablet
-        const navWrapper = document.getElementById('navWrapper');
-        const profileNotifWrapper = document.querySelector('.profile-notif-wrapper');
-        if (navWrapper) {
-            navWrapper.classList.add('disabled');
-        }
-        if (profileNotifWrapper) {
-            profileNotifWrapper.classList.add('disabled');
-        }
-
-        // Reset sheet position on mobile
-        const templateSheet = document.querySelector('.template-preview-sheet');
-        if (templateSheet) {
-            templateSheet.classList.remove('expanded');
-        }
-
-        // Now do the heavy lifting in the background
-        setTimeout(() => {
-            // Hide loading animation
-            if (loadingEl) {
-                loadingEl.style.display = 'none';
-            }
-
-            const template = this.templates[templateId] || {};
-            
-            // Get watermark toggle state
-            const watermarkToggle = document.getElementById('watermarkToggle');
-            const shouldShowWatermark = watermarkToggle ? watermarkToggle.checked : true;
-            
-            // Store selected template info
-            this.currentTemplateForPreview = {
-                id: templateId,
-                card: templateCard,
-                data: template,
-                addWatermark: shouldShowWatermark,
-                videoQuality: 'auto',
-                videoUrl: youtubeUrl
+        _0x4b380c[_0x403687(0x2d9)][_0x403687(0x3ed)](_0x403687(0x289)), _0x4b380c['style']['display'] = _0x403687(0x44b), _0x4b380c[_0x403687(0x344)][_0x403687(0x202)] = _0x403687(0x1ea), _0x4b380c[_0x403687(0x344)][_0x403687(0x415)] = '1', document[_0x403687(0x384)][_0x403687(0x2d9)]['add'](_0x403687(0x39a)), _0x5e766a(_0x403687(0x3be));
+        const _0x164e7b = document[_0x403687(0x1b9)](_0x403687(0x279)), _0x4739a8 = document['querySelector'](_0x403687(0x4c4));
+        _0x164e7b && _0x164e7b[_0x403687(0x2d9)][_0x403687(0x3ed)]('disabled');
+        _0x4739a8 && _0x4739a8['classList'][_0x403687(0x3ed)](_0x403687(0x2ae));
+        const _0x5ad7e0 = document[_0x403687(0x1ff)]('.template-preview-sheet');
+        _0x5ad7e0 && _0x5ad7e0['classList']['remove'](_0x403687(0x4c0)), setTimeout(() => {
+            const _0x449598 = _0x403687;
+            _0x1c009b && (_0x1c009b[_0x449598(0x344)][_0x449598(0x180)] = _0x449598(0x4f5));
+            const _0x2606cb = this[_0x449598(0x540)][_0x13a85a] || {}, _0x15280a = document[_0x449598(0x1b9)]('watermarkToggle'), _0x59817c = _0x15280a ? _0x15280a[_0x449598(0x17c)] : !![];
+            this[_0x449598(0x175)] = {
+                'id': _0x13a85a,
+                'card': _0x3f3ed2,
+                'data': _0x2606cb,
+                'addWatermark': _0x59817c,
+                'videoQuality': _0x449598(0x32b),
+                'videoUrl': _0x4e6aef
             };
-            
-            // Reset AI prompt
-            const promptInput = document.getElementById('aiPromptInput');
-            if (promptInput) {
-                promptInput.value = '';
-                document.getElementById('charCountDisplay').textContent = '0';
+            const _0x12c1dd = document[_0x449598(0x1b9)](_0x449598(0x528));
+            _0x12c1dd && (_0x12c1dd['value'] = '', document[_0x449598(0x1b9)]('charCountDisplay')[_0x449598(0x345)] = '0');
+            const _0x12f479 = document[_0x449598(0x1b9)]('aiResponseArea');
+            _0x12f479 && (_0x12f479[_0x449598(0x344)][_0x449598(0x180)] = _0x449598(0x4f5));
+            this[_0x449598(0x425)]();
+            if (_0x4e6aef) {
+                const _0x28d691 = document[_0x449598(0x1b9)](_0x449598(0x28d)), _0xbaf5f7 = document[_0x449598(0x1b9)](_0x449598(0x47e)), _0x482459 = document[_0x449598(0x1b9)](_0x449598(0x46a));
+                this[_0x449598(0x26d)](_0x4e6aef, _0xbaf5f7, _0x482459, _0x28d691);
             }
-            
-            // Hide AI response
-            const responseArea = document.getElementById('aiResponseArea');
-            if (responseArea) {
-                responseArea.style.display = 'none';
-            }
-            
-            // Load video preview with template
-            this.loadVideoPreviewWithTemplate();
-            
-            // Fetch video metadata if URL exists
-            if (youtubeUrl) {
-                const descEl2 = document.getElementById('previewTemplateDescription');
-                const durationEl2 = document.getElementById('previewVideoDuration');
-                const formatEl2 = document.getElementById('previewVideoFormat');
-                this.fetchVideoMetadata(youtubeUrl, durationEl2, formatEl2, descEl2);
-            }
-        }, 100);
-        
-        // renderTemplatePreview already handles watermark control visibility
-        // No need for setupWatermarkControls - it was using wrong element IDs
+        }, 0x64);
     }
-
-    updateWatermarkDisplay() {
-        const watermarkToggle = document.getElementById('watermarkToggle');
-        const watermark = document.querySelector('.solis-watermark');
-        
-        if (!watermarkToggle || !watermark) return;
-        
-        if (watermarkToggle.checked) {
-            watermark.style.display = 'flex';
-            safeLog('✅ Watermark VISIBLE');
-        } else {
-            watermark.style.display = 'none';
-            safeLog('❌ Watermark HIDDEN');
-        }
+    [_0x4afe9d(0x1e0)]() {
+        const _0xee154f = _0x4afe9d, _0xb178c0 = document[_0xee154f(0x1b9)](_0xee154f(0x543)), _0xad2958 = document[_0xee154f(0x1ff)](_0xee154f(0x17a));
+        if (!_0xb178c0 || !_0xad2958)
+            return;
+        _0xb178c0[_0xee154f(0x17c)] ? (_0xad2958[_0xee154f(0x344)][_0xee154f(0x180)] = _0xee154f(0x44b), _0x5e766a(_0xee154f(0x2ea))) : (_0xad2958[_0xee154f(0x344)]['display'] = _0xee154f(0x4f5), _0x5e766a(_0xee154f(0x4b4)));
     }
-
-    setupWatermarkToggle() {
-        const watermarkToggleLabel = document.getElementById('watermarkToggleLabel');
-        const watermarkUpgradeBtn = document.getElementById('watermarkUpgradeBtn');
-        const watermarkNotice = document.getElementById('watermarkNotice');
-        const watermarkToggle = document.getElementById('watermarkToggle');
-        
-        if (!watermarkToggle) return;
-        
-        // Check if user is premium (can toggle watermark)
-        const isPremium = window.currentUser && window.currentUser.plan && window.currentUser.plan !== 'free';
-        
-        // Show toggle if premium, otherwise show upgrade button
-        if (watermarkToggleLabel) {
-            watermarkToggleLabel.style.display = isPremium ? 'flex' : 'none';
-        }
-        if (watermarkUpgradeBtn) {
-            watermarkUpgradeBtn.style.display = isPremium ? 'none' : 'flex';
-        }
-        if (watermarkNotice && !isPremium) {
-            watermarkNotice.style.display = 'block';
-        }
-        
-        // Only attach listener if premium
-        if (isPremium) {
-            watermarkToggle.addEventListener('change', () => {
-                this.updateWatermarkDisplay();
-                safeLog(`🔄 Watermark toggled: ${watermarkToggle.checked ? 'ON' : 'OFF'}`);
-            });
-        }
+    [_0x4afe9d(0x495)]() {
+        const _0x5bca86 = _0x4afe9d, _0x22f60d = document['getElementById']('watermarkToggleLabel'), _0x195878 = document['getElementById']('watermarkUpgradeBtn'), _0x268015 = document[_0x5bca86(0x1b9)](_0x5bca86(0x36c)), _0x53210f = document[_0x5bca86(0x1b9)](_0x5bca86(0x543));
+        if (!_0x53210f)
+            return;
+        const _0x3d068c = window[_0x5bca86(0x33b)] && window[_0x5bca86(0x33b)][_0x5bca86(0x19b)] && window[_0x5bca86(0x33b)][_0x5bca86(0x19b)] !== 'free';
+        _0x22f60d && (_0x22f60d[_0x5bca86(0x344)][_0x5bca86(0x180)] = _0x3d068c ? _0x5bca86(0x44b) : _0x5bca86(0x4f5)), _0x195878 && (_0x195878[_0x5bca86(0x344)][_0x5bca86(0x180)] = _0x3d068c ? _0x5bca86(0x4f5) : 'flex'), _0x268015 && !_0x3d068c && (_0x268015[_0x5bca86(0x344)][_0x5bca86(0x180)] = 'block'), _0x3d068c && _0x53210f[_0x5bca86(0x412)](_0x5bca86(0x1c1), () => {
+            const _0x50ece7 = _0x5bca86;
+            this[_0x50ece7(0x1e0)](), _0x5e766a('🔄\x20Watermark\x20toggled:\x20' + (_0x53210f['checked'] ? 'ON' : _0x50ece7(0x1be)));
+        });
     }
-
-    loadVideoPreviewWithTemplate() {
-        const previewEl = document.getElementById('templateVideoPreview');
-        if (!previewEl) return;
-
-        const templateId = this.currentTemplateForPreview?.id;
-        if (!templateId) {
-            previewEl.innerHTML = `
-                <div class="preview-video-placeholder">
-                    <i class="fas fa-exclamation-circle"></i>
-                    <p>No template selected</p>
-                </div>
-            `;
+    [_0x4afe9d(0x425)]() {
+        const _0x12fc64 = _0x4afe9d, _0x5c2035 = document[_0x12fc64(0x1b9)]('templateVideoPreview');
+        if (!_0x5c2035)
+            return;
+        const _0x40c3f9 = this[_0x12fc64(0x175)]?.['id'];
+        if (!_0x40c3f9) {
+            _0x5c2035['innerHTML'] = _0x12fc64(0x388);
             return;
         }
-
-        // Fetch server-side rendered template preview
-        this.fetchTemplatePreview(previewEl, templateId);
+        this[_0x12fc64(0x451)](_0x5c2035, _0x40c3f9);
     }
-    async fetchTemplatePreview(container, templateId) {
+    async ['fetchTemplatePreview'](_0x10dbb5, _0x239050) {
+        const _0x303db8 = _0x4afe9d;
         try {
-            // Get the template data we already have locally
-            const template = this.templates[templateId];
-            
-            if (!template) {
-                safeLog(`Template "${templateId}" not found in this.templates`, Object.keys(this.templates));
-                // Create a default template object if not found
-                // This happens when templates haven't been loaded yet
-                const defaultTemplate = {
-                    id: templateId,
-                    name: templateId?.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase()) || 'Template',
-                    description: 'Video template preview',
-                    type: templateId || 'default'
+            const _0x1ac29b = this[_0x303db8(0x540)][_0x239050];
+            if (!_0x1ac29b) {
+                _0x5e766a('Template\x20\x22' + _0x239050 + '\x22\x20not\x20found\x20in\x20this.templates', Object[_0x303db8(0x298)](this[_0x303db8(0x540)]));
+                const _0x456904 = {
+                    'id': _0x239050,
+                    'name': _0x239050?.[_0x303db8(0x269)](/_/g, '\x20')[_0x303db8(0x269)](/\b\w/g, _0x169e41 => _0x169e41[_0x303db8(0x307)]()) || _0x303db8(0x3a5),
+                    'description': _0x303db8(0x4cb),
+                    'type': _0x239050 || 'default'
                 };
-                return await this.renderTemplatePreview(container, defaultTemplate);
+                return await this[_0x303db8(0x235)](_0x10dbb5, _0x456904);
             }
-
-            // Add the template ID to the template object
-            template.id = templateId;
-            return await this.renderTemplatePreview(container, template);
-        } catch (error) {
-            safeLog('Error in fetchTemplatePreview:', error);
-            container.innerHTML = `
-                <div class="preview-video-placeholder">
-                    <i class="fas fa-exclamation-circle"></i>
-                    <p>Error loading preview</p>
-                </div>
-            `;
+            return _0x1ac29b['id'] = _0x239050, await this[_0x303db8(0x235)](_0x10dbb5, _0x1ac29b);
+        } catch (_0x389a87) {
+            _0x5e766a(_0x303db8(0x3fb), _0x389a87), _0x10dbb5[_0x303db8(0x471)] = _0x303db8(0x4e3);
         }
     }
-
-    async renderTemplatePreview(container, template) {
-        // 🔐 SECURITY: Validate template.id to prevent path traversal/injection
-        if (template?.id && (template.id.includes('..') || template.id.includes('/') || template.id.includes('\\') || template.id.includes(':'))) {
-            console.error('❌ SECURITY: Attempted path traversal in template.id:', template.id);
-            showNotification('Invalid template', 'error');
+    async [_0x4afe9d(0x235)](_0x5600a6, _0x41202d) {
+        const _0x215bb2 = _0x4afe9d;
+        if (_0x41202d?.['id'] && (_0x41202d['id'][_0x215bb2(0x220)]('..') || _0x41202d['id'][_0x215bb2(0x220)]('/') || _0x41202d['id']['includes']('\x5c') || _0x41202d['id']['includes'](':'))) {
+            console[_0x215bb2(0x302)](_0x215bb2(0x339), _0x41202d['id']), _0x41706e(_0x215bb2(0x468), _0x215bb2(0x302));
             return;
         }
-        // Escape template.id for use in logs/display
-        const safeTemplateId = template?.id ? String(template.id).replace(/[<>"']/g, '') : 'unknown';
-        safeLog('🎨 renderTemplatePreview called with container:', !!container, 'template:', safeTemplateId);
-        const html = this.generateTemplatePreviewHTML(template);
-        let controlHTML = '';
-        
-        // Check if user is free or paid and create appropriate control
+        const _0x3ec3e7 = _0x41202d?.['id'] ? String(_0x41202d['id'])['replace'](/[<>"']/g, '') : _0x215bb2(0x51a);
+        _0x5e766a(_0x215bb2(0x3b8), !!_0x5600a6, _0x215bb2(0x236), _0x3ec3e7);
+        const _0xd8e807 = this['generateTemplatePreviewHTML'](_0x41202d);
+        let _0x171f73 = '';
         try {
-            const response = await fetch(`${window.API_BASE_URL}/auth/watermark-check`, {
-                headers: getAuthHeaders(),
-                credentials: 'include',  // 🔐 Include httpOnly cookie
-                cache: 'no-store'
+            const _0x621873 = await fetch(window[_0x215bb2(0x3c4)] + _0x215bb2(0x491), {
+                'headers': _0x67ee3(),
+                'credentials': 'include',
+                'cache': _0x215bb2(0x356)
             });
-            
-            safeLog('📡 Watermark-check response status:', response.status, 'ok:', response.ok);
-            
-            if (response.ok) {
-                const data = await response.json();
-                safeLog('🔍 Watermark check response:', data);
-                if (data.watermark_required === true) {
-                    // Free user - show upgrade button in watermark controls
-                    safeLog('📌 watermark_required is TRUE - showing upgrade button in controls');
-                    const watermarkUpgradeBtn = document.getElementById('watermarkUpgradeBtn');
-                    if (watermarkUpgradeBtn) {
-                        watermarkUpgradeBtn.style.display = 'flex';
-                    }
-                    controlHTML = '';
-                } else {
-                    // Paid user - no toggle in preview, use dashboard toggle-container instead
-                    safeLog('📌 watermark_required is FALSE - no preview toggle needed');
-                    controlHTML = '';
-                }
-            } else {
-                safeLog('❌ Watermark-check API returned non-ok status:', response.status);
-            }
-        } catch (error) {
-            safeLog('🚨 Error checking watermark eligibility:', error);
+            _0x5e766a(_0x215bb2(0x263), _0x621873[_0x215bb2(0x51f)], _0x215bb2(0x426), _0x621873['ok']);
+            if (_0x621873['ok']) {
+                const _0x50a45a = await _0x621873['json']();
+                _0x5e766a(_0x215bb2(0x1db), _0x50a45a);
+                if (_0x50a45a[_0x215bb2(0x422)] === !![]) {
+                    _0x5e766a(_0x215bb2(0x34a));
+                    const _0x41eef2 = document[_0x215bb2(0x1b9)](_0x215bb2(0x2ab));
+                    _0x41eef2 && (_0x41eef2[_0x215bb2(0x344)][_0x215bb2(0x180)] = _0x215bb2(0x44b)), _0x171f73 = '';
+                } else
+                    _0x5e766a('📌\x20watermark_required\x20is\x20FALSE\x20-\x20no\x20preview\x20toggle\x20needed'), _0x171f73 = '';
+            } else
+                _0x5e766a(_0x215bb2(0x568), _0x621873['status']);
+        } catch (_0x4e12d2) {
+            _0x5e766a('🚨\x20Error\x20checking\x20watermark\x20eligibility:', _0x4e12d2);
         }
-        
-        // Add watermark overlay using exact design from currentwatermark.html
-        const watermarkedHTML = `
-            <div style="position: relative; width: 100%; height: 100%; background: #3a3a3a;">
-                ${html}
-                <div class="solis-watermark" style="position: absolute; bottom: 12px; right: 12px; z-index: 100; pointer-events: none; display: flex; flex-direction: column; align-items: flex-end; color: #ffffff; user-select: none; filter: drop-shadow(0px 2px 4px rgba(0, 0, 0, 0.5)); font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;">
-                    <div style="display: flex; align-items: center; gap: 8px;">
-                        <div style="width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
-                            <svg viewBox="0 0 100 100" fill="none" stroke="currentColor" width="28" height="28" xmlns="http://www.w3.org/2000/svg">
-                                <circle cx="50" cy="50" r="12" fill="currentColor"></circle>
-                                <ellipse rx="44" ry="18" cx="50" cy="50" stroke-width="6" transform="rotate(45 50 50)"></ellipse>
-                                <ellipse rx="44" ry="18" cx="50" cy="50" stroke-width="6" transform="rotate(-45 50 50)"></ellipse>
-                            </svg>
-                        </div>
-                        <div style="font-size: 15px; font-weight: 800; letter-spacing: -0.02em; text-transform: uppercase; line-height: 1;">
-                            Solis <span style="opacity: 0.85; font-weight: 700;">AI</span>
-                        </div>
-                    </div>
-                </div>
-                ${controlHTML}
-            </div>
-        `;
-        
-        safeLog('📝 Setting watermarked HTML to container');
-        safeLog('🔍 controlHTML length:', controlHTML.length);
-        safeLog('🔍 controlHTML includes toggle:', controlHTML.includes('previewWatermarkToggle'));
-        safeLog('🔍 watermarkedHTML includes toggle:', watermarkedHTML.includes('previewWatermarkToggle'));
-        
-        // 🔐 SECURITY: Use innerHTML with validated HTML (template strings are escaped)
-        // The watermarkedHTML is built from trusted template strings, not user input
-        container.innerHTML = watermarkedHTML;
-        safeLog('✅ Watermarked HTML set', 'Has watermark element:', !!container.querySelector('.solis-watermark'));
-        setTimeout(() => {
-            const previewWatermarkToggle = container.querySelector('#previewWatermarkToggle');
-            if (previewWatermarkToggle) {
-                safeLog('✅ Watermark toggle found in preview, adding event listeners');
-                
-                previewWatermarkToggle.addEventListener('change', (e) => {
-                    const isEnabled = e.target.checked;
-                    const sliderBg = container.querySelector('.watermark-toggle-bg');
-                    const slider = container.querySelector('.watermark-toggle-slider');
-                    
-                    if (sliderBg) {
-                        sliderBg.style.backgroundColor = isEnabled ? '#4F46E5' : '#888';
-                    }
-                    if (slider) {
-                        slider.style.left = isEnabled ? '26px' : '2px';
-                    }
-                    
-                    // Store in localStorage for persistence
-                    localStorage.setItem('solisAIWatermarkEnabled', isEnabled ? 'true' : 'false');
-                    
-                    // Update template data
-                    if (this.currentTemplateForPreview) {
-                        this.currentTemplateForPreview.addWatermark = isEnabled;
-                    }
-                    
-                    // Update watermark visibility in preview
-                    const watermark = container.querySelector('.solis-watermark');
-                    if (watermark) {
-                        watermark.style.display = isEnabled ? 'flex' : 'none';
-                        safeLog(`✅ Watermark ${isEnabled ? 'ENABLED' : 'DISABLED'} in preview`);
-                    }
+        const _0x5381e5 = _0x215bb2(0x194) + _0xd8e807 + _0x215bb2(0x1fb) + _0x171f73 + _0x215bb2(0x319);
+        _0x5e766a(_0x215bb2(0x331)), _0x5e766a('🔍\x20controlHTML\x20length:', _0x171f73[_0x215bb2(0x56d)]), _0x5e766a('🔍\x20controlHTML\x20includes\x20toggle:', _0x171f73[_0x215bb2(0x220)](_0x215bb2(0x4b8))), _0x5e766a(_0x215bb2(0x3c6), _0x5381e5[_0x215bb2(0x220)]('previewWatermarkToggle')), _0x5600a6[_0x215bb2(0x471)] = _0x5381e5, _0x5e766a(_0x215bb2(0x1d4), _0x215bb2(0x3c8), !!_0x5600a6[_0x215bb2(0x1ff)](_0x215bb2(0x17a))), setTimeout(() => {
+            const _0x198c29 = _0x215bb2, _0x2fe673 = _0x5600a6[_0x198c29(0x1ff)]('#previewWatermarkToggle');
+            if (_0x2fe673) {
+                _0x5e766a(_0x198c29(0x583)), _0x2fe673['addEventListener']('change', _0x16d79a => {
+                    const _0x5e3aa1 = _0x198c29, _0x5dd9b6 = _0x16d79a[_0x5e3aa1(0x463)][_0x5e3aa1(0x17c)], _0x3e2faa = _0x5600a6['querySelector']('.watermark-toggle-bg'), _0x488c61 = _0x5600a6[_0x5e3aa1(0x1ff)](_0x5e3aa1(0x44d));
+                    _0x3e2faa && (_0x3e2faa[_0x5e3aa1(0x344)]['backgroundColor'] = _0x5dd9b6 ? _0x5e3aa1(0x27b) : _0x5e3aa1(0x395));
+                    _0x488c61 && (_0x488c61['style'][_0x5e3aa1(0x309)] = _0x5dd9b6 ? _0x5e3aa1(0x3ab) : _0x5e3aa1(0x442));
+                    localStorage[_0x5e3aa1(0x3b0)](_0x5e3aa1(0x4ed), _0x5dd9b6 ? _0x5e3aa1(0x4fe) : _0x5e3aa1(0x340));
+                    this[_0x5e3aa1(0x175)] && (this['currentTemplateForPreview'][_0x5e3aa1(0x250)] = _0x5dd9b6);
+                    const _0x39ee92 = _0x5600a6[_0x5e3aa1(0x1ff)](_0x5e3aa1(0x17a));
+                    _0x39ee92 && (_0x39ee92[_0x5e3aa1(0x344)]['display'] = _0x5dd9b6 ? _0x5e3aa1(0x44b) : _0x5e3aa1(0x4f5), _0x5e766a(_0x5e3aa1(0x30c) + (_0x5dd9b6 ? _0x5e3aa1(0x287) : _0x5e3aa1(0x413)) + _0x5e3aa1(0x520)));
                 });
-                
-                // Initialize watermark visibility based on toggle state
-                const watermark = container.querySelector('.solis-watermark');
-                if (watermark && !previewWatermarkToggle.checked) {
-                    watermark.style.display = 'none';
-                    safeLog('✅ Watermark initially hidden (toggle off)');
-                }
-            } else {
-                safeLog('⚠️ Watermark toggle checkbox NOT found in preview!');
-            }
-        }, 0);
-        
-        // Trigger customizer setup after content is loaded
-        safeLog('[Template Preview] Content loaded, triggering customizer...');
-        if (window.FloatingCustomizeBar && window.customizer) {
-            // Give DOM time to settle
-            setTimeout(() => {
-                if (window.initializeFloatingCustomizer) {
-                    window.initializeFloatingCustomizer(true); // true = reinitialize
-                }
-            }, 100);
-        }
+                const _0x3a413e = _0x5600a6[_0x198c29(0x1ff)](_0x198c29(0x17a));
+                _0x3a413e && !_0x2fe673[_0x198c29(0x17c)] && (_0x3a413e['style'][_0x198c29(0x180)] = _0x198c29(0x4f5), _0x5e766a(_0x198c29(0x204)));
+            } else
+                _0x5e766a(_0x198c29(0x20a));
+        }, 0x0), _0x5e766a(_0x215bb2(0x587)), window['FloatingCustomizeBar'] && window[_0x215bb2(0x416)] && setTimeout(() => {
+            const _0x5ea467 = _0x215bb2;
+            window['initializeFloatingCustomizer'] && window[_0x5ea467(0x558)](!![]);
+        }, 0x64);
     }
-
-    generateTemplatePreviewHTML(template) {
-        const previewTemplates = {
-            'ranked_compilation': () => `
-                <style>
-                    .ranking-preview-container * {
-                        background: transparent !important;
-                        box-sizing: border-box;
-                    }
-                    .ranking-preview-container {
-                        max-width: 400px;
-                        margin-top: 10px;
-                        padding: 10px;
-                        width: 100%;
-                        display: flex;
-                        flex-direction: column;
-                        align-items: center;
-                        pointer-events: auto;
-                    }
-                    .ranking-preview-container .text-stroke {
-                        font-weight: 400;
-                        font-family: 'Luckiest Guy', cursive;
-                        text-shadow: 
-                            -1.5px -1.5px 0 #000,  
-                             1.5px -1.5px 0 #000,
-                            -1.5px  1.5px 0 #000,
-                             1.5px  1.5px 0 #000,
-                             2px  0px 0 #000,
-                            -2px  0px 0 #000,
-                             0px  2px 0 #000,
-                             0px -2px 0 #000,
-                             3px  3px 0 #000,
-                             3.5px 3.5px 0 #000,
-                             4px  4px 0 #000;
-                        pointer-events: auto;
-                    }
-                    .ranking-preview-container .title {
-                        font-size: 2.1rem;
-                        text-align: center;
-                        line-height: 1.1;
-                        text-transform: uppercase;
-                        margin-bottom: 4px;
-                        margin-top: 0;
-                        padding-top: 0;
-                        color: white;
-                        font-family: 'Luckiest Guy', cursive;
-                        white-space: nowrap;
-                        pointer-events: auto;
-                    }
-                    .ranking-preview-container .funniest {
-                        color: #ff0000;
-                        font-family: 'Luckiest Guy', cursive;
-                        pointer-events: auto;
-                    }
-                    .ranking-preview-container .ranking-list {
-                        list-style: none; 
-                        padding: 0;
-                        margin: 0;
-                        text-align: left;
-                        width: 100%;
-                        pointer-events: auto;
-                    }
-                    .ranking-preview-container .ranked-item {
-                        font-size: 2.8rem;
-                        margin-bottom: 20px;
-                        line-height: 1;
-                        display: flex;
-                        justify-content: flex-start;
-                        font-family: 'Luckiest Guy', cursive;
-                        pointer-events: auto;
-                    }
-                    .ranking-preview-container .ranked-item .rank-number {
-                        display: inline-block;
-                        pointer-events: auto;
-                        margin-right: 10px;
-                    }
-                    .ranking-preview-container .ranked-item .rank-title {
-                        display: inline-block;
-                        pointer-events: auto;
-                        max-width: 250px;
-                        white-space: nowrap;
-                        overflow: hidden;
-                        text-overflow: ellipsis;
-                    }
-                    .ranking-preview-container .rank-1 { color: #ffd700; pointer-events: auto; }
-                    .ranking-preview-container .rank-2 { color: #c0c0c0; pointer-events: auto; }
-                    .ranking-preview-container .rank-3 { color: #cd7f32; pointer-events: auto; }
-                    .ranking-preview-container .rank-4 { color: #ffffff; pointer-events: auto; }
-                    .ranking-preview-container .rank-5 { color: #ffffff; pointer-events: auto; }
-                    .ranking-preview-container .metadata {
-                        margin-top: 20px;
-                        padding-top: 20px;
-                        border-top: 1px solid rgba(255,255,255,0.2);
-                        display: flex;
-                        gap: 15px;
-                        font-size: 0.8rem;
-                        color: #999;
-                        justify-content: center;
-                        width: 100%;
-                        pointer-events: auto;
-                    }
-                </style>
-                <link rel="preconnect" href="https://fonts.googleapis.com">
-                <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-                <link href="https://fonts.googleapis.com/css2?family=Luckiest+Guy&display=swap" rel="stylesheet">
-                <div class="ranking-preview-container">
-                    <h1 class="title text-stroke">
-                        <span data-template-element-id="title_ranking" style="color: white;">RANKING</span> <span data-template-element-id="title_funniest" class="funniest" style="color: #ff0000;">FUNNIEST</span>
-                    </h1>
-                    <h2 data-template-element-id="title_channel" style="font-size: 1.4rem; text-align: center; margin: -10px 0 30px 0; color: white !important; background: transparent !important; font-family: 'Luckiest Guy', cursive;" class="text-stroke">{CHANNEL} MOMENTS</h2>
-                    <ul class="ranking-list">
-                        <li class="ranked-item rank-1">
-                            <span data-template-element-id="rank_1_number" class="rank-number text-stroke">1.</span>
-                            <span data-template-element-id="rank_1_title" class="rank-title text-stroke">Sample</span>
-                        </li>
-                        <li class="ranked-item rank-2">
-                            <span data-template-element-id="rank_2_number" class="rank-number text-stroke">2.</span>
-                            <span data-template-element-id="rank_2_title" class="rank-title text-stroke">Sample</span>
-                        </li>
-                        <li class="ranked-item rank-3">
-                            <span data-template-element-id="rank_3_number" class="rank-number text-stroke">3.</span>
-                            <span data-template-element-id="rank_3_title" class="rank-title text-stroke">Sample</span>
-                        </li>
-                        <li class="ranked-item rank-4">
-                            <span data-template-element-id="rank_4_number" class="rank-number text-stroke">4.</span>
-                            <span data-template-element-id="rank_4_title" class="rank-title text-stroke">Sample</span>
-                        </li>
-                        <li class="ranked-item rank-5">
-                            <span data-template-element-id="rank_5_number" class="rank-number text-stroke">5.</span>
-                            <span data-template-element-id="rank_5_title" class="rank-title text-stroke">Sample</span>
-                        </li>
-                    </ul>
-                </div>
-            `,
-            'splitscreen': () => `
-                <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; padding: 0; text-align: center; background: #000; color: white; font-family: 'Montserrat', Arial, sans-serif; border-radius: 8px; overflow: hidden;">
-                    <!-- TOP: Video Preview -->
-                    <div style="flex: 1; width: 100%; background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); display: flex; align-items: center; justify-content: center; position: relative;">
-                        <div style="position: absolute; width: 100%; height: 100%; background: repeating-linear-gradient(45deg, #ff6a3d 0px, #ff6a3d 2px, transparent 2px, transparent 10px); opacity: 0.05; pointer-events: none;"></div>
-                        <div style="text-align: center; position: relative; z-index: 2;">
-                            <div style="font-size: 12px; color: #ff6a3d; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; display: flex; align-items: center; justify-content: center; gap: 6px;">
-                                <span style="width: 6px; height: 6px; background: #ff6a3d; border-radius: 50%; animation: splitscreen-pulse 2s infinite;"></span>
-                                📹 Video Preview
-                            </div>
-                            <div style="font-size: 14px; font-weight: 800; color: #fff; text-transform: uppercase; letter-spacing: 0.5px;">Your Content</div>
-                        </div>
-                    </div>
-
-                    <!-- DIVIDER LINE - Draggable with Handle -->
-                    <div id="splitscreenDivider" style="width: 100%; height: 8px; background: rgba(20, 20, 20, 1); z-index: 50; cursor: row-resize; display: flex; align-items: center; justify-content: center; position: relative; transition: all 0.2s ease; padding: 4px 0;">
-                        <div style="width: 100%; height: 2px; background: rgba(255, 255, 255, 0.4); transition: all 0.2s ease;" id="dividerLine"></div>
-                        <div style="position: absolute; width: 40px; height: 5px; background: rgba(255, 107, 0, 0.6); border-radius: 2.5px; transition: all 0.2s ease; left: 50%; transform: translateX(-50%); opacity: 0;" id="dividerHandle"></div>
-                    </div>
-
-                    <!-- BOTTOM: Gameplay with Video -->
-                    <div data-no-text-select="true" onclick="showGameplayClipSelector(event)" style="flex: 1; width: 100%; background: #000; display: flex; align-items: center; justify-content: center; position: relative; overflow: hidden; cursor: pointer; transition: all 0.2s ease;"
-                         onmouseover="this.style.opacity = '0.8';"
-                         onmouseout="this.style.opacity = '1';">
-                        <video style="width: 100%; height: 100%; object-fit: cover; display: block; pointer-events: none;" autoplay muted loop playsinline id="splitscreenGameplayVideo">
-                            <source src="/assets/Minecraft_1.mp4" type="video/mp4">
-                            Your browser doesn't support HTML5 video.
-                        </video>
-                    </div>
-                </div>
-                <style>
-                    @keyframes splitscreen-pulse {
-                        0%, 100% { opacity: 1; }
-                        50% { opacity: 0.5; }
-                    }
-                </style>
-            `
-        };
-        
-        // Use template ID to find the correct preview renderer
-        const generator = previewTemplates[template.id] || previewTemplates[template.type] || previewTemplates['ranked_compilation'];
-        return `<style>@keyframes pulse { 0%, 100% { transform: scale(1); opacity: 1; } 50% { transform: scale(1.1); opacity: 0.7; } }</style>${generator()}`;
+    ['generateTemplatePreviewHTML'](_0x41f74d) {
+        const _0x5b7776 = _0x4afe9d, _0xb0dfa8 = {
+                'ranked_compilation': () => '\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<style>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20.ranking-preview-container\x20*\x20{\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20background:\x20transparent\x20!important;\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20box-sizing:\x20border-box;\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20}\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20.ranking-preview-container\x20{\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20max-width:\x20400px;\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20margin-top:\x2010px;\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20padding:\x2010px;\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20width:\x20100%;\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20display:\x20flex;\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20flex-direction:\x20column;\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20align-items:\x20center;\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20pointer-events:\x20auto;\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20}\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20.ranking-preview-container\x20.text-stroke\x20{\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20font-weight:\x20400;\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20font-family:\x20\x27Luckiest\x20Guy\x27,\x20cursive;\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20text-shadow:\x20\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20-1.5px\x20-1.5px\x200\x20#000,\x20\x20\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x201.5px\x20-1.5px\x200\x20#000,\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20-1.5px\x20\x201.5px\x200\x20#000,\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x201.5px\x20\x201.5px\x200\x20#000,\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x202px\x20\x200px\x200\x20#000,\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20-2px\x20\x200px\x200\x20#000,\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x200px\x20\x202px\x200\x20#000,\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x200px\x20-2px\x200\x20#000,\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x203px\x20\x203px\x200\x20#000,\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x203.5px\x203.5px\x200\x20#000,\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x204px\x20\x204px\x200\x20#000;\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20pointer-events:\x20auto;\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20}\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20.ranking-preview-container\x20.title\x20{\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20font-size:\x202.1rem;\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20text-align:\x20center;\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20line-height:\x201.1;\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20text-transform:\x20uppercase;\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20margin-bottom:\x204px;\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20margin-top:\x200;\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20padding-top:\x200;\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20color:\x20white;\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20font-family:\x20\x27Luckiest\x20Guy\x27,\x20cursive;\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20white-space:\x20nowrap;\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20pointer-events:\x20auto;\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20}\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20.ranking-preview-container\x20.funniest\x20{\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20color:\x20#ff0000;\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20font-family:\x20\x27Luckiest\x20Guy\x27,\x20cursive;\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20pointer-events:\x20auto;\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20}\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20.ranking-preview-container\x20.ranking-list\x20{\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20list-style:\x20none;\x20\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20padding:\x200;\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20margin:\x200;\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20text-align:\x20left;\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20width:\x20100%;\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20pointer-events:\x20auto;\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20}\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20.ranking-preview-container\x20.ranked-item\x20{\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20font-size:\x202.8rem;\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20margin-bottom:\x2020px;\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20line-height:\x201;\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20display:\x20flex;\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20justify-content:\x20flex-start;\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20font-family:\x20\x27Luckiest\x20Guy\x27,\x20cursive;\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20pointer-events:\x20auto;\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20}\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20.ranking-preview-container\x20.ranked-item\x20.rank-number\x20{\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20display:\x20inline-block;\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20pointer-events:\x20auto;\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20margin-right:\x2010px;\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20}\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20.ranking-preview-container\x20.ranked-item\x20.rank-title\x20{\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20display:\x20inline-block;\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20pointer-events:\x20auto;\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20max-width:\x20250px;\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20white-space:\x20nowrap;\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20overflow:\x20hidden;\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20text-overflow:\x20ellipsis;\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20}\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20.ranking-preview-container\x20.rank-1\x20{\x20color:\x20#ffd700;\x20pointer-events:\x20auto;\x20}\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20.ranking-preview-container\x20.rank-2\x20{\x20color:\x20#c0c0c0;\x20pointer-events:\x20auto;\x20}\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20.ranking-preview-container\x20.rank-3\x20{\x20color:\x20#cd7f32;\x20pointer-events:\x20auto;\x20}\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20.ranking-preview-container\x20.rank-4\x20{\x20color:\x20#ffffff;\x20pointer-events:\x20auto;\x20}\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20.ranking-preview-container\x20.rank-5\x20{\x20color:\x20#ffffff;\x20pointer-events:\x20auto;\x20}\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20.ranking-preview-container\x20.metadata\x20{\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20margin-top:\x2020px;\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20padding-top:\x2020px;\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20border-top:\x201px\x20solid\x20rgba(255,255,255,0.2);\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20display:\x20flex;\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20gap:\x2015px;\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20font-size:\x200.8rem;\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20color:\x20#999;\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20justify-content:\x20center;\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20width:\x20100%;\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20pointer-events:\x20auto;\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20}\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</style>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<link\x20rel=\x22preconnect\x22\x20href=\x22https://fonts.googleapis.com\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<link\x20rel=\x22preconnect\x22\x20href=\x22https://fonts.gstatic.com\x22\x20crossorigin>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<link\x20href=\x22https://fonts.googleapis.com/css2?family=Luckiest+Guy&display=swap\x22\x20rel=\x22stylesheet\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20class=\x22ranking-preview-container\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<h1\x20class=\x22title\x20text-stroke\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<span\x20data-template-element-id=\x22title_ranking\x22\x20style=\x22color:\x20white;\x22>RANKING</span>\x20<span\x20data-template-element-id=\x22title_funniest\x22\x20class=\x22funniest\x22\x20style=\x22color:\x20#ff0000;\x22>FUNNIEST</span>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</h1>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<h2\x20data-template-element-id=\x22title_channel\x22\x20style=\x22font-size:\x201.4rem;\x20text-align:\x20center;\x20margin:\x20-10px\x200\x2030px\x200;\x20color:\x20white\x20!important;\x20background:\x20transparent\x20!important;\x20font-family:\x20\x27Luckiest\x20Guy\x27,\x20cursive;\x22\x20class=\x22text-stroke\x22>{CHANNEL}\x20MOMENTS</h2>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<ul\x20class=\x22ranking-list\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<li\x20class=\x22ranked-item\x20rank-1\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<span\x20data-template-element-id=\x22rank_1_number\x22\x20class=\x22rank-number\x20text-stroke\x22>1.</span>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<span\x20data-template-element-id=\x22rank_1_title\x22\x20class=\x22rank-title\x20text-stroke\x22>Sample</span>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</li>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<li\x20class=\x22ranked-item\x20rank-2\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<span\x20data-template-element-id=\x22rank_2_number\x22\x20class=\x22rank-number\x20text-stroke\x22>2.</span>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<span\x20data-template-element-id=\x22rank_2_title\x22\x20class=\x22rank-title\x20text-stroke\x22>Sample</span>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</li>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<li\x20class=\x22ranked-item\x20rank-3\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<span\x20data-template-element-id=\x22rank_3_number\x22\x20class=\x22rank-number\x20text-stroke\x22>3.</span>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<span\x20data-template-element-id=\x22rank_3_title\x22\x20class=\x22rank-title\x20text-stroke\x22>Sample</span>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</li>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<li\x20class=\x22ranked-item\x20rank-4\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<span\x20data-template-element-id=\x22rank_4_number\x22\x20class=\x22rank-number\x20text-stroke\x22>4.</span>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<span\x20data-template-element-id=\x22rank_4_title\x22\x20class=\x22rank-title\x20text-stroke\x22>Sample</span>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</li>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<li\x20class=\x22ranked-item\x20rank-5\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<span\x20data-template-element-id=\x22rank_5_number\x22\x20class=\x22rank-number\x20text-stroke\x22>5.</span>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<span\x20data-template-element-id=\x22rank_5_title\x22\x20class=\x22rank-title\x20text-stroke\x22>Sample</span>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</li>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</ul>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20',
+                'splitscreen': () => _0x5b7776(0x406)
+            }, _0xf9452a = _0xb0dfa8[_0x41f74d['id']] || _0xb0dfa8[_0x41f74d[_0x5b7776(0x27d)]] || _0xb0dfa8[_0x5b7776(0x4a3)];
+        return '<style>@keyframes\x20pulse\x20{\x200%,\x20100%\x20{\x20transform:\x20scale(1);\x20opacity:\x201;\x20}\x2050%\x20{\x20transform:\x20scale(1.1);\x20opacity:\x200.7;\x20}\x20}</style>' + _0xf9452a();
     }
-
-    async loadYouTubeSubtitles(videoId) {
+    async [_0x4afe9d(0x2ca)](_0x102235) {
+        const _0x537a29 = _0x4afe9d;
         try {
-            const statusEl = document.getElementById('youtubeSubtitleStatus');
-            if (statusEl) {
-                statusEl.textContent = 'Loading...';
-            }
-
-            // Fetch subtitles from backend
-            const response = await fetch('/api/youtube/subtitles', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({ video_id: videoId })
+            const _0x3f42fd = document[_0x537a29(0x1b9)](_0x537a29(0x3f4));
+            _0x3f42fd && (_0x3f42fd[_0x537a29(0x345)] = _0x537a29(0x300));
+            const _0x5886c5 = await fetch('/api/youtube/subtitles', {
+                'method': _0x537a29(0x55a),
+                'headers': { 'Content-Type': _0x537a29(0x1aa) },
+                'body': JSON[_0x537a29(0x4d1)]({ 'video_id': _0x102235 })
             });
-
-            let subtitles = [];
-            if (response.ok) {
-                const data = await response.json();
-                subtitles = data.subtitles || [];
+            let _0x16b230 = [];
+            if (_0x5886c5['ok']) {
+                const _0x25b7ad = await _0x5886c5['json']();
+                _0x16b230 = _0x25b7ad[_0x537a29(0x47f)] || [];
             }
-
-            if (statusEl) {
-                statusEl.textContent = subtitles.length > 0 ? 'Ready' : 'No subs';
-            }
-
-            // Initialize caption system with fetched subtitles
-            if (typeof captionSystem !== 'undefined') {
-                captionSystem.initializeCaptions(subtitles);
-                captionSystem.playAnimation();
-            }
-        } catch (error) {
-            safeLog('Error loading YouTube subtitles:', error);
-            const statusEl = document.getElementById('youtubeSubtitleStatus');
-            if (statusEl) {
-                statusEl.textContent = 'Error';
-            }
+            _0x3f42fd && (_0x3f42fd[_0x537a29(0x345)] = _0x16b230['length'] > 0x0 ? _0x537a29(0x34c) : 'No\x20subs'), typeof captionSystem !== 'undefined' && (captionSystem['initializeCaptions'](_0x16b230), captionSystem['playAnimation']());
+        } catch (_0x2e16de) {
+            _0x5e766a(_0x537a29(0x45e), _0x2e16de);
+            const _0x517bb8 = document[_0x537a29(0x1b9)]('youtubeSubtitleStatus');
+            _0x517bb8 && (_0x517bb8[_0x537a29(0x345)] = _0x537a29(0x209));
         }
     }
-
-    extractYouTubeVideoId(url) {
-        const regexPatterns = [
-            /(?:https?:\/\/)?(?:www\.)?youtube\.com\/watch\?v=([^&]+)/,
-            /(?:https?:\/\/)?(?:www\.)?youtu\.be\/([^?]+)/,
-            /(?:https?:\/\/)?(?:www\.)?youtube\.com\/embed\/([^?]+)/,
-            /(?:https?:\/\/)?(?:www\.)?youtube\.com\/shorts\/([^?&]+)/
-        ];
-
-        for (const regex of regexPatterns) {
-            const match = url.match(regex);
-            if (match && match[1]) {
-                const videoId = match[1];
-                // 🔐 SECURITY: Validate extracted video ID format
-                // YouTube video IDs are exactly 11 characters: [a-zA-Z0-9_-]
-                if (/^[a-zA-Z0-9_-]{11}$/.test(videoId)) {
-                    return videoId;
-                }
+    ['extractYouTubeVideoId'](_0x4fce7c) {
+        const _0x2c9e29 = _0x4afe9d, _0x5d8569 = [
+                /(?:https?:\/\/)?(?:www\.)?youtube\.com\/watch\?v=([^&]+)/,
+                /(?:https?:\/\/)?(?:www\.)?youtu\.be\/([^?]+)/,
+                /(?:https?:\/\/)?(?:www\.)?youtube\.com\/embed\/([^?]+)/,
+                /(?:https?:\/\/)?(?:www\.)?youtube\.com\/shorts\/([^?&]+)/
+            ];
+        for (const _0x26d426 of _0x5d8569) {
+            const _0x2581bc = _0x4fce7c[_0x2c9e29(0x2e4)](_0x26d426);
+            if (_0x2581bc && _0x2581bc[0x1]) {
+                const _0x473b3a = _0x2581bc[0x1];
+                if (/^[a-zA-Z0-9_-]{11}$/[_0x2c9e29(0x431)](_0x473b3a))
+                    return _0x473b3a;
             }
         }
         return null;
     }
-
-    isYouTubeShort(url) {
-        return /(?:https?:\/\/)?(?:www\.)?youtube\.com\/shorts\//.test(url);
+    [_0x4afe9d(0x387)](_0x5b12f1) {
+        const _0x18a57c = _0x4afe9d;
+        return /(?:https?:\/\/)?(?:www\.)?youtube\.com\/shorts\//[_0x18a57c(0x431)](_0x5b12f1);
     }
-
-    async fetchVideoMetadata(videoUrl, durationEl, formatEl, descEl) {
+    async [_0x4afe9d(0x26d)](_0x5ae81b, _0x24a33a, _0x50a32a, _0x31831b) {
+        const _0x488812 = _0x4afe9d;
         try {
-            // Extract video ID from URL
-            const videoId = this.extractYouTubeVideoId(videoUrl);
-            if (!videoId) {
-                if (descEl) descEl.textContent = 'Invalid YouTube URL';
+            const _0x175c21 = this[_0x488812(0x2c5)](_0x5ae81b);
+            if (!_0x175c21) {
+                if (_0x31831b)
+                    _0x31831b[_0x488812(0x345)] = _0x488812(0x4e2);
                 return;
             }
-
-            const apiBase = window.API_BASE_URL || 'https://api.solisai.video/api';
-            
-            // Try to fetch video metadata from backend
+            const _0x17b549 = window[_0x488812(0x3c4)] || _0x488812(0x54c);
             try {
-                const response = await fetch(`${apiBase}/youtube/get-metadata/${videoId}`, {
-                    signal: AbortSignal.timeout(3000) // 3 second timeout
-                });
-
-                if (response.ok) {
-                    const data = await response.json();
-                    
-                    // Update description with video title
-                    if (descEl && data.title) {
-                        descEl.textContent = data.title;
+                const _0x2d82b9 = await fetch(_0x17b549 + _0x488812(0x37e) + _0x175c21, { 'signal': AbortSignal['timeout'](0xbb8) });
+                if (_0x2d82b9['ok']) {
+                    const _0x4ccfe1 = await _0x2d82b9['json']();
+                    _0x31831b && _0x4ccfe1['title'] && (_0x31831b['textContent'] = _0x4ccfe1[_0x488812(0x4fc)]);
+                    if (_0x24a33a && _0x4ccfe1[_0x488812(0x483)]) {
+                        let _0x592c2e = _0x4ccfe1['duration'];
+                        typeof _0x4ccfe1[_0x488812(0x483)] === _0x488812(0x367) && (_0x592c2e = '~' + Math['floor'](_0x4ccfe1['duration'] / 0x3c) + 'm\x20' + _0x4ccfe1[_0x488812(0x483)] % 0x3c + 's'), _0x24a33a[_0x488812(0x345)] = _0x592c2e;
                     }
-                    
-                    // Update duration
-                    if (durationEl && data.duration) {
-                        let durationText = data.duration;
-                        if (typeof data.duration === 'number') {
-                            durationText = `~${Math.floor(data.duration / 60)}m ${data.duration % 60}s`;
-                        }
-                        durationEl.textContent = durationText;
-                    }
-                    
-                    // Update format
-                    if (formatEl) {
-                        const format = this.isYouTubeShort(videoUrl) ? 'YouTube Shorts' : 'TikTok / Shorts';
-                        formatEl.textContent = format;
+                    if (_0x50a32a) {
+                        const _0x239ec7 = this[_0x488812(0x387)](_0x5ae81b) ? 'YouTube\x20Shorts' : 'TikTok\x20/\x20Shorts';
+                        _0x50a32a[_0x488812(0x345)] = _0x239ec7;
                     }
                     return;
                 }
-            } catch (fetchError) {
-                safeLog('Backend metadata fetch failed, using fallback:', fetchError.message);
+            } catch (_0x15b7ce) {
+                _0x5e766a(_0x488812(0x58d), _0x15b7ce['message']);
             }
-            
-            // FALLBACK: If backend endpoint doesn't exist, just show basic info
-            if (descEl) descEl.textContent = `YouTube Video (ID: ${videoId.substring(0, 8)}...)`;
-            if (formatEl) formatEl.textContent = this.isYouTubeShort(videoUrl) ? 'YouTube Shorts' : 'TikTok / Shorts';
-            if (durationEl) durationEl.textContent = '~60s';
-            
-        } catch (error) {
-            safeLog('Error in fetchVideoMetadata:', error);
-            // Keep default/loading values
-            if (descEl) descEl.textContent = 'Unable to fetch video info';
+            if (_0x31831b)
+                _0x31831b['textContent'] = _0x488812(0x44a) + _0x175c21['substring'](0x0, 0x8) + '...)';
+            if (_0x50a32a)
+                _0x50a32a[_0x488812(0x345)] = this[_0x488812(0x387)](_0x5ae81b) ? _0x488812(0x576) : _0x488812(0x54d);
+            if (_0x24a33a)
+                _0x24a33a[_0x488812(0x345)] = _0x488812(0x3f8);
+        } catch (_0x152a82) {
+            _0x5e766a(_0x488812(0x1e8), _0x152a82);
+            if (_0x31831b)
+                _0x31831b[_0x488812(0x345)] = _0x488812(0x3ba);
         }
     }
-
-    closeTemplatePreviewModal() {
-        const modal = document.getElementById('templatePreviewModal');
-        if (modal) {
-            modal.classList.remove('active');
-            modal.style.display = 'none';
-            modal.style.visibility = 'hidden';
-            modal.style.opacity = '0';
-            document.body.classList.remove('modal-open');
-        }
-        
-        // Collapse sheet on mobile
-        const templateSheet = document.querySelector('.template-preview-sidebar');
-        if (templateSheet) {
-            templateSheet.classList.remove('expanded');
-        }
-        
-        // Restore navigation elements on mobile/tablet
-        const navWrapper = document.getElementById('navWrapper');
-        const profileNotifWrapper = document.querySelector('.profile-notif-wrapper');
-        if (navWrapper) {
-            navWrapper.classList.remove('disabled');
-        }
-        if (profileNotifWrapper) {
-            profileNotifWrapper.classList.remove('disabled');
-        }
-        
-        this.currentTemplateForPreview = null;
+    ['closeTemplatePreviewModal']() {
+        const _0x51bee7 = _0x4afe9d, _0x19a0fc = document[_0x51bee7(0x1b9)]('templatePreviewModal');
+        _0x19a0fc && (_0x19a0fc[_0x51bee7(0x2d9)][_0x51bee7(0x40f)](_0x51bee7(0x289)), _0x19a0fc[_0x51bee7(0x344)][_0x51bee7(0x180)] = _0x51bee7(0x4f5), _0x19a0fc[_0x51bee7(0x344)][_0x51bee7(0x202)] = _0x51bee7(0x2ff), _0x19a0fc[_0x51bee7(0x344)]['opacity'] = '0', document['body'][_0x51bee7(0x2d9)][_0x51bee7(0x40f)](_0x51bee7(0x39a)));
+        const _0x2c5467 = document[_0x51bee7(0x1ff)](_0x51bee7(0x559));
+        _0x2c5467 && _0x2c5467[_0x51bee7(0x2d9)][_0x51bee7(0x40f)](_0x51bee7(0x4c0));
+        const _0x31d442 = document['getElementById'](_0x51bee7(0x279)), _0x29e9af = document['querySelector'](_0x51bee7(0x4c4));
+        _0x31d442 && _0x31d442[_0x51bee7(0x2d9)]['remove'](_0x51bee7(0x2ae)), _0x29e9af && _0x29e9af[_0x51bee7(0x2d9)][_0x51bee7(0x40f)]('disabled'), this[_0x51bee7(0x175)] = null;
     }
-
-    async updateWatermarkToggleState() {
-        const watermarkFreeNotice = document.getElementById('watermarkFreeNotice');
-        const watermarkPaidSection = document.getElementById('watermarkPaidSection');
-        const watermarkToggle = document.getElementById('watermarkToggle');
-        
-        if (!watermarkToggle) return;
-        
+    async [_0x4afe9d(0x52b)]() {
+        const _0x1ef017 = _0x4afe9d, _0xa71ac7 = document[_0x1ef017(0x1b9)]('watermarkFreeNotice'), _0xf5af9d = document[_0x1ef017(0x1b9)](_0x1ef017(0x31f)), _0x48a105 = document[_0x1ef017(0x1b9)](_0x1ef017(0x543));
+        if (!_0x48a105)
+            return;
         try {
-            const response = await fetch(`${API_BASE_URL}/auth/subscription?t=${Date.now()}`, {
-                headers: getAuthHeaders(),
-                credentials: 'include',  // ✅ Send httpOnly cookie
-                cache: 'no-store'
+            const _0x188b05 = await fetch(API_BASE_URL + '/auth/subscription?t=' + Date[_0x1ef017(0x1df)](), {
+                'headers': _0x67ee3(),
+                'credentials': _0x1ef017(0x3cd),
+                'cache': _0x1ef017(0x356)
             });
-            
-            if (response.ok) {
-                const data = await response.json();
-                const planName = data.subscription?.plan_name?.toLowerCase() || 'free';
-                const isPaid = ['basic', 'prime', 'elite'].includes(planName);
-                
-                if (isPaid) {
-                    // Show toggle for paid users
-                    if (watermarkPaidSection) watermarkPaidSection.style.display = 'block';
-                    if (watermarkFreeNotice) watermarkFreeNotice.style.display = 'none';
-                    watermarkToggle.disabled = false;
-                    watermarkToggle.checked = false;
-                    // Paid users can toggle
-                    this.currentTemplateForPreview.addWatermark = false;
+            if (_0x188b05['ok']) {
+                const _0x185a73 = await _0x188b05[_0x1ef017(0x494)](), _0x1b5ed1 = _0x185a73[_0x1ef017(0x496)]?.[_0x1ef017(0x233)]?.[_0x1ef017(0x3f2)]() || 'free', _0x5b229d = [
+                        _0x1ef017(0x2d4),
+                        _0x1ef017(0x3ac),
+                        _0x1ef017(0x39f)
+                    ][_0x1ef017(0x220)](_0x1b5ed1);
+                if (_0x5b229d) {
+                    if (_0xf5af9d)
+                        _0xf5af9d[_0x1ef017(0x344)][_0x1ef017(0x180)] = _0x1ef017(0x514);
+                    if (_0xa71ac7)
+                        _0xa71ac7[_0x1ef017(0x344)]['display'] = 'none';
+                    _0x48a105[_0x1ef017(0x2ae)] = ![], _0x48a105['checked'] = ![], this[_0x1ef017(0x175)][_0x1ef017(0x250)] = ![];
                 } else {
-                    // Show upgrade notice for free users, force watermark enabled
-                    if (watermarkFreeNotice) watermarkFreeNotice.style.display = 'block';
-                    if (watermarkPaidSection) watermarkPaidSection.style.display = 'none';
-                    // Free users ALWAYS have watermark
-                    this.currentTemplateForPreview.addWatermark = true;
+                    if (_0xa71ac7)
+                        _0xa71ac7['style'][_0x1ef017(0x180)] = _0x1ef017(0x514);
+                    if (_0xf5af9d)
+                        _0xf5af9d[_0x1ef017(0x344)][_0x1ef017(0x180)] = 'none';
+                    this[_0x1ef017(0x175)][_0x1ef017(0x250)] = !![];
                 }
             }
-        } catch (error) {
-            safeLog('Error checking watermark eligibility:', error);
-            // Default to paid behavior if fetch fails
-            if (watermarkPaidSection) watermarkPaidSection.style.display = 'block';
-            if (watermarkFreeNotice) watermarkFreeNotice.style.display = 'none';
+        } catch (_0x306efb) {
+            _0x5e766a(_0x1ef017(0x53c), _0x306efb);
+            if (_0xf5af9d)
+                _0xf5af9d[_0x1ef017(0x344)][_0x1ef017(0x180)] = 'block';
+            if (_0xa71ac7)
+                _0xa71ac7[_0x1ef017(0x344)][_0x1ef017(0x180)] = _0x1ef017(0x4f5);
         }
     }
-
-    handleWatermarkToggle(e) {
-        if (!this.currentTemplateForPreview) return;
-        
-        const watermarkToggle = document.getElementById('watermarkToggle');
-        const isChecked = watermarkToggle.checked;
-        
-        // Update the template preview state
-        this.currentTemplateForPreview.addWatermark = isChecked;
+    [_0x4afe9d(0x2dc)](_0x55b8b4) {
+        const _0x34d775 = _0x4afe9d;
+        if (!this[_0x34d775(0x175)])
+            return;
+        const _0x109a52 = document[_0x34d775(0x1b9)](_0x34d775(0x543)), _0x3847db = _0x109a52['checked'];
+        this[_0x34d775(0x175)][_0x34d775(0x250)] = _0x3847db;
     }
-
-    confirmTemplateUse() {
-        if (!this.currentTemplateForPreview) {
-            showNotification('Please select a template', 'error');
+    ['confirmTemplateUse']() {
+        const _0xb031a7 = _0x4afe9d;
+        if (!this[_0xb031a7(0x175)]) {
+            _0x41706e(_0xb031a7(0x386), _0xb031a7(0x302));
             return;
         }
-
-        // SAVE template data BEFORE closing modal (closing sets currentTemplateForPreview to null)
-        const templateId = this.currentTemplateForPreview.id;
-        const template = this.templates[templateId];
-        
-        safeLog('🔍 confirmTemplateUse:', {
-            templateId,
-            availableTemplates: Object.keys(this.templates),
-            foundTemplate: !!template,
-            cachedData: this.currentTemplateForPreview.data
+        const _0x664308 = this[_0xb031a7(0x175)]['id'], _0x1bb97c = this[_0xb031a7(0x540)][_0x664308];
+        _0x5e766a(_0xb031a7(0x226), {
+            'templateId': _0x664308,
+            'availableTemplates': Object[_0xb031a7(0x298)](this[_0xb031a7(0x540)]),
+            'foundTemplate': !!_0x1bb97c,
+            'cachedData': this[_0xb031a7(0x175)][_0xb031a7(0x1f1)]
         });
-        
-        // If template not found in templates dict, try to use cached data
-        if (!template && !this.currentTemplateForPreview.data) {
-            safeLog('❌ Template not found:', templateId, 'Available:', Object.keys(this.templates));
-            showNotification(`Template "${templateId}" not found. Available: ${Object.keys(this.templates).join(', ')}`, 'error');
+        if (!_0x1bb97c && !this['currentTemplateForPreview'][_0xb031a7(0x1f1)]) {
+            _0x5e766a('❌\x20Template\x20not\x20found:', _0x664308, _0xb031a7(0x433), Object['keys'](this[_0xb031a7(0x540)])), _0x41706e('Template\x20\x22' + _0x664308 + '\x22\x20not\x20found.\x20Available:\x20' + Object[_0xb031a7(0x298)](this[_0xb031a7(0x540)])['join'](',\x20'), _0xb031a7(0x302));
             return;
         }
-
-        const promptText = document.getElementById('aiPromptInput')?.value.trim() || '';
-        
-        // Store the AI prompt
-        this.currentAIPrompt = promptText;
-
-        
-        // Get YouTube URL from input
-        const youtubeUrl = document.getElementById('youtubeUrlInput')?.value.trim();
-        
-        if (!youtubeUrl) {
-            showNotification('Please enter a YouTube URL first', 'error');
+        const _0x38f607 = document['getElementById']('aiPromptInput')?.[_0xb031a7(0x328)][_0xb031a7(0x317)]() || '';
+        this[_0xb031a7(0x4b1)] = _0x38f607;
+        const _0x3ffc7c = document[_0xb031a7(0x1b9)](_0xb031a7(0x3d7))?.[_0xb031a7(0x328)][_0xb031a7(0x317)]();
+        if (!_0x3ffc7c) {
+            _0x41706e(_0xb031a7(0x4c6), _0xb031a7(0x302));
             return;
         }
-        
-        // Close modal AFTER saving template data
-        this.closeTemplatePreviewModal();
-        
-        // Start clip processing with the ACTUAL YouTube URL
-        this.startClipProcessingWithSlots(youtubeUrl, templateId);
+        this[_0xb031a7(0x41a)](), this[_0xb031a7(0x1b8)](_0x3ffc7c, _0x664308);
     }
-
-
-
-    showSlotSystemInfo() {
-        // Create or update slot system info in the UI
-        let slotInfo = document.getElementById('slotSystemInfo');
-        if (!slotInfo) {
-            slotInfo = document.createElement('div');
-            slotInfo.id = 'slotSystemInfo';
-            slotInfo.className = 'slot-system-info';
-            
-            const templateSection = document.getElementById('templatesSection');
-            if (templateSection) {
-                templateSection.appendChild(slotInfo);
-            }
+    [_0x4afe9d(0x586)]() {
+        const _0x15f863 = _0x4afe9d;
+        let _0x35ae4a = document[_0x15f863(0x1b9)](_0x15f863(0x52c));
+        if (!_0x35ae4a) {
+            _0x35ae4a = document['createElement'](_0x15f863(0x20f)), _0x35ae4a['id'] = _0x15f863(0x52c), _0x35ae4a[_0x15f863(0x2a5)] = _0x15f863(0x2ec);
+            const _0x4e29af = document['getElementById'](_0x15f863(0x1ce));
+            _0x4e29af && _0x4e29af[_0x15f863(0x304)](_0x35ae4a);
         }
-        
-        slotInfo.innerHTML = `
-            <div class="slot-system-card">
-                <div class="slot-system-icon">
-                    <i class="fas fa-layer-group"></i>
-                </div>
-                <div class="slot-system-content">
-                    <h4>Slot System Active</h4>
-                    <p>This template uses the dynamic 1-5 slot system. New clips will fill from slot 5 upward.</p>
-                    <div class="slot-visualization">
-                        <div class="slot-row">
-                            <div class="slot-visual" data-slot="1">1</div>
-                            <div class="slot-visual" data-slot="2">2</div>
-                            <div class="slot-visual" data-slot="3">3</div>
-                            <div class="slot-visual" data-slot="4">4</div>
-                            <div class="slot-visual" data-slot="5">5</div>
-                        </div>
-                        <div class="slot-labels">
-                            <span>New clips start here →</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        `;
+        _0x35ae4a[_0x15f863(0x471)] = _0x15f863(0x57b);
     }
-
-    showConfirmationButtons(show) {
-        const confirmBtn = document.getElementById('confirmTemplateBtn');
-        const cancelBtn = document.getElementById('cancelTemplateBtn');
-        
-        if (confirmBtn && cancelBtn) {
-            if (show) {
-                confirmBtn.style.display = 'flex';
-                cancelBtn.style.display = 'flex';
-            } else {
-                confirmBtn.style.display = 'none';
-                cancelBtn.style.display = 'none';
-            }
-        }
+    [_0x4afe9d(0x423)](_0x2380eb) {
+        const _0x34f0b5 = _0x4afe9d, _0x550683 = document[_0x34f0b5(0x1b9)](_0x34f0b5(0x3c7)), _0x48f613 = document[_0x34f0b5(0x1b9)](_0x34f0b5(0x1ed));
+        _0x550683 && _0x48f613 && (_0x2380eb ? (_0x550683['style'][_0x34f0b5(0x180)] = 'flex', _0x48f613[_0x34f0b5(0x344)][_0x34f0b5(0x180)] = _0x34f0b5(0x44b)) : (_0x550683['style'][_0x34f0b5(0x180)] = _0x34f0b5(0x4f5), _0x48f613[_0x34f0b5(0x344)]['display'] = _0x34f0b5(0x4f5)));
     }
-
-    async confirmTemplateSelection() {
-        if (!this.selectedTemplate) {
-            showNotification('Please select a template first', 'error');
+    async [_0x4afe9d(0x55f)]() {
+        const _0x1d0f2a = _0x4afe9d;
+        if (!this[_0x1d0f2a(0x479)]) {
+            _0x41706e(_0x1d0f2a(0x187), 'error');
             return;
         }
-
-        const url = document.getElementById('youtubeUrlInput')?.value.trim();
-        if (!url) {
-            showNotification('Please enter a YouTube URL first', 'error');
+        const _0x2e1418 = document[_0x1d0f2a(0x1b9)](_0x1d0f2a(0x3d7))?.[_0x1d0f2a(0x328)]['trim']();
+        if (!_0x2e1418) {
+            _0x41706e(_0x1d0f2a(0x4c6), _0x1d0f2a(0x302));
             return;
         }
-
-        // Show template confirmation with slot info
-        this.showTemplateConfirmation(this.selectedTemplate, url);
+        this[_0x1d0f2a(0x2f8)](this[_0x1d0f2a(0x479)], _0x2e1418);
     }
-
-    showTemplateConfirmation(templateId, url) {
-        const template = this.templates[templateId];
-        if (!template) {
-            showNotification('Template not found', 'error');
+    ['showTemplateConfirmation'](_0xccd516, _0x410e1a) {
+        const _0x458844 = _0x4afe9d, _0x526828 = this[_0x458844(0x540)][_0xccd516];
+        if (!_0x526828) {
+            _0x41706e(_0x458844(0x447), _0x458844(0x302));
             return;
         }
-
-        const slotInfo = template.supportsSlotSystem ? 
-            '\n\n🎯 Using Slot System: New clips will fill from slot 5 upward' : 
-            '';
-
-        if (confirm(`Create "${template.name}" from this YouTube URL?\n\nURL: ${url}\n\n${template.description}\n${template.duration}${slotInfo}\n\nThis may take a few minutes to process.`)) {
-            this.startClipProcessingWithSlots(url, templateId);
-        }
+        const _0x56f1e4 = _0x526828['supportsSlotSystem'] ? '\x0a\x0a🎯\x20Using\x20Slot\x20System:\x20New\x20clips\x20will\x20fill\x20from\x20slot\x205\x20upward' : '';
+        confirm('Create\x20\x22' + _0x526828['name'] + _0x458844(0x1ab) + _0x410e1a + '\x0a\x0a' + _0x526828[_0x458844(0x510)] + '\x0a' + _0x526828[_0x458844(0x483)] + _0x56f1e4 + _0x458844(0x2a4)) && this[_0x458844(0x1b8)](_0x410e1a, _0xccd516);
     }
-
-    cancelTemplateSelection() {
-        this.selectedTemplate = null;
-        document.querySelectorAll('.template-card').forEach(card => {
-            card.classList.remove('selected');
-        });
-
-        this.showConfirmationButtons(false);
-        
-        // Remove slot system info
-        const slotInfo = document.getElementById('slotSystemInfo');
-        if (slotInfo) {
-            slotInfo.remove();
-        }
+    ['cancelTemplateSelection']() {
+        const _0x3e78e8 = _0x4afe9d;
+        this[_0x3e78e8(0x479)] = null, document[_0x3e78e8(0x350)](_0x3e78e8(0x252))['forEach'](_0x20d44c => {
+            const _0x3b8c8d = _0x3e78e8;
+            _0x20d44c[_0x3b8c8d(0x2d9)][_0x3b8c8d(0x40f)](_0x3b8c8d(0x424));
+        }), this[_0x3e78e8(0x423)](![]);
+        const _0x5df527 = document['getElementById'](_0x3e78e8(0x52c));
+        _0x5df527 && _0x5df527[_0x3e78e8(0x40f)]();
     }
-
-    async startClipProcessingWithSlots(url, templateId) {
+    async [_0x4afe9d(0x1b8)](_0x50047b, _0xd07d1c) {
+        const _0x3a005f = _0x4afe9d;
         try {
-            // 🔐 BACKEND REQUIREMENT: /clips/start MUST:
-            // 1. Verify user session from httpOnly cookie
-            // 2. Check user's subscription plan and enforce rate limits (daily limits, cooldowns)
-            // 3. Validate URL strictly (whitelist YouTube domains only)
-            // 4. Use library functions (not shell commands) to fetch video
-            // 5. Return 401/403 if user lacks permissions
-            
-            // Get watermark preference from toggle
-            const watermarkToggle = document.getElementById('watermarkToggle');
-            const watermarkEnabled = watermarkToggle ? watermarkToggle.checked : true;
-            
-            const headers = getAuthHeaders();
-            
-            // 🎨 Get customizations from customizer if they exist
-            let customizations = null;
-            if (window.customizer && typeof window.customizer.collectCustomizations === 'function') {
-                customizations = window.customizer.collectCustomizations();
-            }
-            
-            const payload = {
-                url: url,
-                template_id: templateId,
-                use_slot_system: true,
-                watermark_enabled: watermarkEnabled
+            const _0x5d3981 = document[_0x3a005f(0x1b9)](_0x3a005f(0x543)), _0x5d3f90 = _0x5d3981 ? _0x5d3981[_0x3a005f(0x17c)] : !![], _0xe55f8b = _0x67ee3();
+            let _0x10151e = null;
+            window[_0x3a005f(0x416)] && typeof window['customizer'][_0x3a005f(0x453)] === _0x3a005f(0x1f6) && (_0x10151e = window['customizer'][_0x3a005f(0x453)]());
+            const _0x5bf088 = {
+                'url': _0x50047b,
+                'template_id': _0xd07d1c,
+                'use_slot_system': !![],
+                'watermark_enabled': _0x5d3f90
             };
-            
-            // 🎨 Add customizations to payload if they exist and are not empty
-            if (customizations && Object.keys(customizations).length > 0) {
-                payload.customizations = customizations;
-                safeLog('📝 Sending customizations with video generation:', customizations);
-            }
-            
-            const response = await fetch(`${API_BASE_URL}/clips/start`, {
-                method: 'POST',
-                headers: headers,
-                credentials: 'include',  // 🔐 Send httpOnly cookie
-                body: JSON.stringify(payload)
+            _0x10151e && Object[_0x3a005f(0x298)](_0x10151e)[_0x3a005f(0x56d)] > 0x0 && (_0x5bf088['customizations'] = _0x10151e, _0x5e766a('📝\x20Sending\x20customizations\x20with\x20video\x20generation:', _0x10151e));
+            const _0x4db048 = await fetch(API_BASE_URL + _0x3a005f(0x28b), {
+                'method': _0x3a005f(0x55a),
+                'headers': _0xe55f8b,
+                'credentials': _0x3a005f(0x3cd),
+                'body': JSON[_0x3a005f(0x4d1)](_0x5bf088)
             });
-            
-            if (!response.ok) {
-                const errorData = await response.json();
-                
-                // Handle 429 status specifically
-                if (response.status === 429) {
-                   
-                    // Handle GENERATION_COOLDOWN (per-tier cooldown limit)
-                    if (errorData.error_code === 'GENERATION_COOLDOWN') {
-                        const remainingSeconds = errorData.remaining_seconds || errorData.cooldown_seconds || 30;
-                        const remainingMinutes = Math.floor(remainingSeconds / 60);
-                        const remainingSecsOnly = remainingSeconds % 60;
-                        
-                        // Start countdown timer on submit button
-                        startCooldownTimer(remainingSeconds);
-                        
-                        // Show the cooldown-based error message
-                        const durationError = document.getElementById('durationErrorMessage');
-                        if (durationError) {
-                            const errorText = document.getElementById('errorDurationText');
-                            if (errorText) {
-                                let timestr = '';
-                                if (remainingMinutes > 0) {
-                                    timestr = `${remainingMinutes}m ${remainingSecsOnly}s`;
-                                } else {
-                                    timestr = `${remainingSeconds}s`;
-                                }
-                                errorText.textContent = `You can generate another video in ${timestr}.`;
+            if (!_0x4db048['ok']) {
+                const _0xce2a0 = await _0x4db048[_0x3a005f(0x494)]();
+                if (_0x4db048[_0x3a005f(0x51f)] === 0x1ad) {
+                    if (_0xce2a0[_0x3a005f(0x2e8)] === _0x3a005f(0x1e4)) {
+                        const _0x3814a6 = _0xce2a0[_0x3a005f(0x52a)] || _0xce2a0[_0x3a005f(0x2b8)] || 0x1e, _0xd7285e = Math[_0x3a005f(0x48a)](_0x3814a6 / 0x3c), _0xd64f54 = _0x3814a6 % 0x3c;
+                        _0x4c2c2a(_0x3814a6);
+                        const _0x111eac = document['getElementById'](_0x3a005f(0x1d5));
+                        if (_0x111eac) {
+                            const _0x266268 = document[_0x3a005f(0x1b9)](_0x3a005f(0x445));
+                            if (_0x266268) {
+                                let _0x194594 = '';
+                                _0xd7285e > 0x0 ? _0x194594 = _0xd7285e + 'm\x20' + _0xd64f54 + 's' : _0x194594 = _0x3814a6 + 's', _0x266268[_0x3a005f(0x345)] = 'You\x20can\x20generate\x20another\x20video\x20in\x20' + _0x194594 + '.';
                             }
-                            durationError.style.display = 'flex';
+                            _0x111eac[_0x3a005f(0x344)]['display'] = _0x3a005f(0x44b);
                         }
-                        showNotification(errorData.error, 'error');
+                        _0x41706e(_0xce2a0[_0x3a005f(0x302)], _0x3a005f(0x302));
                         return;
                     }
-                    
-                    // Handle other 429 errors
-                    if (errorData.error_code === 'DAILY_LIMIT_REACHED') {
+                    if (_0xce2a0[_0x3a005f(0x2e8)] === _0x3a005f(0x59a)) {
                         showLimitModal({
-                            used: errorData.daily_count,
-                            limit: errorData.daily_limit,
-                            plan_type: 'free',
-                            last_video_date: errorData.last_video_date,
-                            cooldown_hours: errorData.cooldown_hours || 96
-                        });
-                        return;
-                    } else if (errorData.error_code === 'VIDEO_LIMIT_REACHED') {
-                        showLimitModal({
-                            used: errorData.storage_info?.current_video_count,
-                            limit: errorData.storage_info?.plan_info?.videos_space,
-                            plan_type: errorData.plan_type,
-                            last_video_date: errorData.last_video_date,
-                            cooldown_hours: errorData.cooldown_hours || 96
+                            'used': _0xce2a0[_0x3a005f(0x478)],
+                            'limit': _0xce2a0[_0x3a005f(0x432)],
+                            'plan_type': _0x3a005f(0x449),
+                            'last_video_date': _0xce2a0['last_video_date'],
+                            'cooldown_hours': _0xce2a0[_0x3a005f(0x579)] || 0x60
                         });
                         return;
                     } else {
-                        // Generic 429 error
-                        showNotification(errorData.error || 'Rate limit reached. Please try again later.', 'error');
-                        return;
-                    }
-                } else if (errorData.error_code === 'VIDEO_TOO_LONG') {
-                    // Show specialized video too long modal
-                    const videoMinutes = errorData.video_minutes || 0;
-                    const maxMinutes = errorData.max_duration_minutes || 0;
-                    showNotification(`Video too long (${videoMinutes}m). Maximum is ${maxMinutes}m for your plan.`, 'error');
-                    return;
-                } else {
-                    // Generic error handling for non-429 errors
-                    const errorMsg = errorData.error || 'Failed to start processing';
-                    showNotification(errorMsg, 'error');
-                    throw new Error(errorMsg);
-                }
-            }
-
-            const result = await response.json();
-            this.currentProjectId = result.project_id;
-
-            // Create processing item with slot info
-            const processingItem = {
-                id: Date.now(),
-                projectId: this.currentProjectId,
-                name: `${result.template.name} from YouTube`,
-                template: templateId,
-                templateName: result.template.name,
-                status: 'processing',
-                progress: 0,
-                message: 'Starting download...',
-                timestamp: new Date(),
-                lastChecked: Date.now(),
-                slotNumber: null,
-                useSlotSystem: true,
-                isSlotSystem: true
-            };
-
-            await this.addProcessingItem(processingItem);
-            
-            // Show the progress spinner immediately
-            const wrapper = document.getElementById('generationProgressWrapper');
-            if (wrapper) {
-                wrapper.style.display = 'flex';
-                const progressCircle = document.getElementById('progressCircle');
-                const progressText = document.getElementById('generationProgressText');
-                if (progressCircle) {
-                    progressCircle.style.strokeDasharray = '0 75.36'; // Reset to 0%
-                }
-                if (progressText) {
-                    progressText.textContent = '0%';
-                }
-            }
-            
-            // Register the processing task with websocket for real-time updates
-            if (solisWSClient && result.project_id) {
-                solisWSClient.registerTask(result.project_id, 'processing');
-            }
-            
-            // Disable the submit button while video is generating
-            const submitBtn = document.getElementById('processUrlBtn');
-            if (submitBtn) {
-                submitBtn.disabled = true;
-                submitBtn.classList.add('is-generating');
-            }
-            
-            this.switchTab('library');
-            // Start monitoring for this specific item (fallback for polling)
-            this.startMonitoring(processingItem.id);
-
-        } catch (error) {
-            safeLog('startClipProcessingWithSlots error:', error);
-            showNotification('Failed to start processing: ' + error.message, 'error');
-        }
-    }
-
-    startMonitoring(itemId) {
-        // Clear existing interval for this item
-        this.stopMonitoring(itemId);
-
-        const intervalId = setInterval(async () => {
-            const item = this.processingItems.find(i => i.id === itemId);
-            if (!item) {
-                this.stopMonitoring(itemId);
-                return;
-            }
-
-            // Check status while item is processing (on any tab)
-            if (item.status === 'processing') {
-                await this.checkItemStatus(itemId);
-            } else {
-                this.stopMonitoring(itemId);
-            }
-        }, 3000); // Check every 3 seconds for updates
-
-        this.monitoringIntervals.set(itemId, intervalId);
-    }
-
-    stopMonitoring(itemId) {
-        if (this.monitoringIntervals.has(itemId)) {
-            clearInterval(this.monitoringIntervals.get(itemId));
-            this.monitoringIntervals.delete(itemId);
-        }
-    }
-
-    stopAllMonitoring() {
-        this.monitoringIntervals.forEach((intervalId, itemId) => {
-            clearInterval(intervalId);
-        });
-        this.monitoringIntervals.clear();
-    }
-
-    async checkItemStatus(itemId) {
-        try {
-            const item = this.processingItems.find(i => i.id === itemId);
-            if (!item) return;
-
-            const headers = getAuthHeaders();
-            const response = await fetch(`${API_BASE_URL}/clips/status/${item.projectId}`, {
-                headers: headers,
-                credentials: 'include'  // 🔐 Send httpOnly cookie
-            });
-            
-            if (!response.ok) return;
-            
-            const status = await response.json();
-
-            // Only update if status actually changed (reduce re-renders)
-            const statusChanged = item.status !== status.status || item.progress !== status.progress;
-            
-            if (statusChanged) {
-                // Update item
-                item.status = status.status;
-                item.progress = status.progress;
-                item.message = status.message;
-                item.lastChecked = Date.now();
-                
-                // Update slot number if available
-                if (status.slot_number && item.isSlotSystem) {
-                    item.slotNumber = status.slot_number;
-                    item.name = `${item.templateName} (Slot ${status.slot_number})`;
-                }
-
-                this.updateProcessingView();
-                // Also update library view if on that tab to show progress updates
-                if (this.currentTab === 'library') {
-                    this.updateLibraryView();
-                }
-                this.saveProcessingItems();
-            }
-
-            if (status.status === 'completed') {
-                item.status = 'completed';
-                this.moveToLibrary(item);
-                this.stopMonitoring(itemId);
-                showNotification('Clip created successfully!', 'success');
-                
-                // Re-enable the submit button when generation completes
-                const submitBtn = document.getElementById('processUrlBtn');
-                if (submitBtn) {
-                    submitBtn.disabled = false;
-                    submitBtn.classList.remove('is-generating');
-                }
-                
-                // Show slot info if using slot system
-                if (item.isSlotSystem && item.slotNumber) {
-                    showNotification(`Clip added to Slot ${item.slotNumber}`, 'info');
-                }
-                
-                // Keep library tab active to see the completed clip
-                this.switchTab('library');
-                this.updateProcessingView();
-                this.saveProcessingItems();
-            } else if (status.status === 'error') {
-                item.status = 'failed';
-                item.message = status.message; // Preserve error message for display
-                this.stopMonitoring(itemId);
-                
-                // Re-enable the submit button on error
-                const submitBtn = document.getElementById('processUrlBtn');
-                if (submitBtn) {
-                    submitBtn.disabled = false;
-                    submitBtn.classList.remove('is-generating');
-                }
-                
-                // Remove failed item from processing after showing for a bit
-                setTimeout(() => {
-                    this.processingItems = this.processingItems.filter(i => i.id !== itemId);
-                    this.updateLibraryView();
-                    this.saveProcessingItems();
-                }, 5000); // Show error for 5 seconds then remove
-                
-                // Check if error is about video being too long
-                const errorMsg = status.message || '';
-                safeLog('Processing error detected:', errorMsg);
-                
-                // Try to detect video too long error using multiple patterns
-                // Pattern 1: Exact format "Video is too long. Maximum allowed: X minutes. Your video: Y minutes."
-                const videoTooLongPattern1 = /Video is too long\. Maximum allowed:\s*(\d+)\s*minutes\. Your video:\s*(\d+)\s*minutes/i;
-                // Pattern 2: Alternative format
-                const videoTooLongPattern2 = /Maximum allowed:\s*(\d+)\s*minutes.*Your video:\s*(\d+)\s*minutes/i;
-                // Pattern 3: Fallback with just looking for keywords
-                const videoTooLongPattern3 = /too long|duration limit/i;
-                
-
-                let videoTooLongMatch = errorMsg.match(videoTooLongPattern1);
-                safeLog('Pattern 1 match:', videoTooLongMatch);
-                
-                if (videoTooLongMatch && videoTooLongMatch.length >= 3) {
-                    const maxMinutes = parseInt(videoTooLongMatch[1]);
-                    const videoMinutes = parseInt(videoTooLongMatch[2]);
-                    safeLog('✓ Video too long detected (pattern 1):', videoMinutes, 'max:', maxMinutes);
-                    setTimeout(() => {
-                        if (window && typeof window.openVideoTooLongModal === 'function') {
-                            window.openVideoTooLongModal(videoMinutes, maxMinutes);
-                        }
-                    }, 100);
-                } else {
-                    // Try pattern 2
-                    videoTooLongMatch = errorMsg.match(videoTooLongPattern2);
-                    safeLog('Pattern 2 match:', videoTooLongMatch);
-                    
-                    if (videoTooLongMatch && videoTooLongMatch.length >= 3) {
-                        const maxMinutes = parseInt(videoTooLongMatch[1]);
-                        const videoMinutes = parseInt(videoTooLongMatch[2]);
-                        safeLog('✓ Video too long detected (pattern 2):', videoMinutes, 'max:', maxMinutes);
-                        setTimeout(() => {
-                            if (window && typeof window.openVideoTooLongModal === 'function') {
-                                window.openVideoTooLongModal(videoMinutes, maxMinutes);
-                            }
-                        }, 100);
-                    } else if (videoTooLongPattern3.test(errorMsg)) {
-                        // Fallback: Try to extract any numbers
-                        safeLog('Pattern 3 match (keywords found), trying number extraction...');
-                        const numbers = errorMsg.match(/\d+/g);
-                        if (numbers && numbers.length >= 2) {
-                            // Try to find the last two numbers (likely video duration and max duration)
-                            const videoMinutes = parseInt(numbers[numbers.length - 2]);
-                            const maxMinutes = parseInt(numbers[numbers.length - 1]);
-                            if (videoMinutes > 0 && maxMinutes > 0 && videoMinutes > maxMinutes) {
-                                safeLog('✓ Video too long detected (fallback):', videoMinutes, 'max:', maxMinutes);
-                                setTimeout(() => {
-                                    if (window && typeof window.openVideoTooLongModal === 'function') {
-                                        window.openVideoTooLongModal(videoMinutes, maxMinutes);
-                                    }
-                                }, 100);
-                            }
-                        }
-                    }
-                }
-                
-                showNotification('Clip creation failed: ' + status.message, 'error');
-            }
-            // If still processing, continue monitoring
-
-        } catch (error) {
-            safeLog('Error checking status for item', itemId, error);
-            // Don't stop monitoring on network errors, just try again next interval
-        }
-    }
-
-    startSmartMonitoring() {
-        // Only monitor items that are still processing
-        this.processingItems.forEach(item => {
-            if (item.status === 'processing') {
-                this.startMonitoring(item.id);
-            }
-        });
-    }
-
-    // ⚠️ SECURITY: Validates basic URL format only. Backend MUST validate and sanitize all URLs.
-    // Do NOT pass raw user input to shell commands on backend!
-    isValidYouTubeUrl(urlString) {
-        try {
-            const url = new URL(urlString.startsWith('http') ? urlString : 'https://' + urlString);
-            const hostname = url.hostname.toLowerCase();
-            const pathname = url.pathname.toLowerCase();
-            
-            // 🔐 SECURITY: Strict domain validation using Set
-            const allowedDomains = new Set(['youtube.com', 'www.youtube.com', 'youtu.be', 'www.youtu.be']);
-            if (!allowedDomains.has(hostname)) {
-                return false;
-            }
-            
-            // 🔐 SECURITY: Check for path traversal attacks
-            if (pathname.includes('..') || pathname.includes('//')) {
-                return false;
-            }
-            
-            // Must have a path (video ID or watch endpoint)
-            if (!pathname || pathname === '/') {
-                return false;
-            }
-            
-            // 🔐 SECURITY: Extract and validate video ID format
-            const videoId = this.extractYouTubeVideoId(urlString);
-            if (!videoId) {
-                return false;
-            }
-            
-            // YouTube video IDs are exactly 11 characters: [a-zA-Z0-9_-]
-            return /^[a-zA-Z0-9_-]{11}$/.test(videoId);
-        } catch (e) {
-            return false;
-        }
-    }
-
-    /**
-     * 🔐 SECURITY: Validate projectId format to prevent path traversal/IDOR
-     * NOTE: Backend MUST validate ownership - frontend validation is UX only
-     */
-    validateProjectId(projectId) {
-        if (!projectId || typeof projectId !== 'string') return false;
-        // Reject path traversal: .., /, \, null bytes, special chars
-        if (projectId.match(/\.\.|\/|\\|:|\||<|>|"|'|\x00/g)) return false;
-        // Accept only alphanumeric, dash, underscore
-        return /^[a-zA-Z0-9_-]+$/.test(projectId);
-    }
-
-    /**
-     * 🔐 SECURITY: Validate itemId format to prevent injection/IDOR
-     * NOTE: Backend MUST validate ownership - frontend validation is UX only
-     */
-    validateItemId(itemId) {
-        if (!itemId || typeof itemId !== 'string') return false;
-        // Reject path traversal and injection attempts
-        if (itemId.match(/\.\.|\/|\\|:|\||<|>|"|'|\x00/g)) return false;
-        // Accept alphanumeric, dash, underscore, dot
-        return /^[a-zA-Z0-9_.-]+$/.test(itemId);
-    }
-
-    toggleUrlButtonLoading(isLoading) {
-        const submitBtn = document.getElementById('processUrlBtn');
-        if (!submitBtn) return;
-        
-        if (isLoading) {
-            submitBtn.classList.add('loading');
-            submitBtn.disabled = true;
-            // ✅ SECURITY FIX: Persist button state to sessionStorage to prevent refresh bypass
-            sessionStorage.setItem('urlButtonLockeduntil', Date.now().toString());
-            sessionStorage.setItem('urlButtonLocked', 'true');
-        } else {
-            submitBtn.classList.remove('loading');
-            submitBtn.disabled = false;
-            // Clear persistent lock
-            sessionStorage.removeItem('urlButtonLocked');
-            sessionStorage.removeItem('urlButtonLockeduntil');
-        }
-    }
-    
-    // ✅ SECURITY FIX: Check for persistent rate limit on page load
-    enforceUrlButtonRateLimitOnLoad() {
-        const submitBtn = document.getElementById('processUrlBtn');
-        if (!submitBtn) return;
-        
-        // Check if button should be locked from sessionStorage
-        const isLocked = sessionStorage.getItem('urlButtonLocked') === 'true';
-        const lockedUntil = sessionStorage.getItem('urlButtonLockeduntil');
-        
-        if (isLocked && lockedUntil) {
-            const lockedUntilTime = parseInt(lockedUntil, 10);
-            const now = Date.now();
-            const remainingMs = lockedUntilTime - now;
-            
-            // If still within cooldown window, re-enable the lock
-            if (remainingMs > 0) {
-                const COOLDOWN_MS = CONFIG.RATE_LIMITING.YOUTUBE_PROCESS_MIN_MS || 3000;
-                if (remainingMs < COOLDOWN_MS + 5000) { // Add 5s buffer for processing time
-                    submitBtn.disabled = true;
-                    submitBtn.style.cursor = 'not-allowed';
-                    submitBtn.style.opacity = '0.5';
-                    submitBtn.classList.add('loading');
-                    
-                    // Auto-unlock when timer expires
-                    const unlockTimer = setTimeout(() => {
-                        submitBtn.disabled = false;
-                        submitBtn.style.cursor = 'pointer';
-                        submitBtn.style.opacity = '1';
-                        submitBtn.classList.remove('loading');
-                        sessionStorage.removeItem('urlButtonLocked');
-                        sessionStorage.removeItem('urlButtonLockeduntil');
-                    }, remainingMs);
-                    
-                    // Store timer ID so it can be cancelled if needed
-                    submitBtn._unlockTimer = unlockTimer;
-                }
-            } else {
-                // Lock expired, clear it
-                sessionStorage.removeItem('urlButtonLocked');
-                sessionStorage.removeItem('urlButtonLockeduntil');
-            }
-        }
-    }
-
-    async processYouTubeUrl() {
-        // ⚠️ SECURITY: Client-side rate limiting is UX only, NOT security
-        // Attackers can disable JavaScript or send requests directly to API
-        // BACKEND MUST enforce rate limiting on the server
-        const now = Date.now();
-        if (now - this.lastYouTubeProcessTime < CONFIG.RATE_LIMITING.YOUTUBE_PROCESS_MIN_MS) {
-            showNotification('Please wait a moment before trying again', 'warning');
-            return;
-        }
-        this.lastYouTubeProcessTime = now;
-        
-        const urlInput = document.getElementById('youtubeUrlInput');
-        if (!urlInput) return;
-        
-        const url = urlInput.value.trim();
-        
-        if (!url) {
-            showNotification('Please enter a YouTube URL', 'error');
-            return;
-        }
-
-        // Frontend validation - backend MUST also validate all URLs strictly
-        if (!this.isValidYouTubeUrl(url)) {
-            showNotification('Please enter a valid YouTube URL (youtube.com or youtu.be)', 'error');
-            return;
-        }
-
-        // Show loading animation
-        this.toggleUrlButtonLoading(true);
-
-        try {
-            // Check video duration BEFORE showing templates
-            const durationCheckResult = await this.checkVideoDurationBeforeTemplates(url);
-            
-            if (!durationCheckResult.allowed) {
-                // Video is too long, error message already shown - stay in create tab
-                this.toggleUrlButtonLoading(false);
-                return;
-            }
-
-            // Check if user has reached daily limit BEFORE redirecting to templates
-            const headers = getAuthHeaders();
-            try {
-                const checkResponse = await fetch(`${API_BASE_URL}/clips/check-limits`, {
-                    method: 'GET',
-                    headers: headers,
-                    credentials: 'include'  // 🔐 Send httpOnly cookie
-                });
-                
-                if (checkResponse.ok) {
-                    const limitData = await checkResponse.json();
-                    // Backend has already verified user limits via session
-                    
-                    // Check if user is already generating a video
-                    if (limitData.is_generating) {
-                        showNotification('A video is already being generated. Please wait for it to complete before starting another one.', 'warning');
-                        // Disable the submit button to prevent further attempts
-                        const submitBtn = document.getElementById('processUrlBtn');
-                        if (submitBtn) {
-                            submitBtn.disabled = true;
-                            submitBtn.style.opacity = '0.5';
-                            submitBtn.style.cursor = 'not-allowed';
-                            submitBtn.classList.add('is-generating');
-                        }
-                        this.toggleUrlButtonLoading(false);
-                        return;
-                    }
-                    
-                    // Check if user can generate (main flag)
-                    if (!limitData.can_generate) {
-                        showLimitModal({
-                            used: limitData.daily?.used || 0,
-                            limit: limitData.daily?.limit || 1,
-                            plan_type: limitData.plan?.name?.toLowerCase() || 'free',
-                            last_video_date: limitData.last_video_date || '1970-01-01',
-                            cooldown_hours: limitData.generation?.cooldown_hours || 96
-                        });
-                        this.toggleUrlButtonLoading(false);
-                        return;
-                    }
-                    
-                    // Old field names fallback for backwards compatibility
-                    if (limitData.daily_limit_reached) {
-                        showLimitModal({
-                            used: limitData.daily_count,
-                            limit: limitData.daily_limit,
-                            plan_type: 'free',
-                            last_video_date: limitData.last_video_date || '1970-01-01',
-                            cooldown_hours: limitData.generation?.cooldown_hours || 96
-                        });
-                        this.toggleUrlButtonLoading(false);
-                        return;
-                    }
-                    
-                    // Check storage limit
-                    if (limitData.storage_limit_reached) {
-                        showLimitModal({
-                            used: limitData.current_video_count,
-                            limit: limitData.plan_video_limit,
-                            plan_type: limitData.plan?.name?.toLowerCase() || 'free',
-                            last_video_date: limitData.last_video_date || '1970-01-01',
-                            cooldown_hours: limitData.generation?.cooldown_hours || 96
-                        });
-                        this.toggleUrlButtonLoading(false);
-                        return;
-                    }
-                }
-            } catch (error) {
-                // Continue anyway if check fails
-            }
-
-            // Show template selection (redirect to templates tab)
-            this.switchTab('templates');
-            showNotification('YouTube URL validated. Please select a template.', 'success');
-            
-            // Show preview container
-            const previewContainer = document.getElementById('clipPreviewContainer');
-            if (previewContainer) {
-                previewContainer.style.display = 'block';
-            }
-        } finally {
-            // Always hide loading animation when done
-            this.toggleUrlButtonLoading(false);
-        }
-    }
-
-    async checkVideoDurationBeforeTemplates(url) {
-        try {
-            const headers = getAuthHeaders();
-            
-            // Call backend to check video duration
-            const response = await fetch(`${API_BASE_URL}/clips/check-duration`, {
-                method: 'POST',
-                headers: headers,
-                credentials: 'include',  // 🔐 Send httpOnly cookie
-                body: JSON.stringify({ url: url })
-            });
-
-            const data = await response.json();
-
-            if (!response.ok) {
-                // If error from backend
-                if (data.error_code === 'VIDEO_TOO_LONG') {
-                    const videoMinutes = data.video_minutes || 0;
-                    const maxMinutes = data.max_duration_minutes || 0;
-                    safeLog('Video too long detected at URL input:', videoMinutes, 'max:', maxMinutes);
-                    
-                    // Show inline error message below URL input
-                    const errorDiv = document.getElementById('durationErrorMessage');
-                    const errorText = document.getElementById('errorDurationText');
-                    
-                    if (errorDiv && errorText) {
-                        // Use safe DOM manipulation instead of innerHTML to prevent XSS
-                        errorText.textContent = `You cannot post a video above ${maxMinutes} minutes. Your video is ${videoMinutes} minutes. Upgrade to unlock longer videos.`;
-                        errorDiv.style.display = 'block';
-                    }
-                    
-                    return { allowed: false };
-                } else {
-                    showNotification('Error checking video: ' + (data.error || 'Unknown error'), 'error');
-                    return { allowed: false };
-                }
-            }
-
-            // Video is OK - hide error message if visible
-            const errorDiv = document.getElementById('durationErrorMessage');
-            if (errorDiv) {
-                errorDiv.style.display = 'none';
-            }
-
-            return { 
-                allowed: true, 
-                duration: data.duration_minutes,
-                maxAllowed: data.max_duration_minutes
-            };
-
-        } catch (error) {
-            safeLog('Error checking video duration:', error);
-            // Silently allow proceeding if check fails
-            const errorDiv = document.getElementById('durationErrorMessage');
-            if (errorDiv) {
-                errorDiv.style.display = 'none';
-            }
-            return { allowed: true };
-        }
-    }
-
-    async generateClipWithSlotSystem() {
-        const urlInput = document.getElementById('youtubeUrlInput');
-        if (!urlInput) return;
-        
-        const url = urlInput.value.trim();
-        
-        if (!url) {
-            showNotification('Please process a YouTube URL first', 'error');
-            return;
-        }
-
-        if (!this.selectedTemplate) {
-            showNotification('Please select a template first', 'error');
-            return;
-        }
-
-        this.startClipProcessingWithSlots(url, this.selectedTemplate);
-    }
-
-    addProcessingItem(item) {
-        this.processingItems.unshift(item);
-        this.saveProcessingItems();
-        
-        // If on library tab, update the view to show the new processing item
-        if (this.currentTab === 'library') {
-            this.updateLibraryView();
-        }
-    }
-
-    updateProcessingView() {
-        // If on library tab, update the entire library view to show progress changes
-        if (this.currentTab === 'library') {
-            this.updateLibraryView();
-            return;
-        }
-        
-        // Update progress for existing processing cards (for processing tab if it exists)
-        this.processingItems.forEach(item => {
-            const progress = item.progress || 0;
-            const remaining = 100 - progress;  // Show how much is LEFT
-            
-            // Update percentage display with remaining time
-            const percentDiv = document.querySelector(`[data-loading-id="${item.id}"] .loading-percentage`);
-            if (percentDiv) {
-                percentDiv.textContent = `${remaining}% left`;
-            }
-            
-            // Update loader parts visibility based on REMAINING progress
-            const loaderParts = document.querySelectorAll(`[data-loading-id="${item.id}"] .loader-part`);
-            loaderParts.forEach((part, index) => {
-                const threshold = (index + 1) * 25;
-                part.style.opacity = remaining >= threshold ? '1' : '0';
-            });
-        });
-    }
-
-    oldUpdateProcessingView_old() {
-        const processingList = document.getElementById('processingList');
-        const processingSection = document.getElementById('processingSection');
-        const emptyState = document.getElementById('emptyProcessingState');
-        
-        if (!processingList || !emptyState || !processingSection) return;
-        
-        // Show/hide section
-        if (this.processingItems.length === 0) {
-            emptyState.style.display = 'block';
-            processingList.innerHTML = '';
-            processingSection.style.display = 'none';
-            return;
-        }
-
-        emptyState.style.display = 'none';
-        processingSection.style.display = 'block';
-        
-        // Update items with progressive loader
-        processingList.innerHTML = this.processingItems.map(item => {
-            const progress = item.progress || 0;
-            return `
-                <div class="processing-item" data-id="${item.id}">
-                    <div class="processing-card">
-                        <!-- Thumbnail with video icon -->
-                        <div class="processing-thumbnail">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                <polygon points="23 7 16 12 23 17 23 7"></polygon>
-                                <rect x="1" y="5" width="15" height="14" rx="2" ry="2"></rect>
-                            </svg>
-                            
-                            <!-- Progressive circular loader (only show if processing) -->
-                            ${item.status === 'processing' ? `
-                                <div class="processing-loader">
-                                    <div class="loader">
-                                        ${this.renderLoaderParts(progress)}
-                                    </div>
-                                </div>
-                            ` : ''}
-                        </div>
-                        
-                        <!-- Info section -->
-                        <div class="processing-info">
-                            <div>
-                                <div class="processing-name">${item.name}</div>
-                                <div class="processing-status ${item.status}">
-                                    <i class="fas fa-${this.getStatusIcon(item.status)}"></i>
-                                    ${this.formatStatus(item.status)}
-                                </div>
-                                ${item.message && item.status === 'processing' ? `
-                                    <div class="processing-message">${item.message}</div>
-                                ` : ''}
-                            </div>
-                            ${item.status === 'processing' ? `
-                                <div class="processing-percentage">${progress}%</div>
-                            ` : ''}
-                        </div>
-                    </div>
-                </div>
-            `;
-        }).join('');
-    }
-
-    getStatusIcon(status) {
-        const icons = {
-            'processing': 'spinner',
-            'completed': 'check',
-            'failed': 'exclamation'
-        };
-        return icons[status] || 'question';
-    }
-
-    formatStatus(status) {
-        return status.charAt(0).toUpperCase() + status.slice(1);
-    }
-
-    renderLoaderParts(progress) {
-        // Show REMAINING progress (how much is left)
-        const remaining = 100 - progress;
-        const parts = [
-            { opacity: remaining >= 25 ? 1 : 0 },
-            { opacity: remaining >= 50 ? 1 : 0 },
-            { opacity: remaining >= 75 ? 1 : 0 },
-            { opacity: remaining >= 100 ? 1 : 0 }
-        ];
-        return parts.map((part, i) => `<div class="loader-part loader-part-${i + 1}" style="opacity: ${part.opacity}; transition: opacity 0.4s ease;"></div>`).join('');
-    }
-
-    async downloadClip(projectId) {
-        try {
-
-            
-            // 🔐 IDOR PROTECTION (Backend Responsibility):
-            // Frontend sends projectId, but backend MUST verify user owns this project
-            // before allowing download. Backend must check:
-            // 1. User session from httpOnly cookie
-            // 2. Project ownership (projectId format: "userId_uuid")
-            // 3. User subscription allows download
-            const headers = getAuthHeaders();
-            const downloadUrl = `${API_BASE_URL}/clips/download/${projectId}`;
-            
-            const response = await fetch(downloadUrl, {
-                headers: headers,
-                credentials: 'include'  // 🔐 Send httpOnly cookie
-            });
-            
-
-            
-            if (response.ok) {
-                const blob = await response.blob();
-                const url = window.URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.style.display = 'none';
-                a.href = url;
-                
-                // Get filename from response headers or use default
-                const contentDisposition = response.headers.get('content-disposition');
-                let filename = 'clip.mp4';
-                if (contentDisposition) {
-                    const filenameMatch = contentDisposition.match(/filename="(.+)"/);
-                    if (filenameMatch) {
-                        filename = filenameMatch[1];
-                    }
-                }
-                
-                a.download = filename;
-                document.body.appendChild(a);
-                a.click();
-                window.URL.revokeObjectURL(url);
-                document.body.removeChild(a);
-                
-
-                showNotification('Download started!', 'success');
-            } else {
-
-                throw new Error(`Download failed with status ${response.status}`);
-            }
-        } catch (error) {
-            console.error('❌ Download error:', error);
-            showNotification('Download failed: ' + error.message, 'error');
-        }
-    }
-
-    cancelProcessing(itemId) {
-        const item = this.processingItems.find(i => i.id === itemId);
-        if (item) {
-            item.status = 'cancelled';
-            this.stopMonitoring(itemId);
-            this.updateProcessingView();
-            this.saveProcessingItems();
-            showNotification('Processing cancelled', 'info');
-        }
-    }
-
-    deleteProcessingItem(itemId) {
-        const index = this.processingItems.findIndex(i => i.id === itemId);
-        if (index !== -1) {
-            const item = this.processingItems[index];
-            
-            // PREVENT deletion of currently processing items
-            if (item.status === 'processing') {
-                showNotification('Cannot delete items while processing. Wait for completion or cancel first.', 'warning');
-                return;
-            }
-            
-            // Delete from backend
-            this.deleteProjectFromServer(item.projectId);
-            
-            // Remove from local list
-            this.processingItems.splice(index, 1);
-            this.stopMonitoring(itemId);
-            this.updateProcessingView();
-            this.saveProcessingItems();
-            showNotification(`${item.name} deleted successfully`, 'success');
-        }
-    }
-
-    retryProcessing(itemId) {
-        const item = this.processingItems.find(i => i.id === itemId);
-        if (item) {
-            item.status = 'processing';
-            item.progress = 0;
-            this.updateProcessingView();
-            this.saveProcessingItems();
-            this.startMonitoring(itemId);
-            showNotification('Retrying processing...', 'info');
-        }
-    }
-
-    moveToLibrary(processingItem) {
-        // 🔐 SECURITY: Validate projectId format to prevent path traversal
-        if (!this.validateProjectId(processingItem.projectId)) {
-            safeLog(`❌ SECURITY: Invalid projectId format rejected: ${processingItem.projectId}`);
-            return;
-        }
-
-        const libraryItem = {
-            id: processingItem.id,
-            projectId: processingItem.projectId,
-            name: processingItem.name,
-            template: processingItem.template,
-            templateName: processingItem.templateName,
-            timestamp: processingItem.timestamp,
-            status: 'completed',
-            slotNumber: processingItem.slotNumber,
-            isSlotSystem: processingItem.isSlotSystem
-        };
-
-        // ⚡ OPTIMIZED: Transform card in-place instead of re-rendering entire grid
-        const processingCard = document.querySelector(`[data-processing-id="${processingItem.id}"]`);
-        
-        if (processingCard) {
-            // Smoothly animate the card transformation
-            processingCard.style.transition = 'all 0.5s ease';
-            processingCard.style.opacity = '0.5';
-            
-            setTimeout(() => {
-                // 🔐 SECURITY: Clear old content first to prevent leftover listeners
-                processingCard.innerHTML = '';
-                
-                // Build library card using safe DOM methods
-                const safeName = sanitizeHTML(libraryItem.name);
-                const validThumbnailUrl = isValidImageUrl(libraryItem.thumbnailUrl) ? libraryItem.thumbnailUrl : 'https://via.placeholder.com/1000x600?text=No+Image';
-                
-                // Create preview section
-                const preview = document.createElement('div');
-                preview.className = 'card-preview';
-                preview.innerHTML = `
-                    <div class="status-pill">
-                        <div class="status-dot"></div>
-                        <span class="status-text">Ready</span>
-                    </div>
-                    <img src="${validThumbnailUrl}" alt="Asset Preview" onerror="this.src='https://via.placeholder.com/1000x600?text=No+Image'">
-                    <div class="card-actions">
-                        <button class="card-action-btn library-delete-btn" title="Delete clip" tabindex="0">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                                <path d="M3 6h18"/>
-                                <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/>
-                                <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/>
-                                <line x1="10" y1="11" x2="10" y2="17"/>
-                                <line x1="14" y1="11" x2="14" y2="17"/>
-                            </svg>
-                        </button>
-                    </div>
-                `;
-                
-                // Create content section
-                const content = document.createElement('div');
-                content.className = 'card-content';
-                const infoGroup = document.createElement('div');
-                infoGroup.className = 'info-group';
-                
-                const title = document.createElement('h2');
-                title.className = 'card-title';
-                title.textContent = safeName;
-                
-                const footer = document.createElement('div');
-                footer.className = 'card-footer';
-                footer.innerHTML = `
-                    <div class="badge">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-                        <span class="duration-text">${sanitizeHTML(libraryItem.duration || '0s')}</span>
-                    </div>
-                `;
-                
-                const downloadBtn = document.createElement('button');
-                downloadBtn.className = 'export-btn library-download-btn';
-                downloadBtn.title = 'Download clip';
-                downloadBtn.innerHTML = `
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-                        <g class="export-arrow">
-                            <polyline points="7 10 12 15 17 10"/>
-                            <line x1="12" y1="15" x2="12" y2="3"/>
-                        </g>
-                    </svg>
-                    Export
-                `;
-                
-                infoGroup.appendChild(title);
-                infoGroup.appendChild(footer);
-                content.appendChild(infoGroup);
-                content.appendChild(downloadBtn);
-                
-                processingCard.appendChild(preview);
-                processingCard.appendChild(content);
-                
-                // Remove processing attributes and add library attrs
-                processingCard.removeAttribute('data-processing-id');
-                processingCard.setAttribute('data-id', libraryItem.id);
-                processingCard.setAttribute('data-project-id', libraryItem.projectId);
-                processingCard.classList.remove('processing-card');
-                
-                // Fade in the new content
-                processingCard.style.opacity = '0';
-                processingCard.style.transition = 'opacity 0.3s ease';
-                
-                setTimeout(() => {
-                    processingCard.style.opacity = '1';
-                }, 10);
-                
-                // Re-attach event listeners for this card only
-                this.attachLibraryCardListeners(processingCard, libraryItem.id, libraryItem.projectId);
-                
-                // Fetch duration from server with validated projectId
-                this.fetchAndUpdateDuration(processingCard, libraryItem.projectId);
-            }, 300);
-        }
-
-        // Update data arrays
-        this.processingItems = this.processingItems.filter(item => item.id !== processingItem.id);
-        this.libraryItems.unshift(libraryItem);
-        
-        // Save to localStorage
-        this.saveProcessingItems();
-        this.saveLibraryItems();
-        
-        // Update other UI elements (storage badge, recent activity)
-        this.loadAndDisplayStorageInfo();
-        this.updateRecentActivity();
-        
-        safeLog(`✅ Card transformed: ${processingItem.name}`);
-    }
-
-    fetchAndUpdateDuration(cardElement, projectId) {
-        // 🔐 SECURITY: Validate projectId before making API call
-        if (!this.validateProjectId(projectId)) {
-            safeLog(`❌ SECURITY: Invalid projectId in fetchAndUpdateDuration`);
-            return;
-        }
-        
-        fetch(`/api/clips/duration/${encodeURIComponent(projectId)}`, {
-            method: 'GET',
-            credentials: 'include'
-        })
-        .then(response => {
-            if (!response.ok) throw new Error(`HTTP ${response.status}`);
-            return response.json();
-        })
-        .then(data => {
-            if (data.duration_formatted && cardElement) {
-                const durationSpan = cardElement.querySelector('.duration-text');
-                if (durationSpan) {
-                    // 🔐 SECURITY: Use textContent instead of innerHTML
-                    durationSpan.textContent = data.duration_formatted;
-                }
-            }
-        })
-        .catch(error => safeLog('Could not fetch duration:', error));
-    }
-
-    attachLibraryCardListeners(cardElement, itemId, projectId) {
-        // ⚡ Attach listeners to single card without re-rendering grid
-        const downloadBtn = cardElement.querySelector('.library-download-btn');
-        const deleteBtn = cardElement.querySelector('.library-delete-btn');
-        
-        if (downloadBtn) {
-            downloadBtn.addEventListener('click', (e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                
-                // 🔐 SECURITY: Validate projectId before download
-                if (projectId && this.validateProjectId(projectId) && clipsStudio) {
-                    clipsStudio.downloadClip(projectId);
-                } else {
-                    safeLog(`❌ SECURITY: Invalid projectId for download: ${projectId}`);
-                }
-            });
-        }
-        
-        if (deleteBtn) {
-            deleteBtn.addEventListener('click', (e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                
-                // 🔐 SECURITY: Validate itemId before delete
-                if (itemId && this.validateItemId(itemId) && clipsStudio) {
-                    clipsStudio.deleteClip(itemId);
-                } else {
-                    safeLog(`❌ SECURITY: Invalid itemId for delete: ${itemId}`);
-                }
-            });
-        }
-    }
-
-    async loadLibraryItems() {
-        try {
-            const headers = getAuthHeaders();
-            const response = await fetch(`${API_BASE_URL}/clips/projects`, {
-                headers: headers,
-                credentials: 'include'  // 🔐 Send httpOnly cookie
-            });
-            
-            if (response.ok) {
-                const data = await response.json();
-                this.libraryItems = data.projects.map(project => ({
-                    id: project.id,
-                    projectId: project.id,
-                    name: project.template_name || 'Clip',
-                    template: project.template,
-                    templateName: project.template_name,
-                    timestamp: new Date(project.created_at),
-                    status: 'completed',
-                    url: project.url,
-                    thumbnailUrl: project.thumbnail_url,
-                    slotNumber: project.slot_number,
-                    isSlotSystem: project.slots ? true : false,
-                    slots: project.slots
-                }));
-                
-                this.updateLibraryView();
-                this.updateRecentActivity();
-                this.saveLibraryItems();
-            }
-        } catch (error) {
-            safeLog('Failed to load library items:', error);
-            // Use local storage as fallback
-            this.loadLibraryItemsFromStorage();
-        }
-    }
-
-    startLibraryPolling() {
-        // Clear any existing polling
-        if (this.libraryPollingInterval) {
-            clearInterval(this.libraryPollingInterval);
-        }
-        
-        // Poll every 5 seconds to auto-refresh library and validate processing items
-        this.libraryPollingInterval = setInterval(async () => {
-            try {
-                await this.loadLibraryItems().catch(e => safeLog('Auto-refresh library failed:', e));
-                
-                // Also validate processing items to remove any stale/orphaned cards
-                if (this.processingItems.length > 0) {
-                    const validItems = [];
-                    for (const item of this.processingItems) {
-                        try {
-                            const headers = getAuthHeaders();
-                            const resp = await fetch(`${API_BASE_URL}/clips/status/${item.projectId}`, {
-                                headers,
-                                credentials: 'include',
-                                timeout: 3000
+                        if (_0xce2a0['error_code'] === 'VIDEO_LIMIT_REACHED') {
+                            showLimitModal({
+                                'used': _0xce2a0[_0x3a005f(0x4e8)]?.['current_video_count'],
+                                'limit': _0xce2a0[_0x3a005f(0x4e8)]?.[_0x3a005f(0x39c)]?.[_0x3a005f(0x3e0)],
+                                'plan_type': _0xce2a0[_0x3a005f(0x3ea)],
+                                'last_video_date': _0xce2a0[_0x3a005f(0x1ad)],
+                                'cooldown_hours': _0xce2a0[_0x3a005f(0x579)] || 0x60
                             });
-                            
-                            if (resp.ok) {
-                                const status = await resp.json();
-                                // Keep only if actively processing
-                                if (status.status && ['processing', 'waiting', 'pending', 'queued'].includes(status.status)) {
-                                    validItems.push(item);
-                                } else {
-                                    safeLog(`🧹 Removing stale card during polling: ${item.name} (status: ${status.status})`);
-                                }
-                            } else {
-                                safeLog(`🧹 Backend check failed for ${item.name}, removing from processing`);
-                            }
-                        } catch (e) {
-                            safeLog(`⚠️ Error validating ${item.name} during polling - removing: ${e.message}`);
-                        }
-                    }
-                    
-                    // Update if any items were removed
-                    if (validItems.length !== this.processingItems.length) {
-                        this.processingItems = validItems;
-                        this.saveProcessingItems();
-                        this.updateLibraryView();
-                        safeLog(`🧹 Polling cleanup: ${this.processingItems.length} active items remaining`);
-                    }
-                }
-            } catch (e) {
-                safeLog('Auto-polling error:', e);
-            }
-        }, 5000);
-        
-        safeLog('📡 Library auto-polling started (every 5s with processing card validation)');
-    }
-
-    stopLibraryPolling() {
-        if (this.libraryPollingInterval) {
-            clearInterval(this.libraryPollingInterval);
-            this.libraryPollingInterval = null;
-            safeLog('📡 Library auto-polling stopped');
-        }
-    }
-
-    async loadAndDisplayStorageInfo() {
-        try {
-            const userId = currentUser?.id;
-            if (!userId) {
-                return;
-            }
-
-            const headers = getAuthHeaders();
-            
-            // ✅ ALWAYS fetch fresh - removes 30 second cache!
-            safeLog('🔄 Fetching fresh subscription info from backend - NO CACHE...');
-            const response = await fetch(`${API_BASE_URL}/auth/subscription`, {
-                method: 'GET',
-                headers: headers,
-                credentials: 'include'  // ✅ Send httpOnly cookie
-            });
-
-            if (response.ok) {
-                const data = await response.json();
-                if (data.success && data.subscription) {
-                    this.updateStorageDisplay(data.subscription);
-                    safeLog('✅ Storage display updated with fresh backend data');
-                }
-            } else {
-                safeLog('Failed to fetch subscription info, status:', response.status);
-            }
-        } catch (error) {
-            safeLog('Error loading storage info:', error);
-        }
-    }
-    
-    updateStorageDisplay(subscription) {
-        const usedElement = document.getElementById('storageUsedBadge');
-        const totalElement = document.getElementById('storageTotalBadge');
-        const planElement = document.getElementById('storagePlanBadge');
-        const storageBadge = document.getElementById('storageBadge');
-        const deleteAllBtn = document.getElementById('deleteAllClipsBtn');
-        const needMoreUpgradeText = document.getElementById('needMoreUpgradeText');
-
-        // Use local library count since videos are stored in localStorage, not backend
-        const videosInLibrary = this.libraryItems.length;
-        const videoLimit = subscription.video_limit || subscription.videos_space_limit || 2;  // From backend
-        const planName = subscription.plan_name || (subscription.plan ? subscription.plan.charAt(0).toUpperCase() + subscription.plan.slice(1) : 'Free');
-
-        if (usedElement) usedElement.textContent = videosInLibrary;
-        if (totalElement) totalElement.textContent = videoLimit;
-        if (planElement) planElement.textContent = planName;
-        
-        // Check if storage limit is reached
-        const isAtLimit = videosInLibrary >= videoLimit;
-        
-        // Apply red highlighting when at limit
-        if (isAtLimit) {
-            if (usedElement) usedElement.style.color = '#ff4444';
-            if (totalElement) totalElement.style.color = '#ff4444';
-            if (storageBadge) {
-                storageBadge.style.borderColor = '#ff4444';
-                storageBadge.style.backgroundColor = 'rgba(255, 68, 68, 0.05)';
-            }
-            // Show delete all clips button
-            if (deleteAllBtn) deleteAllBtn.style.display = 'inline-flex';
-            // Show "Need more? Upgrade" text when at limit
-            if (needMoreUpgradeText) needMoreUpgradeText.style.display = 'inline';
-        } else {
-            if (usedElement) usedElement.style.color = 'inherit';
-            if (totalElement) totalElement.style.color = 'inherit';
-            if (storageBadge) {
-                storageBadge.style.borderColor = '';
-                storageBadge.style.backgroundColor = '';
-            }
-            // Hide delete all clips button
-            if (deleteAllBtn) deleteAllBtn.style.display = 'none';
-            // Hide "Need more? Upgrade" text when not at limit
-            if (needMoreUpgradeText) needMoreUpgradeText.style.display = 'none';
-        }
-        
-        safeLog(`📊 Library storage: ${videosInLibrary} / ${videoLimit} videos (${planName}) - ${isAtLimit ? '⚠️ AT LIMIT' : '✅ OK'}`);
-    }
-
-    handleSubscriptionExpiration() {
-        // SECURITY: Do NOT read user data from localStorage
-        // Backend enforces plan restrictions, not client-side
-        // Use loadAndDisplayStorageInfo() to fetch fresh subscription data from backend
-        
-        if (!this.loadAndDisplayStorageInfo) return;
-        
-        // Fetch fresh subscription data from backend (no caching)
-        this.loadAndDisplayStorageInfo().then(subscription => {
-            if (!subscription || !subscription.subscription_end_date) {
-                return;
-            }
-            
-            const expirationDate = new Date(subscription.subscription_end_date);
-            const today = new Date();
-            
-            // If subscription expired, show notification (backend handles enforcement)
-            if (today > expirationDate && subscription.plan !== 'free') {
-                // UI notification only - backend will enforce plan restrictions
-                showNotification('Your subscription has expired. You are now on the Free plan.', 'warning');
-                
-                // UI update: show storage limit warning if needed
-                if (this.libraryItems && this.libraryItems.length > 2) {
-                    showNotification('Your storage has been limited to 2 videos per the Free plan.', 'warning');
-                }
-            }
-        }).catch(error => {
-            safeLog('Error checking subscription expiration:', error);
-            // Silently fail - backend will enforce limits regardless
-        });
-    }
-
-    updateLibraryView() {
-        // Load storage info first (but with caching to reduce API calls)
-        this.loadAndDisplayStorageInfo();
-        
-        // Check for subscription expiration and downgrade storage if needed
-        this.handleSubscriptionExpiration();
-        
-        const libraryGrid = document.getElementById('libraryGrid');
-        const emptyState = document.getElementById('emptyLibraryState');
-        
-        if (!libraryGrid || !emptyState) return;
-        
-        // Ensure library items are loaded before rendering
-        if (!Array.isArray(this.libraryItems)) {
-            this.libraryItems = [];
-        }
-        if (!Array.isArray(this.processingItems)) {
-            this.processingItems = [];
-        }
-        
-        if (this.libraryItems.length === 0 && this.processingItems.length === 0) {
-            emptyState.style.display = 'block';
-            libraryGrid.innerHTML = '';
-            libraryGrid.appendChild(emptyState);
-            return;
-        }
-
-        emptyState.style.display = 'none';
-        
-        // Build processing items HTML first (they appear at top)
-        let processingHTML = '';
-        if (this.processingItems.length > 0) {
-            processingHTML = this.processingItems.map(item => {
-                return `
-                    <div class="library-card processing-card" data-processing-id="${item.id}" data-project-id="${item.projectId}">
-                        <div class="card-preview processing-preview">
-                            <div class="processing-blur-overlay"></div>
-                            <div class="processing-spinner"></div>
-                        </div>
-                        <div class="card-content">
-                            <div class="info-group">
-                                <h2 class="card-title" data-item-name="${sanitizeHTML(item.name || 'Processing...')}">${sanitizeHTML(item.name || 'Processing...')}</h2>
-                                <div class="card-footer" style="opacity: 0.6;">
-                                    <div class="badge">
-                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-                                        Processing...
-                                    </div>
-                                </div>
-                            </div>
-                            <button class="export-btn" disabled style="opacity: 0.6; cursor: not-allowed;">
-                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-                                    <g class="export-arrow">
-                                        <polyline points="7 10 12 15 17 10"/>
-                                        <line x1="12" y1="15" x2="12" y2="3"/>
-                                    </g>
-                                </svg>
-                                Export
-                            </button>
-                        </div>
-                    </div>
-                `;
-            }).join('');
-        }
-
-libraryGrid.innerHTML = processingHTML + this.libraryItems.map(item => {
-            // SECURITY: Sanitize all user-controlled data before inserting into HTML
-            const safeName = sanitizeHTML(item.name);
-            const safeTemplateName = sanitizeHTML(item.templateName || item.template || '');
-            // 🔐 Validate thumbnail URL - block javascript: and data: URIs
-            const validThumbnailUrl = isValidImageUrl(item.thumbnailUrl) ? item.thumbnailUrl : 'https://via.placeholder.com/1000x600?text=No+Image';
-            
-            return `
-            <div class="library-card" data-id="${item.id}" data-project-id="${item.projectId}">
-                <div class="card-preview">
-                    <div class="status-pill">
-                        <div class="status-dot"></div>
-                        <span class="status-text">Click me</span>
-                    </div>
-                    <img src="${validThumbnailUrl}" alt="Asset Preview" onerror="this.src='https://via.placeholder.com/1000x600?text=No+Image'">
-                    <div class="card-actions">
-                        <button class="card-action-btn library-delete-btn" data-item-id="${item.id}" title="Delete clip">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                                <path d="M3 6h18"/>
-                                <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/>
-                                <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/>
-                                <line x1="10" y1="11" x2="10" y2="17"/>
-                                <line x1="14" y1="11" x2="14" y2="17"/>
-                            </svg>
-                        </button>
-                    </div>
-                </div>
-
-                <div class="card-content">
-                    <div class="info-group">
-                        <h2 class="card-title">${safeName}</h2>
-                        
-                        <div class="card-footer">
-                            <div class="badge">
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-                                ${item.duration || '0s'}
-                            </div>
-                        </div>
-                    </div>
-
-                    <button class="export-btn library-download-btn" data-project-id="${item.projectId}" title="Download clip">
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                            <!-- The tray [ ] that stays still -->
-                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-                            <!-- The arrow that bounces -->
-                            <g class="export-arrow">
-                                <polyline points="7 10 12 15 17 10"/>
-                                <line x1="12" y1="15" x2="12" y2="3"/>
-                            </g>
-                        </svg>
-                        Export
-                    </button>
-                </div>
-            </div>
-        `;
-        }).join('');
-        
-        // Store card data for restoration and enable dragging
-        setTimeout(() => {
-            const libraryCards = document.querySelectorAll('.library-grid .library-card[data-id]');
-            libraryCards.forEach(card => {
-                const cardId = card.getAttribute('data-id');
-                const projectId = card.getAttribute('data-project-id');
-                if (cardId && typeof storeLibraryCard === 'function') {
-                    const cardData = {
-                        id: cardId,
-                        html: card.innerHTML,
-                        classList: card.className,
-                        dataAttributes: {
-                            'data-id': cardId
-                        }
-                    };
-                    storeLibraryCard(cardId, cardData);
-                }
-                
-                // Fetch video duration from server if projectId exists
-                if (projectId) {
-                    fetch(`/api/clips/duration/${projectId}`, {
-                        method: 'GET',
-                        credentials: 'include'
-                    })
-                    .then(response => response.json())
-                    .then(data => {
-                        if (data.duration_formatted) {
-                            const badgeElement = card.querySelector('.badge');
-                            if (badgeElement) {
-                                const durationText = badgeElement.querySelector('svg').nextElementSibling;
-                                if (durationText) {
-                                    durationText.textContent = data.duration_formatted;
-                                } else {
-                                    // Fallback: update badge innerHTML
-                                    const svg = badgeElement.querySelector('svg').outerHTML;
-                                    badgeElement.innerHTML = svg + data.duration_formatted;
-                                }
-                            }
-                        }
-                    })
-                    .catch(error => {});
-                }
-            });
-            
-            // Enable dragging for library cards
-
-            
-            // Hook into websocket for real-time updates without page refresh
-            this.setupWebSocketHandlers();
-            
-            // 🔐 SECURITY: Event delegation for library actions - prevents inline onclick injection
-            // Attach listeners only once to prevent duplicate handlers
-            const libraryGrid = document.querySelector('.library-grid');
-            if (libraryGrid && !libraryGrid._hasClickListener) {
-                libraryGrid._hasClickListener = true;
-                
-                libraryGrid.addEventListener('click', (e) => {
-    
-                    
-                    const downloadBtn = e.target.closest('.library-download-btn');
-                    if (downloadBtn) {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        const projectId = downloadBtn.getAttribute('data-project-id');
-
-                        if (projectId && clipsStudio) {
-                            clipsStudio.downloadClip(projectId);
+                            return;
                         } else {
-
+                            _0x41706e(_0xce2a0[_0x3a005f(0x302)] || _0x3a005f(0x260), 'error');
+                            return;
                         }
+                    }
+                } else {
+                    if (_0xce2a0[_0x3a005f(0x2e8)] === _0x3a005f(0x4c8)) {
+                        const _0x1b0bd7 = _0xce2a0[_0x3a005f(0x486)] || 0x0, _0x3576db = _0xce2a0[_0x3a005f(0x201)] || 0x0;
+                        _0x41706e(_0x3a005f(0x517) + _0x1b0bd7 + 'm).\x20Maximum\x20is\x20' + _0x3576db + 'm\x20for\x20your\x20plan.', _0x3a005f(0x302));
                         return;
+                    } else {
+                        const _0x537cb8 = _0xce2a0[_0x3a005f(0x302)] || _0x3a005f(0x31a);
+                        _0x41706e(_0x537cb8, 'error');
+                        throw new Error(_0x537cb8);
                     }
-                    
-                    const deleteBtn = e.target.closest('.library-delete-btn');
-                    if (deleteBtn) {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        const itemId = deleteBtn.getAttribute('data-item-id');
-                        if (itemId && clipsStudio) {
-                            clipsStudio.deleteClip(itemId);
-                        }
-                        return;
-                    }
+                }
+            }
+            const _0x690ec9 = await _0x4db048[_0x3a005f(0x494)]();
+            this[_0x3a005f(0x292)] = _0x690ec9[_0x3a005f(0x2cf)];
+            const _0xc2de1a = {
+                'id': Date[_0x3a005f(0x1df)](),
+                'projectId': this[_0x3a005f(0x292)],
+                'name': _0x690ec9[_0x3a005f(0x371)][_0x3a005f(0x315)] + _0x3a005f(0x320),
+                'template': _0xd07d1c,
+                'templateName': _0x690ec9[_0x3a005f(0x371)][_0x3a005f(0x315)],
+                'status': 'processing',
+                'progress': 0x0,
+                'message': _0x3a005f(0x56a),
+                'timestamp': new Date(),
+                'lastChecked': Date[_0x3a005f(0x1df)](),
+                'slotNumber': null,
+                'useSlotSystem': !![],
+                'isSlotSystem': !![]
+            };
+            await this['addProcessingItem'](_0xc2de1a);
+            const _0xf8668c = document[_0x3a005f(0x1b9)](_0x3a005f(0x1b4));
+            if (_0xf8668c) {
+                _0xf8668c[_0x3a005f(0x344)][_0x3a005f(0x180)] = 'flex';
+                const _0x1d92af = document[_0x3a005f(0x1b9)](_0x3a005f(0x4ea)), _0x53b368 = document[_0x3a005f(0x1b9)]('generationProgressText');
+                _0x1d92af && (_0x1d92af[_0x3a005f(0x344)][_0x3a005f(0x347)] = _0x3a005f(0x4d7)), _0x53b368 && (_0x53b368[_0x3a005f(0x345)] = '0%');
+            }
+            _0x3e82a3 && _0x690ec9[_0x3a005f(0x2cf)] && _0x3e82a3['registerTask'](_0x690ec9[_0x3a005f(0x2cf)], 'processing');
+            const _0xa7a119 = document[_0x3a005f(0x1b9)](_0x3a005f(0x2de));
+            _0xa7a119 && (_0xa7a119[_0x3a005f(0x2ae)] = !![], _0xa7a119[_0x3a005f(0x2d9)][_0x3a005f(0x3ed)](_0x3a005f(0x4a2))), this[_0x3a005f(0x34e)](_0x3a005f(0x530)), this[_0x3a005f(0x490)](_0xc2de1a['id']);
+        } catch (_0x527495) {
+            _0x5e766a(_0x3a005f(0x1ac), _0x527495), _0x41706e('Failed\x20to\x20start\x20processing:\x20' + _0x527495[_0x3a005f(0x45b)], _0x3a005f(0x302));
+        }
+    }
+    ['startMonitoring'](_0xa5f73d) {
+        const _0x28fbc8 = _0x4afe9d;
+        this[_0x28fbc8(0x522)](_0xa5f73d);
+        const _0x5d12fd = setInterval(async () => {
+            const _0x125182 = _0x28fbc8, _0x12e957 = this[_0x125182(0x393)][_0x125182(0x465)](_0x1d921b => _0x1d921b['id'] === _0xa5f73d);
+            if (!_0x12e957) {
+                this[_0x125182(0x522)](_0xa5f73d);
+                return;
+            }
+            _0x12e957[_0x125182(0x51f)] === 'processing' ? await this[_0x125182(0x261)](_0xa5f73d) : this[_0x125182(0x522)](_0xa5f73d);
+        }, 0xbb8);
+        this['monitoringIntervals'][_0x28fbc8(0x385)](_0xa5f73d, _0x5d12fd);
+    }
+    [_0x4afe9d(0x522)](_0x2e829d) {
+        const _0x1d1aab = _0x4afe9d;
+        this[_0x1d1aab(0x17e)][_0x1d1aab(0x43d)](_0x2e829d) && (clearInterval(this[_0x1d1aab(0x17e)][_0x1d1aab(0x2b0)](_0x2e829d)), this[_0x1d1aab(0x17e)][_0x1d1aab(0x464)](_0x2e829d));
+    }
+    [_0x4afe9d(0x437)]() {
+        const _0x2da1c3 = _0x4afe9d;
+        this[_0x2da1c3(0x17e)]['forEach']((_0x4fad78, _0x3901c3) => {
+            clearInterval(_0x4fad78);
+        }), this[_0x2da1c3(0x17e)][_0x2da1c3(0x4d3)]();
+    }
+    async [_0x4afe9d(0x261)](_0x35cf89) {
+        const _0x348e7a = _0x4afe9d;
+        try {
+            const _0x43bb21 = this[_0x348e7a(0x393)][_0x348e7a(0x465)](_0x14cf4b => _0x14cf4b['id'] === _0x35cf89);
+            if (!_0x43bb21)
+                return;
+            const _0x811987 = _0x67ee3(), _0x528683 = await fetch(API_BASE_URL + '/clips/status/' + _0x43bb21[_0x348e7a(0x469)], {
+                    'headers': _0x811987,
+                    'credentials': _0x348e7a(0x3cd)
                 });
-            }
-        }, 0);
-    }
-
-    deleteClip(itemId) {
-        safeLog(`🗑️ Delete initiated for item: ${itemId}`);
-        
-        // Find the item to delete BEFORE filtering
-        const itemToDelete = this.libraryItems.find(item => item.id == itemId) || 
-                            this.processingItems.find(item => item.id == itemId);
-        
-        if (!itemToDelete) {
-            safeLog(`❌ Item not found: ${itemId}`);
-            showNotification('Clip not found', 'error');
-            return;
-        }
-        
-        safeLog(`📍 Item found:`, itemToDelete);
-        
-        // PREVENT deletion of currently processing items
-        if (itemToDelete.status === 'processing') {
-            safeLog(`⚠️ Cannot delete processing item: ${itemId}`);
-            showNotification('Cannot delete items while processing. Wait for completion or cancel first.', 'warning');
-            return;
-        }
-
-        // Show custom confirmation modal
-        const modal = document.getElementById('deleteConfirmationModal');
-        const confirmText = document.getElementById('deleteConfirmationText');
-        let confirmBtn = document.getElementById('confirmDeleteBtn');
-        
-        if (!modal || !confirmText || !confirmBtn) {
-            showNotification('Error: Delete modal not available', 'error');
-            return;
-        }
-        
-        safeLog('✅ Modal elements found, showing confirmation');
-        
-        // Update modal text with clip name
-        confirmText.textContent = `Delete "${itemToDelete.name}"?`;
-        
-        // 🔐 SECURITY FIX: Do NOT use cloneNode() - it destroys all event listeners
-        // Instead, abort previous AbortController signals and reattach listeners safely
-        if (confirmBtn._eventControllers) {
-            Object.values(confirmBtn._eventControllers).forEach(ctrl => {
-                try { ctrl.abort(); } catch (e) { /* already aborted */ }
-            });
-            confirmBtn._eventControllers = {};
-        }
-        
-        // Create new AbortController for this listener
-        const controller = new AbortController();
-        if (!confirmBtn._eventControllers) confirmBtn._eventControllers = {};
-        confirmBtn._eventControllers['click'] = controller;
-        
-        // Add event listener with cleanup signal - will be removed when controller.abort() is called
-        confirmBtn.addEventListener('click', async () => {
-            safeLog(`🔄 Confirm button clicked for item: ${itemId}`);
-            // Auto-cleanup this listener after first click
-            controller.abort();
-            try {
-                modal.style.display = 'none';
-                showNotification('Deleting clip...', 'info');
-                
-                // Delete from server first if it has a projectId
-                if (itemToDelete.projectId) {
-                    // 🔐 CRITICAL IDOR PROTECTION (Backend Responsibility):
-                    // Frontend can be modified by attackers to send ANY projectId
-                    // Backend MUST verify:
-                    // 1. User session is valid (from httpOnly cookie)
-                    // 2. Project belongs to authenticated user
-                    // 3. User subscription allows deletion
-                    // DO NOT trust projectId from frontend!
-                    safeLog(`📤 Deleting project from server: ${itemToDelete.projectId}`);
-                    await this.deleteProjectFromServer(itemToDelete.projectId);
-                }
-                
-                // Remove from local arrays
-                safeLog(`🗄️ Removing from local arrays`);
-                this.libraryItems = this.libraryItems.filter(item => item.id != itemId);
-                this.processingItems = this.processingItems.filter(item => item.id != itemId);
-                
-                // Also remove any processing items with the same projectId
-                if (itemToDelete.projectId) {
-                    this.processingItems = this.processingItems.filter(item => item.projectId != itemToDelete.projectId);
-                }
-                
-                // Update views and save
-                safeLog(`🔄 Updating views and saving`);
-                this.updateLibraryView();
-                this.updateProcessingView();
-                this.updateRecentActivity();
-                this.saveLibraryItems();
-                this.saveProcessingItems();
-                
-                // ✅ Refresh storage badge immediately from backend
-                safeLog(`📊 Updating storage badge from backend`);
-                if (typeof updateStorageBadgeDisplay === 'function') {
-                    await updateStorageBadgeDisplay();
-                }
-                
-                safeLog(`✅ Clip deleted successfully`);
-                showNotification('✅ Clip deleted successfully', 'success');
-                
-                // Refresh page after deletion to ensure UI is fully updated
-                setTimeout(() => {
-                    window.location.reload();
-                }, 800);
-                
-            } catch (error) {
-                showNotification('Failed to delete clip: ' + error.message, 'error');
-            } finally {
-                // Always close modal
-                modal.style.display = 'none';
-            }
-        }, {once: true});
-        
-        // Show modal with explicit visibility
-        modal.style.display = 'block';
-        modal.style.visibility = 'visible';
-        modal.style.opacity = '1';
-        modal.style.pointerEvents = 'auto';
-        safeLog('📋 Modal displayed');
-        
-        // Close modal when clicking outside of it
-        const closeOnBackdropClick = (event) => {
-            if (event.target === modal) {
-                safeLog('🚫 Modal closed by backdrop click');
-                modal.style.display = 'none';
-                document.removeEventListener('click', closeOnBackdropClick);
-            }
-        };
-        document.addEventListener('click', closeOnBackdropClick);
-    }
-
-    async deleteProjectFromServer(projectId) {
-        try {
-            // 🔐 SECURITY: Client-side validation as defense-in-depth
-            // (Backend MUST also validate ownership!)
-            if (!projectId || typeof projectId !== 'string') {
-                throw new Error('Invalid project ID format');
-            }
-            
-            // Assuming project IDs are UUIDs in format: userId_uuid or similar
-            // Add validation based on your actual project ID format
-            // Basic check: should be a reasonable length string with alphanumeric chars
-            if (!/^[a-zA-Z0-9_-]+$/.test(projectId) || projectId.length < 10) {
-                throw new Error('Invalid project ID format');
-            }
-            
-            // 🔐 CRITICAL - IDOR PREVENTION: /clips/project/{projectId} DELETE MUST:
-            // 1. Verify user session from httpOnly cookie
-            // 2. Query database: Is this projectId owned by the authenticated user?
-            // 3. Return 403 Forbidden if projectId belongs to another user
-            // 4. Only then delete the project
-            // Frontend sends projectId but backend MUST verify ownership!
-            
-            const headers = getAuthHeaders();
-            const response = await fetch(`${API_BASE_URL}/clips/project/${projectId}`, {
-                method: 'DELETE',
-                headers: headers,
-                credentials: 'include'  // 🔐 Send httpOnly cookie
-            });
-            
-            if (!response.ok) {
-                const errorData = await response.json().catch(() => ({}));
-                throw new Error(errorData.error || `Server error: ${response.status}`);
-            }
-            
-            const data = await response.json();
-            return true;
-        } catch (error) {
-            // 🔐 SECURITY FIX: Sanitize error message to avoid exposing sensitive info
-            // Do NOT expose error.message directly - it may contain stack traces, paths, etc.
-            const sanitized = sanitizeErrorMessage(error);
-            showNotification(`Warning: Failed to delete files on server`, 'warning');
-            safeLog('Delete error (sanitized for user):', sanitized);
-            return false;
-        }
-    }
-
-    filterLibrary(filter) {
-        // Filter library items based on selected filter
-        const filteredItems = this.libraryItems.filter(item => {
-            if (filter === 'all') return true;
-            if (filter === 'recent') {
-                const oneWeekAgo = new Date();
-                oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
-                return new Date(item.timestamp) > oneWeekAgo;
-            }
-            if (filter === 'favorites') {
-                // You can add favorite functionality later
-                return true;
-            }
-            return true;
-        });
-        
-        // Update view with filtered items
-        showNotification(`Filtered by: ${filter}`, 'info');
-        // Note: In a full implementation, you would update the grid with filteredItems
-    }
-
-    manualRefresh() {
-        this.loadLibraryItems();
-        this.loadProcessingItems();
-        showNotification('Library refreshed', 'info');
-    }
-
-    // Note: showNotification is defined globally (see line 727)
-    // This method delegates to the global function for consistency
-
-    saveProcessingItems() {
-        try {
-            if (!this.processingItems || this.processingItems.length === 0) {
-                localStorage.removeItem('clipsProcessing');
+            if (!_0x528683['ok'])
                 return;
-            }
-            
-            const data = JSON.stringify(this.processingItems);
-            localStorage.setItem('clipsProcessing', data);
-            safeLog(`✓ Saved ${this.processingItems.length} processing item(s)`);
-        } catch (e) {
-            if (e.name === 'QuotaExceededError') {
-                safeLog('Storage quota exceeded - clearing old data');
-                this.clearOldProcessingData();
-                try {
-                    localStorage.setItem('clipsProcessing', JSON.stringify(this.processingItems));
-                } catch (retryError) {
-                    safeLog('Failed to save even after cleanup:', retryError);
-                }
+            const _0x46984d = await _0x528683[_0x348e7a(0x494)](), _0x3ae69c = _0x43bb21['status'] !== _0x46984d[_0x348e7a(0x51f)] || _0x43bb21[_0x348e7a(0x312)] !== _0x46984d['progress'];
+            _0x3ae69c && (_0x43bb21[_0x348e7a(0x51f)] = _0x46984d['status'], _0x43bb21['progress'] = _0x46984d['progress'], _0x43bb21['message'] = _0x46984d[_0x348e7a(0x45b)], _0x43bb21[_0x348e7a(0x2d3)] = Date[_0x348e7a(0x1df)](), _0x46984d[_0x348e7a(0x1f9)] && _0x43bb21[_0x348e7a(0x26f)] && (_0x43bb21['slotNumber'] = _0x46984d[_0x348e7a(0x1f9)], _0x43bb21[_0x348e7a(0x315)] = _0x43bb21['templateName'] + _0x348e7a(0x54f) + _0x46984d[_0x348e7a(0x1f9)] + ')'), this[_0x348e7a(0x56c)](), this[_0x348e7a(0x215)] === _0x348e7a(0x530) && this[_0x348e7a(0x2c2)](), this[_0x348e7a(0x2d2)]());
+            if (_0x46984d['status'] === _0x348e7a(0x427)) {
+                _0x43bb21['status'] = _0x348e7a(0x427), this['moveToLibrary'](_0x43bb21), this[_0x348e7a(0x522)](_0x35cf89), _0x41706e('Clip\x20created\x20successfully!', _0x348e7a(0x1a6));
+                const _0x53049f = document[_0x348e7a(0x1b9)](_0x348e7a(0x2de));
+                _0x53049f && (_0x53049f[_0x348e7a(0x2ae)] = ![], _0x53049f[_0x348e7a(0x2d9)]['remove'](_0x348e7a(0x4a2))), _0x43bb21[_0x348e7a(0x26f)] && _0x43bb21[_0x348e7a(0x593)] && _0x41706e(_0x348e7a(0x2f5) + _0x43bb21[_0x348e7a(0x593)], 'info'), this[_0x348e7a(0x34e)](_0x348e7a(0x530)), this[_0x348e7a(0x56c)](), this[_0x348e7a(0x2d2)]();
             } else {
-                safeLog('Failed to save processing items:', e);
-            }
-        }
-    }
-
-    async loadProcessingItems() {
-        try {
-            const saved = localStorage.getItem('clipsProcessing');
-            if (saved) {
-                this.processingItems = JSON.parse(saved);
-                const now = Date.now();
-                const MAX_PROCESSING_TIME = 24 * 60 * 60 * 1000; // 24 hours max for processing items to persist
-                
-                // Filter out only genuinely old/completed items
-                this.processingItems = this.processingItems.filter(item => {
-                    // Remove only if explicitly marked as completed or failed
-                    if (item.status === 'completed' || item.status === 'failed') {
-                        safeLog(`🧹 Cleaning up ${item.status} item: ${item.name}`);
-                        return false;
-                    }
-                    
-                    // Check if item is too old (stale processing)
-                    const itemAge = now - (item.timestamp ? new Date(item.timestamp).getTime() : now);
-                    if (itemAge > MAX_PROCESSING_TIME) {
-                        safeLog(`🧹 Removing stale processing item (${Math.round(itemAge/1000/60)} min old): ${item.name}`);
-                        return false;
-                    }
-                    
-                    // Keep everything else that is processing/waiting/pending
-                    return true;
-                });
-
-                // Save the cleaned list back to localStorage
-                this.saveProcessingItems();
-                this.updateProcessingView();
-                this.updateLibraryView();
-                safeLog(`✓ Loaded ${this.processingItems.length} processing item(s)`);
-            }
-        } catch (e) {
-            safeLog('Failed to load processing items:', e);
-            this.processingItems = [];
-            this.saveProcessingItems();
-            this.updateLibraryView();
-        }
-    }
-
-    saveLibraryItems() {
-        try {
-            if (!this.libraryItems || this.libraryItems.length === 0) {
-                localStorage.removeItem('clipsLibrary');
-                return;
-            }
-            
-            const data = JSON.stringify(this.libraryItems);
-            localStorage.setItem('clipsLibrary', data);
-            safeLog(`✓ Saved ${this.libraryItems.length} library item(s)`);
-        } catch (e) {
-            if (e.name === 'QuotaExceededError') {
-                safeLog('Storage quota exceeded - clearing old data');
-                this.clearOldLibraryData();
-                try {
-                    localStorage.setItem('clipsLibrary', JSON.stringify(this.libraryItems));
-                } catch (retryError) {
-                    safeLog('Failed to save even after cleanup:', retryError);
-                }
-            } else {
-                safeLog('Failed to save library items:', e);
-            }
-        }
-    }
-
-    clearProcessingItems() {
-        // Clear all stuck processing items - useful for debugging/manual cleanup
-        safeLog(`🧹 Clearing ${this.processingItems.length} processing items`);
-        this.processingItems = [];
-        this.stopAllMonitoring();
-        this.saveProcessingItems();
-        this.updateLibraryView();
-        showNotification('Cleared all processing items', 'info');
-    }
-
-    loadLibraryItemsFromStorage() {
-        try {
-            const saved = localStorage.getItem('clipsLibrary');
-            if (saved) {
-                this.libraryItems = JSON.parse(saved);
-                this.updateLibraryView();
-                this.updateRecentActivity();
-                safeLog(`✓ Loaded ${this.libraryItems.length} library item(s)`);
-            }
-        } catch (e) {
-            safeLog('Failed to load library items:', e);
-            this.libraryItems = [];
-        }
-    }
-
-    clearOldLibraryData() {
-        // Keep only the 50 most recent items
-        if (this.libraryItems.length > 50) {
-            this.libraryItems = this.libraryItems
-                .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))
-                .slice(0, 50);
-            safeLog('Cleaned up old library items, keeping 50 most recent');
-        }
-    }
-
-    clearOldProcessingData() {
-        // Remove completed items older than 7 days
-        const sevenDaysAgo = Date.now() - (7 * 24 * 60 * 60 * 1000);
-        this.processingItems = this.processingItems.filter(item => {
-            if (item.status === 'completed' && item.timestamp < sevenDaysAgo) {
-                return false; // Remove old completed items
-            }
-            return true;
-        });
-        safeLog('Cleaned up old processing items');
-    }
-
-    setupWebSocketHandlers() {
-        /**
-         * Set up websocket handlers for real-time library updates
-         * This allows processing cards to animate unblur when video completes
-         * without requiring a page refresh
-         */
-        if (!solisWSClient) {
-            safeLog('WebSocket client not available yet, retrying...');
-            setTimeout(() => this.setupWebSocketHandlers(), 1000);
-            return;
-        }
-
-        // Handle progress updates
-        solisWSClient.on('progress', (data) => {
-            const { taskId, progress, step, status } = data;
-            
-            // Validate progress is a valid number
-            if (typeof progress !== 'number' || isNaN(progress) || progress < 0 || progress > 100) {
-                safeLog(`⚠️ Invalid progress value received: ${progress}`);
-                return;
-            }
-            
-            const processingCard = document.querySelector(`[data-processing-id="${taskId}"]`);
-            if (processingCard) {
-                safeLog(`⏳ Processing ${taskId}: ${Math.round(progress)}% - ${step || ''}`);
-            }
-
-            // Update the progress spinner in the header
-            const wrapper = document.getElementById('generationProgressWrapper');
-            const progressCircle = document.getElementById('progressCircle');
-            const progressText = document.getElementById('generationProgressText');
-
-            if (wrapper && progressCircle && progressText) {
-                // Show the wrapper if there's active processing
-                if (this.processingItems.length > 0) {
-                    wrapper.style.display = 'flex';
-                }
-
-                // Update the circle stroke-dasharray to show progress
-                // Circle circumference is 75.36 (2 * π * 12), so progress = (progress/100) * 75.36
-                const circumference = 75.36;
-                const dashValue = (progress / 100) * circumference;
-                progressCircle.style.strokeDasharray = `${dashValue} ${circumference}`;
-
-                // Update percentage text
-                progressText.textContent = `${Math.round(progress)}%`;
-
-                safeLog(`📊 Progress: ${Math.round(progress)}%`);
-            }
-        });
-
-        // Handle completion - move card from processing to library with animation
-        solisWSClient.on('complete', (data) => {
-            const { taskId, result } = data;
-            safeLog(`✅ Video ${taskId} completed, moving to library...`);
-            
-            // Find the processing item
-            const processingIndex = this.processingItems.findIndex(item => item.id === taskId);
-            if (processingIndex === -1) {
-                safeLog(`❌ Processing item not found: ${taskId}`);
-                return;
-            }
-
-            const processingItem = this.processingItems[processingIndex];
-            const processingCard = document.querySelector(`[data-processing-id="${taskId}"]`);
-
-            if (processingCard) {
-                // Add unblurring animation
-                processingCard.classList.add('unblurring');
-                
-                // After animation, convert to library item
-                setTimeout(() => {
-                    // Remove from processing
-                    this.processingItems.splice(processingIndex, 1);
-                    this.saveProcessingItems();
-
-                    // Create library item from result
-                    const libraryItem = {
-                        id: result.project_id || taskId,
-                        projectId: result.project_id || taskId,
-                        name: processingItem.name,
-                        template: processingItem.templateName || processingItem.template || 'Clip',
-                        templateName: processingItem.templateName || processingItem.template || 'Clip',
-                        thumbnailUrl: result.thumbnail_url || processingItem.thumbnailUrl || '',
-                        duration: result.duration || processingItem.duration || '0s',
-                        timestamp: new Date().toISOString(),
-                        status: 'completed'
-                    };
-
-                    // Add to library
-                    this.libraryItems.unshift(libraryItem);
-                    this.saveLibraryItems();
-
-                    // Update the view
-                    this.updateLibraryView();
-
-                    // 🔄 Refresh subscription data to update storage badge with actual backend count
-                    this.loadStorageInfo();
-
-                    // Hide progress spinner if all items are processed
-                    if (this.processingItems.length === 0) {
-                        const wrapper = document.getElementById('generationProgressWrapper');
-                        if (wrapper) {
-                            wrapper.style.display = 'none';
-                            // Reset circle
-                            const progressCircle = document.getElementById('progressCircle');
-                            if (progressCircle) {
-                                progressCircle.style.strokeDasharray = '0 75.36';
+                if (_0x46984d[_0x348e7a(0x51f)] === _0x348e7a(0x302)) {
+                    _0x43bb21[_0x348e7a(0x51f)] = _0x348e7a(0x38f), _0x43bb21[_0x348e7a(0x45b)] = _0x46984d['message'], this['stopMonitoring'](_0x35cf89);
+                    const _0x3b79e5 = document[_0x348e7a(0x1b9)](_0x348e7a(0x2de));
+                    _0x3b79e5 && (_0x3b79e5[_0x348e7a(0x2ae)] = ![], _0x3b79e5['classList']['remove'](_0x348e7a(0x4a2)));
+                    setTimeout(() => {
+                        const _0x3e1b25 = _0x348e7a;
+                        this[_0x3e1b25(0x393)] = this[_0x3e1b25(0x393)][_0x3e1b25(0x54a)](_0xc3f7fe => _0xc3f7fe['id'] !== _0x35cf89), this[_0x3e1b25(0x2c2)](), this[_0x3e1b25(0x2d2)]();
+                    }, 0x1388);
+                    const _0x21636f = _0x46984d[_0x348e7a(0x45b)] || '';
+                    _0x5e766a(_0x348e7a(0x381), _0x21636f);
+                    const _0x1ed752 = /Video is too long\. Maximum allowed:\s*(\d+)\s*minutes\. Your video:\s*(\d+)\s*minutes/i, _0x1f939a = /Maximum allowed:\s*(\d+)\s*minutes.*Your video:\s*(\d+)\s*minutes/i, _0x5ca6d1 = /too long|duration limit/i;
+                    let _0x1bd9ee = _0x21636f[_0x348e7a(0x2e4)](_0x1ed752);
+                    _0x5e766a('Pattern\x201\x20match:', _0x1bd9ee);
+                    if (_0x1bd9ee && _0x1bd9ee[_0x348e7a(0x56d)] >= 0x3) {
+                        const _0x242dd1 = parseInt(_0x1bd9ee[0x1]), _0x953911 = parseInt(_0x1bd9ee[0x2]);
+                        _0x5e766a(_0x348e7a(0x290), _0x953911, 'max:', _0x242dd1), setTimeout(() => {
+                            const _0x285d91 = _0x348e7a;
+                            window && typeof window[_0x285d91(0x361)] === _0x285d91(0x1f6) && window[_0x285d91(0x361)](_0x953911, _0x242dd1);
+                        }, 0x64);
+                    } else {
+                        _0x1bd9ee = _0x21636f[_0x348e7a(0x2e4)](_0x1f939a), _0x5e766a(_0x348e7a(0x49b), _0x1bd9ee);
+                        if (_0x1bd9ee && _0x1bd9ee[_0x348e7a(0x56d)] >= 0x3) {
+                            const _0x5e7bba = parseInt(_0x1bd9ee[0x1]), _0x4d8f12 = parseInt(_0x1bd9ee[0x2]);
+                            _0x5e766a('✓\x20Video\x20too\x20long\x20detected\x20(pattern\x202):', _0x4d8f12, 'max:', _0x5e7bba), setTimeout(() => {
+                                const _0x11c3d0 = _0x348e7a;
+                                window && typeof window[_0x11c3d0(0x361)] === _0x11c3d0(0x1f6) && window[_0x11c3d0(0x361)](_0x4d8f12, _0x5e7bba);
+                            }, 0x64);
+                        } else {
+                            if (_0x5ca6d1[_0x348e7a(0x431)](_0x21636f)) {
+                                _0x5e766a(_0x348e7a(0x368));
+                                const _0x2adc6c = _0x21636f['match'](/\d+/g);
+                                if (_0x2adc6c && _0x2adc6c[_0x348e7a(0x56d)] >= 0x2) {
+                                    const _0x1091e0 = parseInt(_0x2adc6c[_0x2adc6c[_0x348e7a(0x56d)] - 0x2]), _0x56adf0 = parseInt(_0x2adc6c[_0x2adc6c[_0x348e7a(0x56d)] - 0x1]);
+                                    _0x1091e0 > 0x0 && _0x56adf0 > 0x0 && _0x1091e0 > _0x56adf0 && (_0x5e766a(_0x348e7a(0x467), _0x1091e0, _0x348e7a(0x42c), _0x56adf0), setTimeout(() => {
+                                        const _0x144310 = _0x348e7a;
+                                        window && typeof window[_0x144310(0x361)] === _0x144310(0x1f6) && window['openVideoTooLongModal'](_0x1091e0, _0x56adf0);
+                                    }, 0x64));
+                                }
                             }
                         }
                     }
-
-                    safeLog(`✅ Moved ${processingItem.name} to library`);
-                }, 600); // Wait for animation to complete
-            }
-        });
-
-        // Handle errors
-        solisWSClient.on('error', (data) => {
-            const { taskId, error } = data;
-            safeLog(`❌ Video ${taskId} failed: ${error}`);
-            
-            const processingCard = document.querySelector(`[data-processing-id="${taskId}"]`);
-            if (processingCard) {
-                processingCard.style.opacity = '0.5';
-                const titleElement = processingCard.querySelector('.card-title');
-                if (titleElement) {
-                    titleElement.textContent = 'Failed - ' + titleElement.textContent;
+                    _0x41706e('Clip\x20creation\x20failed:\x20' + _0x46984d[_0x348e7a(0x45b)], _0x348e7a(0x302));
                 }
             }
-
-            // Remove from processing items if present
-            const processingIndex = this.processingItems.findIndex(item => item.id === taskId);
-            if (processingIndex !== -1) {
-                this.processingItems.splice(processingIndex, 1);
-                this.saveProcessingItems();
-
-                // Hide progress spinner if all items are processed
-                if (this.processingItems.length === 0) {
-                    const wrapper = document.getElementById('generationProgressWrapper');
-                    if (wrapper) {
-                        wrapper.style.display = 'none';
-                        // Reset circle
-                        const progressCircle = document.getElementById('progressCircle');
-                        if (progressCircle) {
-                            progressCircle.style.strokeDasharray = '0 75.36';
-                        }
-                    }
-                }
-            }
-        });
-
-        // Handle processing-specific errors from backend
-        solisWSClient.on('processing_error', (data) => {
-            const { taskId, error, message } = data;
-            const errorMsg = message || error || 'Unknown processing error';
-            safeLog(`❌ Processing failed: ${errorMsg}`);
-            
-            // Show user-friendly error message
-            const processingCard = document.querySelector(`[data-processing-id="${taskId}"]`);
-            if (processingCard) {
-                processingCard.style.opacity = '0.5';
-                processingCard.style.borderColor = '#ef4444';
-                processingCard.style.borderWidth = '2px';
-                const titleElement = processingCard.querySelector('.card-title');
-                if (titleElement) {
-                    titleElement.textContent = '❌ Failed';
-                }
-                const statusElement = processingCard.querySelector('.card-subtitle') || processingCard.querySelector('.card-status');
-                if (statusElement) {
-                    // Parse error message to extract key info for tier limits
-                    let displayError = errorMsg;
-                    if (errorMsg.includes('Video is too long')) {
-                        // Extract tier information
-                        const tierMatch = errorMsg.match(/(\d+)\s*minute/g);
-                        displayError = errorMsg;
-                    }
-                    statusElement.textContent = displayError.substring(0, 100); // Truncate for display
-                    statusElement.title = displayError; // Full error on hover
-                }
-            }
-
-            // Remove from processing items if present
-            const processingIndex = this.processingItems.findIndex(item => item.id === taskId);
-            if (processingIndex !== -1) {
-                this.processingItems.splice(processingIndex, 1);
-                this.saveProcessingItems();
-
-                // Hide progress spinner if all items are processed
-                if (this.processingItems.length === 0) {
-                    const wrapper = document.getElementById('generationProgressWrapper');
-                    if (wrapper) {
-                        wrapper.style.display = 'none';
-                        // Reset circle
-                        const progressCircle = document.getElementById('progressCircle');
-                        if (progressCircle) {
-                            progressCircle.style.strokeDasharray = '0 75.36';
-                        }
-                        const progressText = document.getElementById('generationProgressText');
-                        if (progressText) {
-                            progressText.textContent = '0%';
-                        }
-                    }
-                }
-            }
-        });
-
-        safeLog('✅ WebSocket handlers initialized');
-    }
-
-    // Safe event listener methods with AbortController for cleanup
-    safeAddEventListener(selector, event, handler) {
-        const elements = document.querySelectorAll(selector);
-        elements.forEach(element => {
-            // 🔐 Use AbortController for proper cleanup without removing other listeners
-            if (!element._eventControllers) element._eventControllers = {};
-            const key = `${event}_${selector}`;
-            
-            // Abort previous listener for this event+selector combo
-            if (element._eventControllers[key]) {
-                element._eventControllers[key].abort();
-            }
-            
-            // Create new AbortController for this listener
-            const controller = new AbortController();
-            element._eventControllers[key] = controller;
-            element.addEventListener(event, handler, { signal: controller.signal });
-        });
-    }
-
-    safeAddEventListenerById(id, event, handler) {
-        const element = document.getElementById(id);
-        if (element) {
-            safeLog(`✅ Found element with id: ${id}`);
-            // 🔐 Use AbortController for proper cleanup without removing other listeners
-            if (!element._eventControllers) {
-                element._eventControllers = {};
-            }
-            const key = `${event}_${id}`;
-            // Cancel previous listener if exists
-            if (element._eventControllers[key]) {
-                element._eventControllers[key].abort();
-            }
-            // Create new controller for this listener
-            const controller = new AbortController();
-            element._eventControllers[key] = controller;
-            element.addEventListener(event, handler, { signal: controller.signal });
-        } else {
-            safeLog(`❌ Element with id "${id}" not found`);
+        } catch (_0x291113) {
+            _0x5e766a('Error\x20checking\x20status\x20for\x20item', _0x35cf89, _0x291113);
         }
     }
-}
-
-function initClipsStudio() {
-    if (!window.clipsStudio) {
-        clipsStudio = new ClipsStudio();
-        clipsStudio.init();
-        window.clipsStudio = clipsStudio;
-        // Initialize websocket after user is loaded
-        setTimeout(() => {
-            // initWebSocket() - will be initialized when needed
-        }, 500);
-    }
-}
-
-// Set up all event listeners
-function logout() {
-    // Call backend logout endpoint to clear httpOnly cookies
-    fetch(`${API_BASE_URL}/auth/logout`, {
-        method: 'POST',
-        credentials: 'include'  // 🔐 Send httpOnly cookie for logout
-    })
-    .then(response => {
-        // Clear localStorage
-        localStorage.removeItem('auth_token');
-        localStorage.removeItem('userId');
-        localStorage.removeItem('userEmail');
-        localStorage.removeItem('currentUser');
-        
-        // Redirect to login
-        safeLog('✅ Logged out successfully');
-        window.location.href = '/login.html';
-    })
-    .catch(error => {
-        safeLog('❌ Logout error:', error);
-        // Still redirect even if backend call fails (logout occurred on backend)
-        setTimeout(() => {
-            window.location.href = '/login.html';
-        }, 1000);
-    });
-}
-
-function setupEventListeners() {
-    // User profile menu - Now handled by menu.js, don't add listener here
-    // if (userProfile) {
-    //     userProfile.addEventListener('click', toggleUserMenu);
-    // }
-    
-    // User settings button
-    const userSettingsBtn = document.getElementById('userSettingsBtn');
-    if (userSettingsBtn) {
-        userSettingsBtn.addEventListener('click', (e) => {
-            e.stopPropagation();
-            toggleUserMenu(e);
+    ['startSmartMonitoring']() {
+        const _0x170f6d = _0x4afe9d;
+        this[_0x170f6d(0x393)]['forEach'](_0xb7bba4 => {
+            const _0x196745 = _0x170f6d;
+            _0xb7bba4[_0x196745(0x51f)] === _0x196745(0x3f5) && this[_0x196745(0x490)](_0xb7bba4['id']);
         });
     }
-
-    // Logout button
-    const logoutBtn = document.getElementById('dropdownLogout');
-    if (logoutBtn) {
-        logoutBtn.addEventListener('click', (e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            logout();
-        });
-    }
-
-    // Settings from menu
-    const menuSettings = document.getElementById('menuSettings');
-    if (menuSettings) {
-        menuSettings.addEventListener('click', (e) => {
-            e.stopPropagation();
-            openSettings();
-        });
-    }
-
-    // Settings
-    if (settingsBtn) {
-        settingsBtn.addEventListener('click', openSettings);
-    }
-    if (closeSettings) {
-        closeSettings.addEventListener('click', closeSettingsPanel);
-    }
-    
-    // 🔐 SECURITY: Clear Chat History button listener
-    const clearChatHistoryBtn = document.getElementById('clearChatHistoryBtn');
-    if (clearChatHistoryBtn) {
-        clearChatHistoryBtn.addEventListener('click', () => {
-            if (confirm('Are you sure you want to delete all chat history? This action cannot be undone.')) {
-                clearChat();
-                clipsStudio.showNotification('Chat history cleared', 'success');
-            }
-        });
-    }
-    
-    // Close settings when backdrop is clicked
-    const settingsBackdrop = document.querySelector('.settings-backdrop');
-    if (settingsBackdrop) {
-        settingsBackdrop.addEventListener('click', closeSettingsPanel);
-    }
-    
-    // Load and apply saved theme, and set toggle state
-    const savedTheme = localStorage.getItem('theme');
-    if (savedTheme) {
-        setTheme(savedTheme);
-        if (darkModeSettingsToggle) {
-            darkModeSettingsToggle.checked = (savedTheme === 'dark');
-        }
-    }
-    
-    // Dark mode toggle in settings
-    if (darkModeSettingsToggle) { // Check if the element exists
-        safeLog('setupEventListeners(): darkModeSettingsToggle element found.');
-        // Optional: Check if it's an input checkbox, which is expected for 'checked' property
-        if (darkModeSettingsToggle.tagName !== 'INPUT' || darkModeSettingsToggle.type !== 'checkbox') {
-            safeLog('setupEventListeners(): darkModeSettingsToggle is not an input checkbox. Dark mode functionality may be impaired.');
-        }
-        darkModeSettingsToggle.addEventListener('change', () => {
-            const newTheme = darkModeSettingsToggle.checked ? 'dark' : 'light';
-            safeLog('darkModeSettingsToggle change event fired. New theme:', newTheme);
-            setTheme(newTheme); // Call setTheme with the new theme
-        }); // End of event listener
-    }
-
-    // Input handling removed - AI section no longer needed
-    
-    // Shuffle button for video ideas
-    const shuffleIdeasBtn = document.getElementById('shuffleIdeasBtn');
-    if (shuffleIdeasBtn) {
-        shuffleIdeasBtn.addEventListener('click', generateVideoIdeas);
-    }
-
-    const watermarkToggle = document.getElementById('watermarkToggle');
-    if (watermarkToggle) {
-        // Set watermark enabled by default
-        watermarkToggle.checked = true;
-        localStorage.setItem('solisAIWatermarkEnabled', 'true');
-        
-        watermarkToggle.addEventListener('change', (e) => {
-            const isEnabled = e.target.checked;
-            
-            // Store in localStorage for persistence
-            localStorage.setItem('solisAIWatermarkEnabled', isEnabled ? 'true' : 'false');
-            
-            // Update template data
-            if (window.clipsStudio && window.clipsStudio.currentTemplateForPreview) {
-                window.clipsStudio.currentTemplateForPreview.addWatermark = isEnabled;
-            }
-            
-            // Update watermark visibility
-            if (window.clipsStudio) {
-                window.clipsStudio.updateWatermarkDisplay();
-            }
-            
-            safeLog(`Watermark ${isEnabled ? 'ENABLED' : 'DISABLED'} by user`);
-        });
-    }
-
-    // YouTube Connect Button
-    const connectYouTubeButton = document.getElementById('connectYouTubeButton');
-    if (connectYouTubeButton) {
-        connectYouTubeButton.addEventListener('click', initiateYouTubeConnection);
-    }
-
-    // Check YouTube connection on page load
-    checkYouTubeConnection();
-}
-    // Stop generation button removed - AI section no longer needed
-
-    // Upgrade modal
-    if (upgradeSettingsBtn) {
-        upgradeSettingsBtn.addEventListener('click', openUpgradeModal);
-    }
-    if (closeUpgrade) {
-        closeUpgrade.addEventListener('click', closeUpgradeModal);
-    }
-
-    // Clips submenu toggle
-    const clipsToggle = document.getElementById('clips-toggle');
-    if (clipsToggle) {
-        clipsToggle.addEventListener('click', function(e) {
-            e.stopPropagation();
-            const submenu = document.getElementById('clips-submenu');
-            const chevron = this.querySelector('.chevron-icon');
-            
-            if (submenu) submenu.classList.toggle('open');
-            if (chevron) chevron.classList.toggle('rotated');
-        });
-    }
-
-    // Navigation items
-    navItems.forEach(item => {
-        item.addEventListener('click', () => {
-            if (!item.closest('.clips-submenu')) {
-                navItems.forEach(i => {
-                    if (i.id !== 'clips-toggle' && !i.closest('.clips-submenu')) {
-                        i.classList.remove('active');
-                    }
-                });
-                
-                if (item.id !== 'clips-toggle') {
-                    item.classList.add('active');
-                }
-            }
-            
-            const target = item.dataset.target;
-            if (target) {
-                navigateTo(target);
-                
-                if (window.innerWidth <= 768 && sidebar.classList.contains('expanded')) {
-                    sidebar.classList.remove('expanded');
-                }
-            }
-        });
-    });
-
-    // Close modals/menus when clicking outside
-    document.addEventListener('click', (e) => {
-        // Close user menu
-        if (userMenu && !userMenu.contains(e.target) && userProfile && !userProfile.contains(e.target)) {
-            userMenu.classList.remove('active');
-            userProfile.classList.remove('menu-open');
-        }
-        
-        // Close upgrade modal
-        if (upgradeModal && !upgradeModal.contains(e.target) && e.target !== upgradeSettingsBtn) {
-            closeUpgradeModal();
-        }
-        
-        // Close feature modals when clicking outside
-        if (e.target.classList.contains('feature-modal')) {
-            e.target.style.display = 'none';
-        }
-    });
-
-    // When user switches browser tabs, if an input was centered but already sent,
-    // ensure it is docked so it doesn't remain stuck centered when returning.
-    document.addEventListener('visibilitychange', () => {
+    [_0x4afe9d(0x34d)](_0x35804a) {
+        const _0x205166 = _0x4afe9d;
         try {
-            if (document.hidden) {
-                // If the page is hidden, force-dock the input instantly so it won't remain centered
-                dockInputInstantly();
-            }
-        } catch (err) {
-            safeLog('visibilitychange handler error', err);
+            const _0x2f69a7 = new URL(_0x35804a['startsWith'](_0x205166(0x2e7)) ? _0x35804a : _0x205166(0x327) + _0x35804a), _0x4671f5 = _0x2f69a7[_0x205166(0x42a)][_0x205166(0x3f2)](), _0x1a0cf5 = _0x2f69a7[_0x205166(0x2ed)][_0x205166(0x3f2)](), _0x3ff4a4 = new Set([
+                    _0x205166(0x22d),
+                    _0x205166(0x18f),
+                    _0x205166(0x452),
+                    _0x205166(0x27e)
+                ]);
+            if (!_0x3ff4a4['has'](_0x4671f5))
+                return ![];
+            if (_0x1a0cf5['includes']('..') || _0x1a0cf5['includes']('//'))
+                return ![];
+            if (!_0x1a0cf5 || _0x1a0cf5 === '/')
+                return ![];
+            const _0x2809ce = this[_0x205166(0x2c5)](_0x35804a);
+            if (!_0x2809ce)
+                return ![];
+            return /^[a-zA-Z0-9_-]{11}$/['test'](_0x2809ce);
+        } catch (_0x470da3) {
+            return ![];
         }
-    });
-
-    // Keyboard shortcuts
-    document.addEventListener('keydown', (e) => {
-        // ESC to close modals - DISABLED
-        // if (e.key === 'Escape') {
-        //     if (userMenu && userMenu.classList.contains('active')) {
-        //         userMenu.classList.remove('active');
-        //         if (userProfile) userProfile.classList.remove('menu-open');
-        //     }
-        //     if (settingsPanel && settingsPanel.classList.contains('open')) {
-        //         closeSettingsPanel();
-        //     }
-        //     if (upgradeModal && upgradeModal.classList.contains('active')) {
-        //         closeUpgradeModal();
-        //     }
-        //     if (workspacePanel && workspacePanel.classList.contains('active')) {
-        //         workspacePanel.classList.remove('active');
-        //         document.body.classList.remove('modal-open');
-        //     }
-        // }
-        
-        // Ctrl/Cmd + K to toggle sidebar
-        if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
-            e.preventDefault();
-            toggleSidebar();
+    }
+    [_0x4afe9d(0x50f)](_0x30323a) {
+        const _0x6e15fc = _0x4afe9d;
+        if (!_0x30323a || typeof _0x30323a !== _0x6e15fc(0x590))
+            return ![];
+        if (_0x30323a[_0x6e15fc(0x2e4)](/\.\.|\/|\\|:|\||<|>|"|'|\x00/g))
+            return ![];
+        return /^[a-zA-Z0-9_-]+$/[_0x6e15fc(0x431)](_0x30323a);
+    }
+    [_0x4afe9d(0x1cf)](_0x321674) {
+        const _0xbad48d = _0x4afe9d;
+        if (!_0x321674 || typeof _0x321674 !== _0xbad48d(0x590))
+            return ![];
+        if (_0x321674['match'](/\.\.|\/|\\|:|\||<|>|"|'|\x00/g))
+            return ![];
+        return /^[a-zA-Z0-9_.-]+$/[_0xbad48d(0x431)](_0x321674);
+    }
+    [_0x4afe9d(0x2c4)](_0x14f9cf) {
+        const _0x1d32ff = _0x4afe9d, _0x4a6e5f = document[_0x1d32ff(0x1b9)](_0x1d32ff(0x2de));
+        if (!_0x4a6e5f)
+            return;
+        _0x14f9cf ? (_0x4a6e5f[_0x1d32ff(0x2d9)]['add'](_0x1d32ff(0x4cc)), _0x4a6e5f['disabled'] = !![], sessionStorage['setItem'](_0x1d32ff(0x536), Date[_0x1d32ff(0x1df)]()['toString']()), sessionStorage[_0x1d32ff(0x3b0)](_0x1d32ff(0x213), _0x1d32ff(0x4fe))) : (_0x4a6e5f[_0x1d32ff(0x2d9)]['remove'](_0x1d32ff(0x4cc)), _0x4a6e5f[_0x1d32ff(0x2ae)] = ![], sessionStorage[_0x1d32ff(0x24e)](_0x1d32ff(0x213)), sessionStorage[_0x1d32ff(0x24e)]('urlButtonLockeduntil'));
+    }
+    ['enforceUrlButtonRateLimitOnLoad']() {
+        const _0x45a159 = _0x4afe9d, _0x534345 = document['getElementById'](_0x45a159(0x2de));
+        if (!_0x534345)
+            return;
+        const _0x11f272 = sessionStorage[_0x45a159(0x394)](_0x45a159(0x213)) === _0x45a159(0x4fe), _0x5444d0 = sessionStorage[_0x45a159(0x394)](_0x45a159(0x536));
+        if (_0x11f272 && _0x5444d0) {
+            const _0x5a0eea = parseInt(_0x5444d0, 0xa), _0x58d643 = Date['now'](), _0x44ddeb = _0x5a0eea - _0x58d643;
+            if (_0x44ddeb > 0x0) {
+                const _0x5d2606 = _0x499ea0[_0x45a159(0x322)][_0x45a159(0x3c3)] || 0xbb8;
+                if (_0x44ddeb < _0x5d2606 + 0x1388) {
+                    _0x534345[_0x45a159(0x2ae)] = !![], _0x534345[_0x45a159(0x344)]['cursor'] = _0x45a159(0x472), _0x534345[_0x45a159(0x344)][_0x45a159(0x415)] = _0x45a159(0x3a7), _0x534345['classList']['add'](_0x45a159(0x4cc));
+                    const _0x3e5ead = setTimeout(() => {
+                        const _0x162129 = _0x45a159;
+                        _0x534345['disabled'] = ![], _0x534345[_0x162129(0x344)]['cursor'] = _0x162129(0x375), _0x534345['style']['opacity'] = '1', _0x534345[_0x162129(0x2d9)]['remove'](_0x162129(0x4cc)), sessionStorage[_0x162129(0x24e)](_0x162129(0x213)), sessionStorage[_0x162129(0x24e)](_0x162129(0x536));
+                    }, _0x44ddeb);
+                    _0x534345[_0x45a159(0x36e)] = _0x3e5ead;
+                }
+            } else
+                sessionStorage['removeItem'](_0x45a159(0x213)), sessionStorage['removeItem'](_0x45a159(0x536));
         }
-    });
-
-
-function toggleSidebar() {
-    sidebar.classList.toggle('expanded');
-    
-    const isExpanded = sidebar.classList.contains('expanded');
-    localStorage.setItem('sidebarExpanded', isExpanded);
-}
-
-// Toggle user menu
-// User menu is now handled by menu.js
-function toggleUserMenu(e) {
-    // This function is deprecated - menu.js handles the new userMenuPanel
-    safeLog('toggleUserMenu called but deprecated - use menu.js instead');
-    if (!userMenu || !userProfile) return;
-    
-    e.stopPropagation();
-    // userMenu.classList.toggle('active');
-    // userProfile.classList.toggle('menu-open');
-}
-
-// Open settings panel
-function openSettings() {
-    if (!settingsPanel) return;
-    
-    // Add open class for slide animation
-    settingsPanel.classList.add('open');
-    
-    // Also open the backdrop
-    const settingsBackdrop = document.getElementById('settingsBackdrop');
-    if (settingsBackdrop) {
-        settingsBackdrop.style.opacity = '1';
-        settingsBackdrop.style.visibility = 'visible';
     }
-    
-    // Close user menu if it's open
-    if (userMenu) userMenu.classList.remove('active');
-    
-    // Fetch and update subscription status when settings is opened
-    if (currentUser) {
-        fetchAndUpdateSubscriptionStatus();
-    }
-}
-
-// Close settings panel
-function closeSettingsPanel() {
-    if (!settingsPanel) return;
-    
-    // Remove open class for slide animation
-    settingsPanel.classList.remove('open');
-    
-    // Also close the backdrop
-    const settingsBackdrop = document.getElementById('settingsBackdrop');
-    if (settingsBackdrop) {
-        settingsBackdrop.style.opacity = '0';
-        settingsBackdrop.style.visibility = 'hidden';
-    }
-}
-
-// Check YouTube Connection Status from Backend
-async function checkYouTubeConnection() {
-    const analyticsLockOverlay = document.getElementById('analyticsLockOverlay');
-    const dashboardGrid = document.getElementById('dashboardGrid');
-    const dashboardCharts = document.querySelector('.dashboard-charts');
-    
-    if (!analyticsLockOverlay) return;
-    
-    try {
-        // Verify connection status from backend (source of truth)
-        const response = await fetch(`${window.API_BASE_URL}/auth/youtube/status`, {
-            method: 'GET',
-            headers: {
-                'X-CSRF-Token': getCSRFToken() || '',
-                'Content-Type': 'application/json'
-            },
-            credentials: 'include'  // 🔐 Auth via httpOnly cookie
-        });
-        
-        if (!response.ok) {
-            safeLog('⚠️ Failed to check YouTube status:', response.status);
-            // Hide analytics if check fails
-            analyticsLockOverlay.style.display = 'flex';
+    async ['processYouTubeUrl']() {
+        const _0x1ce070 = _0x4afe9d, _0x505efd = Date['now']();
+        if (_0x505efd - this[_0x1ce070(0x561)] < _0x499ea0[_0x1ce070(0x322)][_0x1ce070(0x3c3)]) {
+            _0x41706e(_0x1ce070(0x50e), 'warning');
             return;
         }
-        
-        const data = await response.json();
-        const isYouTubeConnected = data.connected === true;
-        
-        safeLog('🔍 YouTube Connection Status (from backend):', isYouTubeConnected);
-        
-        if (!isYouTubeConnected) {
-            // Show lock overlay
-            analyticsLockOverlay.style.display = 'flex';
-            
-            // Add blur effect to dashboard
-            if (dashboardGrid) {
-                dashboardGrid.classList.add('analytics-locked');
-            }
-            if (dashboardCharts) {
-                dashboardCharts.classList.add('analytics-locked');
-            }
-        } else {
-            // Hide lock overlay
-            analyticsLockOverlay.style.display = 'none';
-            
-            // Remove blur effect
-            if (dashboardGrid) {
-                dashboardGrid.classList.remove('analytics-locked');
-            }
-            if (dashboardCharts) {
-                dashboardCharts.classList.remove('analytics-locked');
-            }
+        this[_0x1ce070(0x561)] = _0x505efd;
+        const _0x5cae0e = document[_0x1ce070(0x1b9)](_0x1ce070(0x3d7));
+        if (!_0x5cae0e)
+            return;
+        const _0x5a4579 = _0x5cae0e[_0x1ce070(0x328)][_0x1ce070(0x317)]();
+        if (!_0x5a4579) {
+            _0x41706e(_0x1ce070(0x3d3), _0x1ce070(0x302));
+            return;
         }
-        
-        // Update currentUser object as fallback
-        if (!currentUser) currentUser = {};
-        currentUser.youtube_connected = isYouTubeConnected;
-        
-    } catch (error) {
-        safeLog('❌ Error checking YouTube connection:', error);
-        // Default to locked if error
-        analyticsLockOverlay.style.display = 'flex';
+        if (!this[_0x1ce070(0x34d)](_0x5a4579)) {
+            _0x41706e('Please\x20enter\x20a\x20valid\x20YouTube\x20URL\x20(youtube.com\x20or\x20youtu.be)', 'error');
+            return;
+        }
+        this[_0x1ce070(0x2c4)](!![]);
+        try {
+            const _0x696e78 = await this['checkVideoDurationBeforeTemplates'](_0x5a4579);
+            if (!_0x696e78[_0x1ce070(0x216)]) {
+                this[_0x1ce070(0x2c4)](![]);
+                return;
+            }
+            const _0x15e6a2 = _0x67ee3();
+            try {
+                const _0x286043 = await fetch(API_BASE_URL + _0x1ce070(0x48d), {
+                    'method': _0x1ce070(0x597),
+                    'headers': _0x15e6a2,
+                    'credentials': _0x1ce070(0x3cd)
+                });
+                if (_0x286043['ok']) {
+                    const _0x29af8a = await _0x286043[_0x1ce070(0x494)]();
+                    if (_0x29af8a[_0x1ce070(0x316)]) {
+                        _0x41706e('A\x20video\x20is\x20already\x20being\x20generated.\x20Please\x20wait\x20for\x20it\x20to\x20complete\x20before\x20starting\x20another\x20one.', _0x1ce070(0x2e9));
+                        const _0x90c169 = document[_0x1ce070(0x1b9)]('processUrlBtn');
+                        _0x90c169 && (_0x90c169[_0x1ce070(0x2ae)] = !![], _0x90c169[_0x1ce070(0x344)][_0x1ce070(0x415)] = _0x1ce070(0x3a7), _0x90c169[_0x1ce070(0x344)]['cursor'] = _0x1ce070(0x472), _0x90c169[_0x1ce070(0x2d9)][_0x1ce070(0x3ed)](_0x1ce070(0x4a2)));
+                        this['toggleUrlButtonLoading'](![]);
+                        return;
+                    }
+                    if (!_0x29af8a[_0x1ce070(0x401)]) {
+                        showLimitModal({
+                            'used': _0x29af8a[_0x1ce070(0x509)]?.[_0x1ce070(0x207)] || 0x0,
+                            'limit': _0x29af8a['daily']?.[_0x1ce070(0x51c)] || 0x1,
+                            'plan_type': _0x29af8a['plan']?.['name']?.['toLowerCase']() || _0x1ce070(0x449),
+                            'last_video_date': _0x29af8a[_0x1ce070(0x1ad)] || _0x1ce070(0x429),
+                            'cooldown_hours': _0x29af8a[_0x1ce070(0x390)]?.[_0x1ce070(0x579)] || 0x60
+                        }), this[_0x1ce070(0x2c4)](![]);
+                        return;
+                    }
+                    if (_0x29af8a['daily_limit_reached']) {
+                        showLimitModal({
+                            'used': _0x29af8a[_0x1ce070(0x478)],
+                            'limit': _0x29af8a[_0x1ce070(0x432)],
+                            'plan_type': _0x1ce070(0x449),
+                            'last_video_date': _0x29af8a[_0x1ce070(0x1ad)] || _0x1ce070(0x429),
+                            'cooldown_hours': _0x29af8a['generation']?.[_0x1ce070(0x579)] || 0x60
+                        }), this[_0x1ce070(0x2c4)](![]);
+                        return;
+                    }
+                    if (_0x29af8a[_0x1ce070(0x3e3)]) {
+                        showLimitModal({
+                            'used': _0x29af8a[_0x1ce070(0x4c2)],
+                            'limit': _0x29af8a[_0x1ce070(0x47d)],
+                            'plan_type': _0x29af8a[_0x1ce070(0x19b)]?.[_0x1ce070(0x315)]?.[_0x1ce070(0x3f2)]() || _0x1ce070(0x449),
+                            'last_video_date': _0x29af8a[_0x1ce070(0x1ad)] || _0x1ce070(0x429),
+                            'cooldown_hours': _0x29af8a[_0x1ce070(0x390)]?.[_0x1ce070(0x579)] || 0x60
+                        }), this[_0x1ce070(0x2c4)](![]);
+                        return;
+                    }
+                }
+            } catch (_0x149018) {
+            }
+            this[_0x1ce070(0x34e)](_0x1ce070(0x540)), _0x41706e('YouTube\x20URL\x20validated.\x20Please\x20select\x20a\x20template.', _0x1ce070(0x1a6));
+            const _0x44dd3e = document['getElementById'](_0x1ce070(0x518));
+            _0x44dd3e && (_0x44dd3e[_0x1ce070(0x344)]['display'] = _0x1ce070(0x514));
+        } finally {
+            this[_0x1ce070(0x2c4)](![]);
+        }
+    }
+    async [_0x4afe9d(0x53a)](_0x3271e5) {
+        const _0x51f74a = _0x4afe9d;
+        try {
+            const _0x162474 = _0x67ee3(), _0x4d66e8 = await fetch(API_BASE_URL + _0x51f74a(0x1de), {
+                    'method': 'POST',
+                    'headers': _0x162474,
+                    'credentials': _0x51f74a(0x3cd),
+                    'body': JSON[_0x51f74a(0x4d1)]({ 'url': _0x3271e5 })
+                }), _0x13a2fc = await _0x4d66e8[_0x51f74a(0x494)]();
+            if (!_0x4d66e8['ok']) {
+                if (_0x13a2fc[_0x51f74a(0x2e8)] === _0x51f74a(0x4c8)) {
+                    const _0xf5c830 = _0x13a2fc['video_minutes'] || 0x0, _0xb4674f = _0x13a2fc[_0x51f74a(0x201)] || 0x0;
+                    _0x5e766a('Video\x20too\x20long\x20detected\x20at\x20URL\x20input:', _0xf5c830, _0x51f74a(0x42c), _0xb4674f);
+                    const _0x4d45ab = document[_0x51f74a(0x1b9)](_0x51f74a(0x1d5)), _0x2c509d = document[_0x51f74a(0x1b9)](_0x51f74a(0x445));
+                    return _0x4d45ab && _0x2c509d && (_0x2c509d['textContent'] = _0x51f74a(0x3b3) + _0xb4674f + _0x51f74a(0x3da) + _0xf5c830 + _0x51f74a(0x2e6), _0x4d45ab['style']['display'] = 'block'), { 'allowed': ![] };
+                } else
+                    return _0x41706e('Error\x20checking\x20video:\x20' + (_0x13a2fc[_0x51f74a(0x302)] || _0x51f74a(0x4d2)), 'error'), { 'allowed': ![] };
+            }
+            const _0xca5686 = document[_0x51f74a(0x1b9)]('durationErrorMessage');
+            return _0xca5686 && (_0xca5686['style']['display'] = 'none'), {
+                'allowed': !![],
+                'duration': _0x13a2fc[_0x51f74a(0x493)],
+                'maxAllowed': _0x13a2fc[_0x51f74a(0x201)]
+            };
+        } catch (_0x4991d0) {
+            _0x5e766a(_0x51f74a(0x2da), _0x4991d0);
+            const _0xb2588e = document['getElementById']('durationErrorMessage');
+            return _0xb2588e && (_0xb2588e[_0x51f74a(0x344)][_0x51f74a(0x180)] = _0x51f74a(0x4f5)), { 'allowed': !![] };
+        }
+    }
+    async [_0x4afe9d(0x2aa)]() {
+        const _0xab3c5a = _0x4afe9d, _0x5edb49 = document[_0xab3c5a(0x1b9)](_0xab3c5a(0x3d7));
+        if (!_0x5edb49)
+            return;
+        const _0x3c2f64 = _0x5edb49[_0xab3c5a(0x328)]['trim']();
+        if (!_0x3c2f64) {
+            _0x41706e(_0xab3c5a(0x534), _0xab3c5a(0x302));
+            return;
+        }
+        if (!this[_0xab3c5a(0x479)]) {
+            _0x41706e(_0xab3c5a(0x187), 'error');
+            return;
+        }
+        this[_0xab3c5a(0x1b8)](_0x3c2f64, this[_0xab3c5a(0x479)]);
+    }
+    [_0x4afe9d(0x35c)](_0x36ca70) {
+        const _0x2cc445 = _0x4afe9d;
+        this[_0x2cc445(0x393)][_0x2cc445(0x3e1)](_0x36ca70), this[_0x2cc445(0x2d2)](), this[_0x2cc445(0x215)] === _0x2cc445(0x530) && this[_0x2cc445(0x2c2)]();
+    }
+    [_0x4afe9d(0x56c)]() {
+        const _0xf12cc1 = _0x4afe9d;
+        if (this[_0xf12cc1(0x215)] === _0xf12cc1(0x530)) {
+            this[_0xf12cc1(0x2c2)]();
+            return;
+        }
+        this[_0xf12cc1(0x393)][_0xf12cc1(0x321)](_0x467089 => {
+            const _0x1712ec = _0xf12cc1, _0x1e6e02 = _0x467089[_0x1712ec(0x312)] || 0x0, _0x307259 = 0x64 - _0x1e6e02, _0x56b040 = document[_0x1712ec(0x1ff)](_0x1712ec(0x481) + _0x467089['id'] + _0x1712ec(0x456));
+            _0x56b040 && (_0x56b040[_0x1712ec(0x345)] = _0x307259 + '%\x20left');
+            const _0x5653d5 = document[_0x1712ec(0x350)](_0x1712ec(0x481) + _0x467089['id'] + '\x22]\x20.loader-part');
+            _0x5653d5['forEach']((_0x51d4b4, _0x5e9952) => {
+                const _0x55fb8d = _0x1712ec, _0x490d54 = (_0x5e9952 + 0x1) * 0x19;
+                _0x51d4b4[_0x55fb8d(0x344)]['opacity'] = _0x307259 >= _0x490d54 ? '1' : '0';
+            });
+        });
+    }
+    [_0x4afe9d(0x326)]() {
+        const _0x449ef8 = _0x4afe9d, _0x581815 = document[_0x449ef8(0x1b9)](_0x449ef8(0x572)), _0x345f7a = document[_0x449ef8(0x1b9)]('processingSection'), _0x15cb41 = document[_0x449ef8(0x1b9)]('emptyProcessingState');
+        if (!_0x581815 || !_0x15cb41 || !_0x345f7a)
+            return;
+        if (this[_0x449ef8(0x393)][_0x449ef8(0x56d)] === 0x0) {
+            _0x15cb41['style'][_0x449ef8(0x180)] = 'block', _0x581815[_0x449ef8(0x471)] = '', _0x345f7a[_0x449ef8(0x344)][_0x449ef8(0x180)] = _0x449ef8(0x4f5);
+            return;
+        }
+        _0x15cb41['style'][_0x449ef8(0x180)] = _0x449ef8(0x4f5), _0x345f7a['style'][_0x449ef8(0x180)] = 'block', _0x581815[_0x449ef8(0x471)] = this[_0x449ef8(0x393)]['map'](_0x18d089 => {
+            const _0x37abcb = _0x449ef8, _0x239ecd = _0x18d089[_0x37abcb(0x312)] || 0x0;
+            return '\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20class=\x22processing-item\x22\x20data-id=\x22' + _0x18d089['id'] + _0x37abcb(0x19e) + (_0x18d089[_0x37abcb(0x51f)] === _0x37abcb(0x3f5) ? '\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20class=\x22processing-loader\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20class=\x22loader\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20' + this['renderLoaderParts'](_0x239ecd) + _0x37abcb(0x4f7) : '') + _0x37abcb(0x3db) + _0x18d089[_0x37abcb(0x315)] + _0x37abcb(0x3a3) + _0x18d089['status'] + _0x37abcb(0x40a) + this[_0x37abcb(0x457)](_0x18d089['status']) + _0x37abcb(0x2f3) + this[_0x37abcb(0x3fa)](_0x18d089['status']) + _0x37abcb(0x37d) + (_0x18d089[_0x37abcb(0x45b)] && _0x18d089[_0x37abcb(0x51f)] === _0x37abcb(0x3f5) ? _0x37abcb(0x392) + _0x18d089[_0x37abcb(0x45b)] + _0x37abcb(0x17d) : '') + _0x37abcb(0x3ff) + (_0x18d089[_0x37abcb(0x51f)] === _0x37abcb(0x3f5) ? _0x37abcb(0x259) + _0x239ecd + '%</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20' : '') + _0x37abcb(0x4a0);
+        })['join']('');
+    }
+    [_0x4afe9d(0x457)](_0x282cfc) {
+        const _0x4cda20 = _0x4afe9d, _0x45b8a2 = {
+                'processing': _0x4cda20(0x516),
+                'completed': _0x4cda20(0x55b),
+                'failed': _0x4cda20(0x18e)
+            };
+        return _0x45b8a2[_0x282cfc] || _0x4cda20(0x1ca);
+    }
+    [_0x4afe9d(0x3fa)](_0x198f2b) {
+        const _0x501175 = _0x4afe9d;
+        return _0x198f2b[_0x501175(0x245)](0x0)[_0x501175(0x307)]() + _0x198f2b['slice'](0x1);
+    }
+    [_0x4afe9d(0x329)](_0x4c7478) {
+        const _0x391450 = _0x4afe9d, _0x5ca0e7 = 0x64 - _0x4c7478, _0x23612b = [
+                { 'opacity': _0x5ca0e7 >= 0x19 ? 0x1 : 0x0 },
+                { 'opacity': _0x5ca0e7 >= 0x32 ? 0x1 : 0x0 },
+                { 'opacity': _0x5ca0e7 >= 0x4b ? 0x1 : 0x0 },
+                { 'opacity': _0x5ca0e7 >= 0x64 ? 0x1 : 0x0 }
+            ];
+        return _0x23612b[_0x391450(0x48c)]((_0x18fe3f, _0x15c32d) => _0x391450(0x43a) + (_0x15c32d + 0x1) + _0x391450(0x43e) + _0x18fe3f[_0x391450(0x415)] + ';\x20transition:\x20opacity\x200.4s\x20ease;\x22></div>')['join']('');
+    }
+    async [_0x4afe9d(0x47c)](_0x250ff4) {
+        const _0x5d47ea = _0x4afe9d;
+        try {
+            const _0x5eb642 = _0x67ee3(), _0x3ccd84 = API_BASE_URL + _0x5d47ea(0x318) + _0x250ff4, _0x148191 = await fetch(_0x3ccd84, {
+                    'headers': _0x5eb642,
+                    'credentials': _0x5d47ea(0x3cd)
+                });
+            if (_0x148191['ok']) {
+                const _0x582405 = await _0x148191[_0x5d47ea(0x405)](), _0x439e07 = window['URL'][_0x5d47ea(0x2d7)](_0x582405), _0x1fd794 = document[_0x5d47ea(0x227)]('a');
+                _0x1fd794[_0x5d47ea(0x344)][_0x5d47ea(0x180)] = _0x5d47ea(0x4f5), _0x1fd794['href'] = _0x439e07;
+                const _0x3f757b = _0x148191[_0x5d47ea(0x4e7)][_0x5d47ea(0x2b0)]('content-disposition');
+                let _0x430602 = _0x5d47ea(0x2b9);
+                if (_0x3f757b) {
+                    const _0x1b7248 = _0x3f757b[_0x5d47ea(0x2e4)](/filename="(.+)"/);
+                    _0x1b7248 && (_0x430602 = _0x1b7248[0x1]);
+                }
+                _0x1fd794[_0x5d47ea(0x288)] = _0x430602, document[_0x5d47ea(0x384)]['appendChild'](_0x1fd794), _0x1fd794[_0x5d47ea(0x185)](), window[_0x5d47ea(0x56f)][_0x5d47ea(0x4b3)](_0x439e07), document[_0x5d47ea(0x384)][_0x5d47ea(0x3d8)](_0x1fd794), _0x41706e(_0x5d47ea(0x2f0), _0x5d47ea(0x1a6));
+            } else
+                throw new Error('Download\x20failed\x20with\x20status\x20' + _0x148191[_0x5d47ea(0x51f)]);
+        } catch (_0x5efd23) {
+            console['error'](_0x5d47ea(0x4ae), _0x5efd23), _0x41706e(_0x5d47ea(0x254) + _0x5efd23[_0x5d47ea(0x45b)], _0x5d47ea(0x302));
+        }
+    }
+    [_0x4afe9d(0x179)](_0x3aa76c) {
+        const _0x19a7df = _0x4afe9d, _0x212fa7 = this[_0x19a7df(0x393)][_0x19a7df(0x465)](_0x30722c => _0x30722c['id'] === _0x3aa76c);
+        _0x212fa7 && (_0x212fa7[_0x19a7df(0x51f)] = _0x19a7df(0x192), this[_0x19a7df(0x522)](_0x3aa76c), this[_0x19a7df(0x56c)](), this[_0x19a7df(0x2d2)](), _0x41706e(_0x19a7df(0x1b2), _0x19a7df(0x52d)));
+    }
+    [_0x4afe9d(0x527)](_0x131808) {
+        const _0x3b3d89 = _0x4afe9d, _0x8acecf = this[_0x3b3d89(0x393)]['findIndex'](_0x19eb4a => _0x19eb4a['id'] === _0x131808);
+        if (_0x8acecf !== -0x1) {
+            const _0x442740 = this[_0x3b3d89(0x393)][_0x8acecf];
+            if (_0x442740[_0x3b3d89(0x51f)] === _0x3b3d89(0x3f5)) {
+                _0x41706e(_0x3b3d89(0x249), _0x3b3d89(0x2e9));
+                return;
+            }
+            this[_0x3b3d89(0x39d)](_0x442740[_0x3b3d89(0x469)]), this[_0x3b3d89(0x393)][_0x3b3d89(0x3d1)](_0x8acecf, 0x1), this[_0x3b3d89(0x522)](_0x131808), this[_0x3b3d89(0x56c)](), this[_0x3b3d89(0x2d2)](), _0x41706e(_0x442740['name'] + '\x20deleted\x20successfully', _0x3b3d89(0x1a6));
+        }
+    }
+    [_0x4afe9d(0x330)](_0x3cfe7e) {
+        const _0x38b1a0 = _0x4afe9d, _0x2b94ac = this['processingItems']['find'](_0x2f5d57 => _0x2f5d57['id'] === _0x3cfe7e);
+        _0x2b94ac && (_0x2b94ac['status'] = _0x38b1a0(0x3f5), _0x2b94ac[_0x38b1a0(0x312)] = 0x0, this[_0x38b1a0(0x56c)](), this[_0x38b1a0(0x2d2)](), this[_0x38b1a0(0x490)](_0x3cfe7e), _0x41706e('Retrying\x20processing...', _0x38b1a0(0x52d)));
+    }
+    [_0x4afe9d(0x44f)](_0xd2ff6) {
+        const _0x52776c = _0x4afe9d;
+        if (!this[_0x52776c(0x50f)](_0xd2ff6[_0x52776c(0x469)])) {
+            _0x5e766a('❌\x20SECURITY:\x20Invalid\x20projectId\x20format\x20rejected:\x20' + _0xd2ff6[_0x52776c(0x469)]);
+            return;
+        }
+        const _0x42b820 = {
+                'id': _0xd2ff6['id'],
+                'projectId': _0xd2ff6[_0x52776c(0x469)],
+                'name': _0xd2ff6[_0x52776c(0x315)],
+                'template': _0xd2ff6['template'],
+                'templateName': _0xd2ff6[_0x52776c(0x25a)],
+                'timestamp': _0xd2ff6[_0x52776c(0x2bb)],
+                'status': _0x52776c(0x427),
+                'slotNumber': _0xd2ff6[_0x52776c(0x593)],
+                'isSlotSystem': _0xd2ff6[_0x52776c(0x26f)]
+            }, _0x44b9bc = document[_0x52776c(0x1ff)](_0x52776c(0x1a9) + _0xd2ff6['id'] + '\x22]');
+        _0x44b9bc && (_0x44b9bc[_0x52776c(0x344)][_0x52776c(0x57d)] = _0x52776c(0x3d4), _0x44b9bc[_0x52776c(0x344)][_0x52776c(0x415)] = _0x52776c(0x3a7), setTimeout(() => {
+            const _0x159e9e = _0x52776c;
+            _0x44b9bc['innerHTML'] = '';
+            const _0x15c635 = _0x355f44(_0x42b820['name']), _0x1e30b4 = _0x582c43(_0x42b820[_0x159e9e(0x4fd)]) ? _0x42b820[_0x159e9e(0x4fd)] : _0x159e9e(0x450), _0x3eeb0c = document[_0x159e9e(0x227)](_0x159e9e(0x20f));
+            _0x3eeb0c[_0x159e9e(0x2a5)] = _0x159e9e(0x4bd), _0x3eeb0c['innerHTML'] = '\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20class=\x22status-pill\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20class=\x22status-dot\x22></div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<span\x20class=\x22status-text\x22>Ready</span>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<img\x20src=\x22' + _0x1e30b4 + _0x159e9e(0x24a);
+            const _0x704243 = document[_0x159e9e(0x227)](_0x159e9e(0x20f));
+            _0x704243[_0x159e9e(0x2a5)] = _0x159e9e(0x21c);
+            const _0x3ad2f3 = document[_0x159e9e(0x227)](_0x159e9e(0x20f));
+            _0x3ad2f3[_0x159e9e(0x2a5)] = 'info-group';
+            const _0x3f149f = document[_0x159e9e(0x227)]('h2');
+            _0x3f149f[_0x159e9e(0x2a5)] = 'card-title', _0x3f149f['textContent'] = _0x15c635;
+            const _0x292f9c = document[_0x159e9e(0x227)](_0x159e9e(0x20f));
+            _0x292f9c[_0x159e9e(0x2a5)] = _0x159e9e(0x42d), _0x292f9c['innerHTML'] = '\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20class=\x22badge\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<svg\x20viewBox=\x220\x200\x2024\x2024\x22\x20fill=\x22none\x22\x20stroke=\x22currentColor\x22\x20stroke-width=\x222.5\x22\x20stroke-linecap=\x22round\x22\x20stroke-linejoin=\x22round\x22><circle\x20cx=\x2212\x22\x20cy=\x2212\x22\x20r=\x2210\x22/><polyline\x20points=\x2212\x206\x2012\x2012\x2016\x2014\x22/></svg>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<span\x20class=\x22duration-text\x22>' + _0x355f44(_0x42b820['duration'] || '0s') + _0x159e9e(0x3a4);
+            const _0x5b9436 = document['createElement'](_0x159e9e(0x489));
+            _0x5b9436['className'] = 'export-btn\x20library-download-btn', _0x5b9436['title'] = 'Download\x20clip', _0x5b9436[_0x159e9e(0x471)] = _0x159e9e(0x545), _0x3ad2f3[_0x159e9e(0x304)](_0x3f149f), _0x3ad2f3[_0x159e9e(0x304)](_0x292f9c), _0x704243[_0x159e9e(0x304)](_0x3ad2f3), _0x704243[_0x159e9e(0x304)](_0x5b9436), _0x44b9bc[_0x159e9e(0x304)](_0x3eeb0c), _0x44b9bc[_0x159e9e(0x304)](_0x704243), _0x44b9bc[_0x159e9e(0x565)](_0x159e9e(0x562)), _0x44b9bc['setAttribute'](_0x159e9e(0x58c), _0x42b820['id']), _0x44b9bc[_0x159e9e(0x4ef)]('data-project-id', _0x42b820[_0x159e9e(0x469)]), _0x44b9bc[_0x159e9e(0x2d9)][_0x159e9e(0x40f)](_0x159e9e(0x2c6)), _0x44b9bc[_0x159e9e(0x344)][_0x159e9e(0x415)] = '0', _0x44b9bc[_0x159e9e(0x344)][_0x159e9e(0x57d)] = _0x159e9e(0x18d), setTimeout(() => {
+                const _0x393796 = _0x159e9e;
+                _0x44b9bc[_0x393796(0x344)][_0x393796(0x415)] = '1';
+            }, 0xa), this['attachLibraryCardListeners'](_0x44b9bc, _0x42b820['id'], _0x42b820[_0x159e9e(0x469)]), this[_0x159e9e(0x1d0)](_0x44b9bc, _0x42b820[_0x159e9e(0x469)]);
+        }, 0x12c)), this[_0x52776c(0x393)] = this['processingItems'][_0x52776c(0x54a)](_0xead652 => _0xead652['id'] !== _0xd2ff6['id']), this[_0x52776c(0x303)][_0x52776c(0x3e1)](_0x42b820), this[_0x52776c(0x2d2)](), this[_0x52776c(0x2f9)](), this[_0x52776c(0x570)](), this[_0x52776c(0x594)](), _0x5e766a(_0x52776c(0x271) + _0xd2ff6[_0x52776c(0x315)]);
+    }
+    [_0x4afe9d(0x1d0)](_0x2d0908, _0x4ae644) {
+        const _0x55ed78 = _0x4afe9d;
+        if (!this[_0x55ed78(0x50f)](_0x4ae644)) {
+            _0x5e766a(_0x55ed78(0x313));
+            return;
+        }
+        fetch(_0x55ed78(0x4e6) + encodeURIComponent(_0x4ae644), {
+            'method': _0x55ed78(0x597),
+            'credentials': _0x55ed78(0x3cd)
+        })[_0x55ed78(0x515)](_0x4e81e9 => {
+            const _0x3b2c84 = _0x55ed78;
+            if (!_0x4e81e9['ok'])
+                throw new Error(_0x3b2c84(0x592) + _0x4e81e9[_0x3b2c84(0x51f)]);
+            return _0x4e81e9['json']();
+        })[_0x55ed78(0x515)](_0x62a0c9 => {
+            const _0x4f7266 = _0x55ed78;
+            if (_0x62a0c9[_0x4f7266(0x504)] && _0x2d0908) {
+                const _0x4cdc4b = _0x2d0908['querySelector'](_0x4f7266(0x26c));
+                _0x4cdc4b && (_0x4cdc4b[_0x4f7266(0x345)] = _0x62a0c9['duration_formatted']);
+            }
+        })['catch'](_0x21556e => _0x5e766a(_0x55ed78(0x33f), _0x21556e));
+    }
+    [_0x4afe9d(0x566)](_0x52d19b, _0x2fae9c, _0x258f7) {
+        const _0x1747d8 = _0x4afe9d, _0x61571b = _0x52d19b[_0x1747d8(0x1ff)]('.library-download-btn'), _0x455f3f = _0x52d19b[_0x1747d8(0x1ff)](_0x1747d8(0x4cf));
+        _0x61571b && _0x61571b[_0x1747d8(0x412)]('click', _0x1884d5 => {
+            const _0x4918d5 = _0x1747d8;
+            _0x1884d5[_0x4918d5(0x212)](), _0x1884d5[_0x4918d5(0x4aa)](), _0x258f7 && this[_0x4918d5(0x50f)](_0x258f7) && clipsStudio ? clipsStudio['downloadClip'](_0x258f7) : _0x5e766a(_0x4918d5(0x1c3) + _0x258f7);
+        }), _0x455f3f && _0x455f3f['addEventListener'](_0x1747d8(0x185), _0x257916 => {
+            const _0x31ef0a = _0x1747d8;
+            _0x257916[_0x31ef0a(0x212)](), _0x257916['stopPropagation'](), _0x2fae9c && this[_0x31ef0a(0x1cf)](_0x2fae9c) && clipsStudio ? clipsStudio[_0x31ef0a(0x3f6)](_0x2fae9c) : _0x5e766a(_0x31ef0a(0x4db) + _0x2fae9c);
+        });
+    }
+    async ['loadLibraryItems']() {
+        const _0x598408 = _0x4afe9d;
+        try {
+            const _0x5b3fb6 = _0x67ee3(), _0x5ec9ce = await fetch(API_BASE_URL + '/clips/projects', {
+                    'headers': _0x5b3fb6,
+                    'credentials': _0x598408(0x3cd)
+                });
+            if (_0x5ec9ce['ok']) {
+                const _0x308f8f = await _0x5ec9ce[_0x598408(0x494)]();
+                this[_0x598408(0x303)] = _0x308f8f['projects'][_0x598408(0x48c)](_0x502ee9 => ({
+                    'id': _0x502ee9['id'],
+                    'projectId': _0x502ee9['id'],
+                    'name': _0x502ee9[_0x598408(0x346)] || _0x598408(0x4fa),
+                    'template': _0x502ee9['template'],
+                    'templateName': _0x502ee9['template_name'],
+                    'timestamp': new Date(_0x502ee9[_0x598408(0x552)]),
+                    'status': _0x598408(0x427),
+                    'url': _0x502ee9[_0x598408(0x363)],
+                    'thumbnailUrl': _0x502ee9['thumbnail_url'],
+                    'slotNumber': _0x502ee9['slot_number'],
+                    'isSlotSystem': _0x502ee9[_0x598408(0x585)] ? !![] : ![],
+                    'slots': _0x502ee9['slots']
+                })), this[_0x598408(0x2c2)](), this['updateRecentActivity'](), this[_0x598408(0x2f9)]();
+            }
+        } catch (_0x2f5267) {
+            _0x5e766a(_0x598408(0x1bb), _0x2f5267), this[_0x598408(0x1f3)]();
+        }
+    }
+    [_0x4afe9d(0x438)]() {
+        const _0x356ff6 = _0x4afe9d;
+        this[_0x356ff6(0x3a8)] && clearInterval(this[_0x356ff6(0x3a8)]), this['libraryPollingInterval'] = setInterval(async () => {
+            const _0x3ae520 = _0x356ff6;
+            try {
+                await this[_0x3ae520(0x2a9)]()['catch'](_0x4b7cd3 => _0x5e766a(_0x3ae520(0x560), _0x4b7cd3));
+                if (this['processingItems'][_0x3ae520(0x56d)] > 0x0) {
+                    const _0x2323d = [];
+                    for (const _0x3546e5 of this[_0x3ae520(0x393)]) {
+                        try {
+                            const _0x4145b6 = _0x67ee3(), _0x17edeb = await fetch(API_BASE_URL + _0x3ae520(0x2d5) + _0x3546e5['projectId'], {
+                                    'headers': _0x4145b6,
+                                    'credentials': _0x3ae520(0x3cd),
+                                    'timeout': 0xbb8
+                                });
+                            if (_0x17edeb['ok']) {
+                                const _0x340b67 = await _0x17edeb[_0x3ae520(0x494)]();
+                                _0x340b67['status'] && [
+                                    _0x3ae520(0x3f5),
+                                    'waiting',
+                                    _0x3ae520(0x1c5),
+                                    _0x3ae520(0x407)
+                                ]['includes'](_0x340b67['status']) ? _0x2323d['push'](_0x3546e5) : _0x5e766a(_0x3ae520(0x35a) + _0x3546e5[_0x3ae520(0x315)] + _0x3ae520(0x1d7) + _0x340b67[_0x3ae520(0x51f)] + ')');
+                            } else
+                                _0x5e766a('🧹\x20Backend\x20check\x20failed\x20for\x20' + _0x3546e5[_0x3ae520(0x315)] + _0x3ae520(0x379));
+                        } catch (_0x38f03b) {
+                            _0x5e766a(_0x3ae520(0x1d3) + _0x3546e5['name'] + '\x20during\x20polling\x20-\x20removing:\x20' + _0x38f03b[_0x3ae520(0x45b)]);
+                        }
+                    }
+                    _0x2323d['length'] !== this[_0x3ae520(0x393)][_0x3ae520(0x56d)] && (this[_0x3ae520(0x393)] = _0x2323d, this[_0x3ae520(0x2d2)](), this['updateLibraryView'](), _0x5e766a(_0x3ae520(0x4b6) + this['processingItems'][_0x3ae520(0x56d)] + _0x3ae520(0x3d2)));
+                }
+            } catch (_0x21c4c2) {
+                _0x5e766a(_0x3ae520(0x217), _0x21c4c2);
+            }
+        }, 0x1388), _0x5e766a(_0x356ff6(0x3bf));
+    }
+    ['stopLibraryPolling']() {
+        const _0x2899d8 = _0x4afe9d;
+        this[_0x2899d8(0x3a8)] && (clearInterval(this[_0x2899d8(0x3a8)]), this['libraryPollingInterval'] = null, _0x5e766a(_0x2899d8(0x4a4)));
+    }
+    async [_0x4afe9d(0x570)]() {
+        const _0x4c0476 = _0x4afe9d;
+        try {
+            const _0x23a7c2 = _0x34ba92?.['id'];
+            if (!_0x23a7c2)
+                return;
+            const _0x39e6c4 = _0x67ee3();
+            _0x5e766a(_0x4c0476(0x2fc));
+            const _0x5cd47f = await fetch(API_BASE_URL + _0x4c0476(0x448), {
+                'method': _0x4c0476(0x597),
+                'headers': _0x39e6c4,
+                'credentials': _0x4c0476(0x3cd)
+            });
+            if (_0x5cd47f['ok']) {
+                const _0xe13585 = await _0x5cd47f[_0x4c0476(0x494)]();
+                _0xe13585['success'] && _0xe13585[_0x4c0476(0x496)] && (this[_0x4c0476(0x556)](_0xe13585['subscription']), _0x5e766a(_0x4c0476(0x1ba)));
+            } else
+                _0x5e766a(_0x4c0476(0x211), _0x5cd47f[_0x4c0476(0x51f)]);
+        } catch (_0x43c7f4) {
+            _0x5e766a(_0x4c0476(0x262), _0x43c7f4);
+        }
+    }
+    [_0x4afe9d(0x556)](_0x586ec5) {
+        const _0x11d737 = _0x4afe9d, _0x279612 = document[_0x11d737(0x1b9)]('storageUsedBadge'), _0x2297c4 = document[_0x11d737(0x1b9)]('storageTotalBadge'), _0x5d873b = document[_0x11d737(0x1b9)]('storagePlanBadge'), _0x3bbd4a = document[_0x11d737(0x1b9)](_0x11d737(0x19a)), _0x2a157e = document[_0x11d737(0x1b9)]('deleteAllClipsBtn'), _0x3d7cc2 = document[_0x11d737(0x1b9)](_0x11d737(0x358)), _0x4b88b1 = this[_0x11d737(0x303)][_0x11d737(0x56d)], _0x3b3310 = _0x586ec5[_0x11d737(0x378)] || _0x586ec5['videos_space_limit'] || 0x2, _0x399b98 = _0x586ec5[_0x11d737(0x233)] || (_0x586ec5[_0x11d737(0x19b)] ? _0x586ec5['plan'][_0x11d737(0x245)](0x0)[_0x11d737(0x307)]() + _0x586ec5[_0x11d737(0x19b)]['slice'](0x1) : _0x11d737(0x37f));
+        if (_0x279612)
+            _0x279612[_0x11d737(0x345)] = _0x4b88b1;
+        if (_0x2297c4)
+            _0x2297c4[_0x11d737(0x345)] = _0x3b3310;
+        if (_0x5d873b)
+            _0x5d873b[_0x11d737(0x345)] = _0x399b98;
+        const _0x4a3cc3 = _0x4b88b1 >= _0x3b3310;
+        if (_0x4a3cc3) {
+            if (_0x279612)
+                _0x279612[_0x11d737(0x344)]['color'] = '#ff4444';
+            if (_0x2297c4)
+                _0x2297c4['style'][_0x11d737(0x428)] = _0x11d737(0x3e2);
+            _0x3bbd4a && (_0x3bbd4a[_0x11d737(0x344)][_0x11d737(0x4f8)] = '#ff4444', _0x3bbd4a[_0x11d737(0x344)][_0x11d737(0x183)] = _0x11d737(0x1e5));
+            if (_0x2a157e)
+                _0x2a157e[_0x11d737(0x344)][_0x11d737(0x180)] = _0x11d737(0x474);
+            if (_0x3d7cc2)
+                _0x3d7cc2[_0x11d737(0x344)]['display'] = _0x11d737(0x22b);
+        } else {
+            if (_0x279612)
+                _0x279612['style'][_0x11d737(0x428)] = 'inherit';
+            if (_0x2297c4)
+                _0x2297c4['style'][_0x11d737(0x428)] = _0x11d737(0x3cb);
+            _0x3bbd4a && (_0x3bbd4a[_0x11d737(0x344)]['borderColor'] = '', _0x3bbd4a[_0x11d737(0x344)][_0x11d737(0x183)] = '');
+            if (_0x2a157e)
+                _0x2a157e[_0x11d737(0x344)]['display'] = _0x11d737(0x4f5);
+            if (_0x3d7cc2)
+                _0x3d7cc2[_0x11d737(0x344)][_0x11d737(0x180)] = _0x11d737(0x4f5);
+        }
+        _0x5e766a(_0x11d737(0x40e) + _0x4b88b1 + '\x20/\x20' + _0x3b3310 + _0x11d737(0x598) + _0x399b98 + _0x11d737(0x1bd) + (_0x4a3cc3 ? _0x11d737(0x4ce) : _0x11d737(0x4c9)));
+    }
+    ['handleSubscriptionExpiration']() {
+        const _0x21cb12 = _0x4afe9d;
+        if (!this['loadAndDisplayStorageInfo'])
+            return;
+        this[_0x21cb12(0x570)]()['then'](_0x50f30d => {
+            const _0x2ca478 = _0x21cb12;
+            if (!_0x50f30d || !_0x50f30d[_0x2ca478(0x3ee)])
+                return;
+            const _0x5150d2 = new Date(_0x50f30d['subscription_end_date']), _0x54cc5b = new Date();
+            _0x54cc5b > _0x5150d2 && _0x50f30d[_0x2ca478(0x19b)] !== _0x2ca478(0x449) && (_0x41706e(_0x2ca478(0x3a0), _0x2ca478(0x2e9)), this[_0x2ca478(0x303)] && this['libraryItems'][_0x2ca478(0x56d)] > 0x2 && _0x41706e(_0x2ca478(0x41b), _0x2ca478(0x2e9)));
+        })[_0x21cb12(0x4f3)](_0x2d9795 => {
+            const _0x1c828e = _0x21cb12;
+            _0x5e766a(_0x1c828e(0x35b), _0x2d9795);
+        });
+    }
+    ['updateLibraryView']() {
+        const _0x7853a5 = _0x4afe9d;
+        this['loadAndDisplayStorageInfo'](), this['handleSubscriptionExpiration']();
+        const _0x43aeb2 = document[_0x7853a5(0x1b9)](_0x7853a5(0x4f2)), _0x54e6d9 = document[_0x7853a5(0x1b9)](_0x7853a5(0x280));
+        if (!_0x43aeb2 || !_0x54e6d9)
+            return;
+        !Array[_0x7853a5(0x28f)](this['libraryItems']) && (this[_0x7853a5(0x303)] = []);
+        !Array[_0x7853a5(0x28f)](this['processingItems']) && (this[_0x7853a5(0x393)] = []);
+        if (this[_0x7853a5(0x303)][_0x7853a5(0x56d)] === 0x0 && this[_0x7853a5(0x393)]['length'] === 0x0) {
+            _0x54e6d9[_0x7853a5(0x344)][_0x7853a5(0x180)] = 'block', _0x43aeb2[_0x7853a5(0x471)] = '', _0x43aeb2[_0x7853a5(0x304)](_0x54e6d9);
+            return;
+        }
+        _0x54e6d9[_0x7853a5(0x344)][_0x7853a5(0x180)] = _0x7853a5(0x4f5);
+        let _0x3c3fb7 = '';
+        this[_0x7853a5(0x393)][_0x7853a5(0x56d)] > 0x0 && (_0x3c3fb7 = this['processingItems']['map'](_0x1a01c2 => {
+            const _0x711cbe = _0x7853a5;
+            return _0x711cbe(0x38b) + _0x1a01c2['id'] + '\x22\x20data-project-id=\x22' + _0x1a01c2[_0x711cbe(0x469)] + _0x711cbe(0x277) + _0x355f44(_0x1a01c2['name'] || 'Processing...') + '\x22>' + _0x355f44(_0x1a01c2[_0x711cbe(0x315)] || 'Processing...') + _0x711cbe(0x2cc);
+        })[_0x7853a5(0x19d)]('')), _0x43aeb2[_0x7853a5(0x471)] = _0x3c3fb7 + this[_0x7853a5(0x303)][_0x7853a5(0x48c)](_0x30e556 => {
+            const _0xd72b6f = _0x7853a5, _0x1a05d4 = _0x355f44(_0x30e556[_0xd72b6f(0x315)]), _0x7da0de = _0x355f44(_0x30e556[_0xd72b6f(0x25a)] || _0x30e556[_0xd72b6f(0x371)] || ''), _0x38c3f2 = _0x582c43(_0x30e556['thumbnailUrl']) ? _0x30e556[_0xd72b6f(0x4fd)] : 'https://via.placeholder.com/1000x600?text=No+Image';
+            return _0xd72b6f(0x4bf) + _0x30e556['id'] + '\x22\x20data-project-id=\x22' + _0x30e556[_0xd72b6f(0x469)] + _0xd72b6f(0x25c) + _0x38c3f2 + '\x22\x20alt=\x22Asset\x20Preview\x22\x20onerror=\x22this.src=\x27https://via.placeholder.com/1000x600?text=No+Image\x27\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20class=\x22card-actions\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<button\x20class=\x22card-action-btn\x20library-delete-btn\x22\x20data-item-id=\x22' + _0x30e556['id'] + _0xd72b6f(0x4df) + _0x1a05d4 + _0xd72b6f(0x3c9) + (_0x30e556[_0xd72b6f(0x483)] || '0s') + _0xd72b6f(0x4ac) + _0x30e556[_0xd72b6f(0x469)] + '\x22\x20title=\x22Download\x20clip\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<svg\x20width=\x2218\x22\x20height=\x2218\x22\x20viewBox=\x220\x200\x2024\x2024\x22\x20fill=\x22none\x22\x20stroke=\x22currentColor\x22\x20stroke-width=\x222.5\x22\x20stroke-linecap=\x22round\x22\x20stroke-linejoin=\x22round\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<!--\x20The\x20tray\x20[\x20]\x20that\x20stays\x20still\x20-->\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<path\x20d=\x22M21\x2015v4a2\x202\x200\x200\x201-2\x202H5a2\x202\x200\x200\x201-2-2v-4\x22/>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<!--\x20The\x20arrow\x20that\x20bounces\x20-->\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<g\x20class=\x22export-arrow\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<polyline\x20points=\x227\x2010\x2012\x2015\x2017\x2010\x22/>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<line\x20x1=\x2212\x22\x20y1=\x2215\x22\x20x2=\x2212\x22\x20y2=\x223\x22/>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</g>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</svg>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20Export\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</button>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20';
+        })[_0x7853a5(0x19d)](''), setTimeout(() => {
+            const _0x3b7819 = _0x7853a5, _0x3802fe = document['querySelectorAll'](_0x3b7819(0x270));
+            _0x3802fe[_0x3b7819(0x321)](_0x3ae307 => {
+                const _0x2bfcf3 = _0x3b7819, _0x1defaa = _0x3ae307['getAttribute'](_0x2bfcf3(0x58c)), _0x1d6dcb = _0x3ae307[_0x2bfcf3(0x4cd)](_0x2bfcf3(0x282));
+                if (_0x1defaa && typeof storeLibraryCard === _0x2bfcf3(0x1f6)) {
+                    const _0x47ebad = {
+                        'id': _0x1defaa,
+                        'html': _0x3ae307['innerHTML'],
+                        'classList': _0x3ae307[_0x2bfcf3(0x2a5)],
+                        'dataAttributes': { 'data-id': _0x1defaa }
+                    };
+                    storeLibraryCard(_0x1defaa, _0x47ebad);
+                }
+                _0x1d6dcb && fetch('/api/clips/duration/' + _0x1d6dcb, {
+                    'method': 'GET',
+                    'credentials': _0x2bfcf3(0x3cd)
+                })[_0x2bfcf3(0x515)](_0x3b39a4 => _0x3b39a4[_0x2bfcf3(0x494)]())['then'](_0x1dc721 => {
+                    const _0xd353b9 = _0x2bfcf3;
+                    if (_0x1dc721[_0xd353b9(0x504)]) {
+                        const _0x55be90 = _0x3ae307[_0xd353b9(0x1ff)](_0xd353b9(0x3c1));
+                        if (_0x55be90) {
+                            const _0x4e8535 = _0x55be90[_0xd353b9(0x1ff)](_0xd353b9(0x324))[_0xd353b9(0x3e4)];
+                            if (_0x4e8535)
+                                _0x4e8535[_0xd353b9(0x345)] = _0x1dc721[_0xd353b9(0x504)];
+                            else {
+                                const _0x39dcdc = _0x55be90[_0xd353b9(0x1ff)]('svg')[_0xd353b9(0x196)];
+                                _0x55be90[_0xd353b9(0x471)] = _0x39dcdc + _0x1dc721['duration_formatted'];
+                            }
+                        }
+                    }
+                })[_0x2bfcf3(0x4f3)](_0x458e71 => {
+                });
+            }), this[_0x3b7819(0x1cb)]();
+            const _0x58f252 = document[_0x3b7819(0x1ff)](_0x3b7819(0x2ba));
+            _0x58f252 && !_0x58f252['_hasClickListener'] && (_0x58f252[_0x3b7819(0x337)] = !![], _0x58f252[_0x3b7819(0x412)](_0x3b7819(0x185), _0x5eb4f0 => {
+                const _0x13c1de = _0x3b7819, _0x109fb4 = _0x5eb4f0[_0x13c1de(0x463)][_0x13c1de(0x2db)](_0x13c1de(0x2a0));
+                if (_0x109fb4) {
+                    _0x5eb4f0[_0x13c1de(0x212)](), _0x5eb4f0[_0x13c1de(0x4aa)]();
+                    const _0x43241a = _0x109fb4['getAttribute']('data-project-id');
+                    if (_0x43241a && clipsStudio)
+                        clipsStudio[_0x13c1de(0x47c)](_0x43241a);
+                    else {
+                    }
+                    return;
+                }
+                const _0x22a0bb = _0x5eb4f0[_0x13c1de(0x463)][_0x13c1de(0x2db)](_0x13c1de(0x4cf));
+                if (_0x22a0bb) {
+                    _0x5eb4f0[_0x13c1de(0x212)](), _0x5eb4f0[_0x13c1de(0x4aa)]();
+                    const _0x3455f5 = _0x22a0bb[_0x13c1de(0x4cd)](_0x13c1de(0x434));
+                    _0x3455f5 && clipsStudio && clipsStudio['deleteClip'](_0x3455f5);
+                    return;
+                }
+            }));
+        }, 0x0);
+    }
+    ['deleteClip'](_0x9ec3f1) {
+        const _0x469803 = _0x4afe9d;
+        _0x5e766a(_0x469803(0x3b5) + _0x9ec3f1);
+        const _0x5bd19c = this[_0x469803(0x303)][_0x469803(0x465)](_0x526364 => _0x526364['id'] == _0x9ec3f1) || this[_0x469803(0x393)][_0x469803(0x465)](_0x374fff => _0x374fff['id'] == _0x9ec3f1);
+        if (!_0x5bd19c) {
+            _0x5e766a(_0x469803(0x240) + _0x9ec3f1), _0x41706e(_0x469803(0x2b7), _0x469803(0x302));
+            return;
+        }
+        _0x5e766a(_0x469803(0x2c9), _0x5bd19c);
+        if (_0x5bd19c['status'] === _0x469803(0x3f5)) {
+            _0x5e766a(_0x469803(0x238) + _0x9ec3f1), _0x41706e(_0x469803(0x249), _0x469803(0x2e9));
+            return;
+        }
+        const _0x1076ee = document['getElementById']('deleteConfirmationModal'), _0x133025 = document['getElementById'](_0x469803(0x52f));
+        let _0x5068a3 = document[_0x469803(0x1b9)](_0x469803(0x588));
+        if (!_0x1076ee || !_0x133025 || !_0x5068a3) {
+            _0x41706e(_0x469803(0x372), _0x469803(0x302));
+            return;
+        }
+        _0x5e766a(_0x469803(0x462)), _0x133025[_0x469803(0x345)] = _0x469803(0x3bc) + _0x5bd19c[_0x469803(0x315)] + '\x22?';
+        _0x5068a3[_0x469803(0x3c2)] && (Object[_0x469803(0x2b4)](_0x5068a3[_0x469803(0x3c2)])['forEach'](_0x1c6d6b => {
+            const _0x119fdc = _0x469803;
+            try {
+                _0x1c6d6b[_0x119fdc(0x511)]();
+            } catch (_0x251752) {
+            }
+        }), _0x5068a3['_eventControllers'] = {});
+        const _0x4ade9c = new AbortController();
+        if (!_0x5068a3[_0x469803(0x3c2)])
+            _0x5068a3[_0x469803(0x3c2)] = {};
+        _0x5068a3['_eventControllers'][_0x469803(0x185)] = _0x4ade9c, _0x5068a3[_0x469803(0x412)](_0x469803(0x185), async () => {
+            const _0xb4a849 = _0x469803;
+            _0x5e766a(_0xb4a849(0x354) + _0x9ec3f1), _0x4ade9c[_0xb4a849(0x511)]();
+            try {
+                _0x1076ee[_0xb4a849(0x344)][_0xb4a849(0x180)] = 'none', _0x41706e(_0xb4a849(0x3d5), 'info'), _0x5bd19c[_0xb4a849(0x469)] && (_0x5e766a(_0xb4a849(0x473) + _0x5bd19c['projectId']), await this[_0xb4a849(0x39d)](_0x5bd19c[_0xb4a849(0x469)])), _0x5e766a(_0xb4a849(0x4c7)), this['libraryItems'] = this[_0xb4a849(0x303)][_0xb4a849(0x54a)](_0x31247f => _0x31247f['id'] != _0x9ec3f1), this[_0xb4a849(0x393)] = this[_0xb4a849(0x393)]['filter'](_0x5c2eaf => _0x5c2eaf['id'] != _0x9ec3f1), _0x5bd19c[_0xb4a849(0x469)] && (this[_0xb4a849(0x393)] = this[_0xb4a849(0x393)][_0xb4a849(0x54a)](_0x51b755 => _0x51b755[_0xb4a849(0x469)] != _0x5bd19c[_0xb4a849(0x469)])), _0x5e766a(_0xb4a849(0x374)), this[_0xb4a849(0x2c2)](), this[_0xb4a849(0x56c)](), this[_0xb4a849(0x594)](), this[_0xb4a849(0x2f9)](), this[_0xb4a849(0x2d2)](), _0x5e766a(_0xb4a849(0x176)), typeof updateStorageBadgeDisplay === _0xb4a849(0x1f6) && await updateStorageBadgeDisplay(), _0x5e766a(_0xb4a849(0x2c0)), _0x41706e('✅\x20Clip\x20deleted\x20successfully', _0xb4a849(0x1a6)), setTimeout(() => {
+                    const _0x2536d1 = _0xb4a849;
+                    window['location'][_0x2536d1(0x1a2)]();
+                }, 0x320);
+            } catch (_0x5cf3cb) {
+                _0x41706e(_0xb4a849(0x1b6) + _0x5cf3cb[_0xb4a849(0x45b)], _0xb4a849(0x302));
+            } finally {
+                _0x1076ee[_0xb4a849(0x344)][_0xb4a849(0x180)] = _0xb4a849(0x4f5);
+            }
+        }, { 'once': !![] }), _0x1076ee['style'][_0x469803(0x180)] = 'block', _0x1076ee[_0x469803(0x344)][_0x469803(0x202)] = _0x469803(0x1ea), _0x1076ee[_0x469803(0x344)][_0x469803(0x415)] = '1', _0x1076ee[_0x469803(0x344)]['pointerEvents'] = _0x469803(0x32b), _0x5e766a(_0x469803(0x553));
+        const _0x275452 = _0x341382 => {
+            const _0x56f2c2 = _0x469803;
+            _0x341382[_0x56f2c2(0x463)] === _0x1076ee && (_0x5e766a(_0x56f2c2(0x3cf)), _0x1076ee['style'][_0x56f2c2(0x180)] = _0x56f2c2(0x4f5), document['removeEventListener']('click', _0x275452));
+        };
+        document[_0x469803(0x412)](_0x469803(0x185), _0x275452);
+    }
+    async [_0x4afe9d(0x39d)](_0x18dc9f) {
+        const _0x2556c9 = _0x4afe9d;
+        try {
+            if (!_0x18dc9f || typeof _0x18dc9f !== _0x2556c9(0x590))
+                throw new Error(_0x2556c9(0x25b));
+            if (!/^[a-zA-Z0-9_-]+$/['test'](_0x18dc9f) || _0x18dc9f[_0x2556c9(0x56d)] < 0xa)
+                throw new Error(_0x2556c9(0x25b));
+            const _0x5bfd22 = _0x67ee3(), _0x2d17b2 = await fetch(API_BASE_URL + _0x2556c9(0x181) + _0x18dc9f, {
+                    'method': _0x2556c9(0x2ac),
+                    'headers': _0x5bfd22,
+                    'credentials': _0x2556c9(0x3cd)
+                });
+            if (!_0x2d17b2['ok']) {
+                const _0x21bfe1 = await _0x2d17b2[_0x2556c9(0x494)]()['catch'](() => ({}));
+                throw new Error(_0x21bfe1[_0x2556c9(0x302)] || _0x2556c9(0x551) + _0x2d17b2[_0x2556c9(0x51f)]);
+            }
+            const _0xd1338a = await _0x2d17b2[_0x2556c9(0x494)]();
+            return !![];
+        } catch (_0x56601b) {
+            const _0x38fe13 = _0x27e701(_0x56601b);
+            return _0x41706e(_0x2556c9(0x523), 'warning'), _0x5e766a(_0x2556c9(0x3fd), _0x38fe13), ![];
+        }
+    }
+    [_0x4afe9d(0x499)](_0x11b3b4) {
+        const _0x483c65 = _0x4afe9d, _0xe567f4 = this['libraryItems'][_0x483c65(0x54a)](_0x29b00f => {
+                const _0xaf0c0a = _0x483c65;
+                if (_0x11b3b4 === _0xaf0c0a(0x3bb))
+                    return !![];
+                if (_0x11b3b4 === 'recent') {
+                    const _0x2e1524 = new Date();
+                    return _0x2e1524['setDate'](_0x2e1524[_0xaf0c0a(0x19c)]() - 0x7), new Date(_0x29b00f[_0xaf0c0a(0x2bb)]) > _0x2e1524;
+                }
+                if (_0x11b3b4 === 'favorites')
+                    return !![];
+                return !![];
+            });
+        _0x41706e(_0x483c65(0x4e4) + _0x11b3b4, _0x483c65(0x52d));
+    }
+    ['manualRefresh']() {
+        const _0xcaf4bb = _0x4afe9d;
+        this['loadLibraryItems'](), this['loadProcessingItems'](), _0x41706e(_0xcaf4bb(0x28e), _0xcaf4bb(0x52d));
+    }
+    [_0x4afe9d(0x2d2)]() {
+        const _0x1b2559 = _0x4afe9d;
+        try {
+            if (!this[_0x1b2559(0x393)] || this[_0x1b2559(0x393)][_0x1b2559(0x56d)] === 0x0) {
+                localStorage[_0x1b2559(0x24e)](_0x1b2559(0x547));
+                return;
+            }
+            const _0x497299 = JSON[_0x1b2559(0x4d1)](this[_0x1b2559(0x393)]);
+            localStorage['setItem'](_0x1b2559(0x547), _0x497299), _0x5e766a(_0x1b2559(0x4a1) + this[_0x1b2559(0x393)]['length'] + '\x20processing\x20item(s)');
+        } catch (_0xb2f0dc) {
+            if (_0xb2f0dc['name'] === _0x1b2559(0x501)) {
+                _0x5e766a(_0x1b2559(0x22c)), this[_0x1b2559(0x49e)]();
+                try {
+                    localStorage[_0x1b2559(0x3b0)](_0x1b2559(0x547), JSON[_0x1b2559(0x4d1)](this[_0x1b2559(0x393)]));
+                } catch (_0xef1953) {
+                    _0x5e766a(_0x1b2559(0x4ec), _0xef1953);
+                }
+            } else
+                _0x5e766a(_0x1b2559(0x4e9), _0xb2f0dc);
+        }
+    }
+    async [_0x4afe9d(0x59c)]() {
+        const _0x3ca9a6 = _0x4afe9d;
+        try {
+            const _0x5021de = localStorage[_0x3ca9a6(0x394)](_0x3ca9a6(0x547));
+            if (_0x5021de) {
+                this['processingItems'] = JSON[_0x3ca9a6(0x1b3)](_0x5021de);
+                const _0x22c2da = Date['now'](), _0x3a7c65 = 0x18 * 0x3c * 0x3c * 0x3e8;
+                this['processingItems'] = this[_0x3ca9a6(0x393)][_0x3ca9a6(0x54a)](_0x45d15e => {
+                    const _0x4df8ad = _0x3ca9a6;
+                    if (_0x45d15e[_0x4df8ad(0x51f)] === _0x4df8ad(0x427) || _0x45d15e['status'] === _0x4df8ad(0x38f))
+                        return _0x5e766a(_0x4df8ad(0x502) + _0x45d15e[_0x4df8ad(0x51f)] + _0x4df8ad(0x578) + _0x45d15e[_0x4df8ad(0x315)]), ![];
+                    const _0x57420a = _0x22c2da - (_0x45d15e[_0x4df8ad(0x2bb)] ? new Date(_0x45d15e[_0x4df8ad(0x2bb)])[_0x4df8ad(0x2cb)]() : _0x22c2da);
+                    if (_0x57420a > _0x3a7c65)
+                        return _0x5e766a('🧹\x20Removing\x20stale\x20processing\x20item\x20(' + Math['round'](_0x57420a / 0x3e8 / 0x3c) + _0x4df8ad(0x43b) + _0x45d15e['name']), ![];
+                    return !![];
+                }), this[_0x3ca9a6(0x2d2)](), this[_0x3ca9a6(0x56c)](), this[_0x3ca9a6(0x2c2)](), _0x5e766a(_0x3ca9a6(0x53f) + this['processingItems'][_0x3ca9a6(0x56d)] + _0x3ca9a6(0x582));
+            }
+        } catch (_0x9042ba) {
+            _0x5e766a(_0x3ca9a6(0x21e), _0x9042ba), this[_0x3ca9a6(0x393)] = [], this[_0x3ca9a6(0x2d2)](), this[_0x3ca9a6(0x2c2)]();
+        }
+    }
+    [_0x4afe9d(0x2f9)]() {
+        const _0x3dbc06 = _0x4afe9d;
+        try {
+            if (!this[_0x3dbc06(0x303)] || this[_0x3dbc06(0x303)]['length'] === 0x0) {
+                localStorage['removeItem'](_0x3dbc06(0x513));
+                return;
+            }
+            const _0x16306c = JSON[_0x3dbc06(0x4d1)](this[_0x3dbc06(0x303)]);
+            localStorage['setItem'](_0x3dbc06(0x513), _0x16306c), _0x5e766a(_0x3dbc06(0x4a1) + this['libraryItems'][_0x3dbc06(0x56d)] + _0x3dbc06(0x188));
+        } catch (_0x3435e1) {
+            if (_0x3435e1[_0x3dbc06(0x315)] === _0x3dbc06(0x501)) {
+                _0x5e766a(_0x3dbc06(0x22c)), this['clearOldLibraryData']();
+                try {
+                    localStorage[_0x3dbc06(0x3b0)](_0x3dbc06(0x513), JSON[_0x3dbc06(0x4d1)](this[_0x3dbc06(0x303)]));
+                } catch (_0xc6fd17) {
+                    _0x5e766a(_0x3dbc06(0x4ec), _0xc6fd17);
+                }
+            } else
+                _0x5e766a(_0x3dbc06(0x458), _0x3435e1);
+        }
+    }
+    [_0x4afe9d(0x4b5)]() {
+        const _0x41cf71 = _0x4afe9d;
+        _0x5e766a(_0x41cf71(0x53e) + this[_0x41cf71(0x393)][_0x41cf71(0x56d)] + _0x41cf71(0x3cc)), this['processingItems'] = [], this[_0x41cf71(0x437)](), this[_0x41cf71(0x2d2)](), this['updateLibraryView'](), _0x41706e('Cleared\x20all\x20processing\x20items', _0x41cf71(0x52d));
+    }
+    [_0x4afe9d(0x1f3)]() {
+        const _0x5200f4 = _0x4afe9d;
+        try {
+            const _0x429ef5 = localStorage['getItem'](_0x5200f4(0x513));
+            _0x429ef5 && (this[_0x5200f4(0x303)] = JSON['parse'](_0x429ef5), this['updateLibraryView'](), this[_0x5200f4(0x594)](), _0x5e766a(_0x5200f4(0x53f) + this[_0x5200f4(0x303)][_0x5200f4(0x56d)] + _0x5200f4(0x188)));
+        } catch (_0xd00af9) {
+            _0x5e766a(_0x5200f4(0x1bb), _0xd00af9), this['libraryItems'] = [];
+        }
+    }
+    [_0x4afe9d(0x243)]() {
+        const _0x2ffb96 = _0x4afe9d;
+        this[_0x2ffb96(0x303)][_0x2ffb96(0x56d)] > 0x32 && (this[_0x2ffb96(0x303)] = this[_0x2ffb96(0x303)][_0x2ffb96(0x29a)]((_0x5a9f16, _0x1c19e3) => new Date(_0x1c19e3[_0x2ffb96(0x2bb)]) - new Date(_0x5a9f16[_0x2ffb96(0x2bb)]))[_0x2ffb96(0x59d)](0x0, 0x32), _0x5e766a('Cleaned\x20up\x20old\x20library\x20items,\x20keeping\x2050\x20most\x20recent'));
+    }
+    ['clearOldProcessingData']() {
+        const _0x2eda55 = _0x4afe9d, _0x2b8934 = Date['now']() - 0x7 * 0x18 * 0x3c * 0x3c * 0x3e8;
+        this[_0x2eda55(0x393)] = this[_0x2eda55(0x393)][_0x2eda55(0x54a)](_0xbbef3e => {
+            const _0x4d2380 = _0x2eda55;
+            if (_0xbbef3e[_0x4d2380(0x51f)] === 'completed' && _0xbbef3e[_0x4d2380(0x2bb)] < _0x2b8934)
+                return ![];
+            return !![];
+        }), _0x5e766a(_0x2eda55(0x18b));
+    }
+    [_0x4afe9d(0x1cb)]() {
+        const _0x4e521c = _0x4afe9d;
+        if (!_0x3e82a3) {
+            _0x5e766a(_0x4e521c(0x4b9)), setTimeout(() => this[_0x4e521c(0x1cb)](), 0x3e8);
+            return;
+        }
+        _0x3e82a3['on'](_0x4e521c(0x312), _0xc7a6f7 => {
+            const _0x2de475 = _0x4e521c, {
+                    taskId: _0x4be08c,
+                    progress: _0x13decd,
+                    step: _0x172c34,
+                    status: _0x39477a
+                } = _0xc7a6f7;
+            if (typeof _0x13decd !== 'number' || isNaN(_0x13decd) || _0x13decd < 0x0 || _0x13decd > 0x64) {
+                _0x5e766a(_0x2de475(0x267) + _0x13decd);
+                return;
+            }
+            const _0x4f9c85 = document['querySelector']('[data-processing-id=\x22' + _0x4be08c + '\x22]');
+            _0x4f9c85 && _0x5e766a(_0x2de475(0x3eb) + _0x4be08c + ':\x20' + Math[_0x2de475(0x2eb)](_0x13decd) + _0x2de475(0x45c) + (_0x172c34 || ''));
+            const _0x5e9936 = document['getElementById']('generationProgressWrapper'), _0x373b36 = document[_0x2de475(0x1b9)](_0x2de475(0x4ea)), _0x4ed9cc = document['getElementById'](_0x2de475(0x44e));
+            if (_0x5e9936 && _0x373b36 && _0x4ed9cc) {
+                this[_0x2de475(0x393)]['length'] > 0x0 && (_0x5e9936[_0x2de475(0x344)][_0x2de475(0x180)] = 'flex');
+                const _0x1ac898 = 75.36, _0x29b5a5 = _0x13decd / 0x64 * _0x1ac898;
+                _0x373b36[_0x2de475(0x344)][_0x2de475(0x347)] = _0x29b5a5 + '\x20' + _0x1ac898, _0x4ed9cc[_0x2de475(0x345)] = Math[_0x2de475(0x2eb)](_0x13decd) + '%', _0x5e766a('📊\x20Progress:\x20' + Math['round'](_0x13decd) + '%');
+            }
+        }), _0x3e82a3['on'](_0x4e521c(0x256), _0x3e90a8 => {
+            const _0x34181f = _0x4e521c, {
+                    taskId: _0x465fd4,
+                    result: _0x43e90a
+                } = _0x3e90a8;
+            _0x5e766a('✅\x20Video\x20' + _0x465fd4 + _0x34181f(0x1a1));
+            const _0x327457 = this[_0x34181f(0x393)][_0x34181f(0x599)](_0x4f7bb2 => _0x4f7bb2['id'] === _0x465fd4);
+            if (_0x327457 === -0x1) {
+                _0x5e766a('❌\x20Processing\x20item\x20not\x20found:\x20' + _0x465fd4);
+                return;
+            }
+            const _0xebbf65 = this['processingItems'][_0x327457], _0x5a2932 = document[_0x34181f(0x1ff)](_0x34181f(0x1a9) + _0x465fd4 + '\x22]');
+            _0x5a2932 && (_0x5a2932[_0x34181f(0x2d9)][_0x34181f(0x3ed)](_0x34181f(0x246)), setTimeout(() => {
+                const _0x188bd4 = _0x34181f;
+                this[_0x188bd4(0x393)][_0x188bd4(0x3d1)](_0x327457, 0x1), this[_0x188bd4(0x2d2)]();
+                const _0x52acce = {
+                    'id': _0x43e90a['project_id'] || _0x465fd4,
+                    'projectId': _0x43e90a[_0x188bd4(0x2cf)] || _0x465fd4,
+                    'name': _0xebbf65['name'],
+                    'template': _0xebbf65['templateName'] || _0xebbf65[_0x188bd4(0x371)] || _0x188bd4(0x4fa),
+                    'templateName': _0xebbf65[_0x188bd4(0x25a)] || _0xebbf65[_0x188bd4(0x371)] || _0x188bd4(0x4fa),
+                    'thumbnailUrl': _0x43e90a[_0x188bd4(0x55e)] || _0xebbf65[_0x188bd4(0x4fd)] || '',
+                    'duration': _0x43e90a['duration'] || _0xebbf65[_0x188bd4(0x483)] || '0s',
+                    'timestamp': new Date()['toISOString'](),
+                    'status': _0x188bd4(0x427)
+                };
+                this[_0x188bd4(0x303)]['unshift'](_0x52acce), this[_0x188bd4(0x2f9)](), this['updateLibraryView'](), this[_0x188bd4(0x480)]();
+                if (this[_0x188bd4(0x393)][_0x188bd4(0x56d)] === 0x0) {
+                    const _0x4eea04 = document[_0x188bd4(0x1b9)](_0x188bd4(0x1b4));
+                    if (_0x4eea04) {
+                        _0x4eea04[_0x188bd4(0x344)][_0x188bd4(0x180)] = _0x188bd4(0x4f5);
+                        const _0x6bb8e8 = document[_0x188bd4(0x1b9)](_0x188bd4(0x4ea));
+                        _0x6bb8e8 && (_0x6bb8e8[_0x188bd4(0x344)][_0x188bd4(0x347)] = '0\x2075.36');
+                    }
+                }
+                _0x5e766a('✅\x20Moved\x20' + _0xebbf65[_0x188bd4(0x315)] + _0x188bd4(0x255));
+            }, 0x258));
+        }), _0x3e82a3['on'](_0x4e521c(0x302), _0x3ca643 => {
+            const _0x3810e8 = _0x4e521c, {
+                    taskId: _0x2fe633,
+                    error: _0x474e3f
+                } = _0x3ca643;
+            _0x5e766a(_0x3810e8(0x1f4) + _0x2fe633 + _0x3810e8(0x26b) + _0x474e3f);
+            const _0x1b4c5d = document['querySelector'](_0x3810e8(0x1a9) + _0x2fe633 + '\x22]');
+            if (_0x1b4c5d) {
+                _0x1b4c5d[_0x3810e8(0x344)][_0x3810e8(0x415)] = _0x3810e8(0x3a7);
+                const _0xb3f161 = _0x1b4c5d[_0x3810e8(0x1ff)](_0x3810e8(0x291));
+                _0xb3f161 && (_0xb3f161[_0x3810e8(0x345)] = 'Failed\x20-\x20' + _0xb3f161['textContent']);
+            }
+            const _0x125c30 = this[_0x3810e8(0x393)]['findIndex'](_0x1151c7 => _0x1151c7['id'] === _0x2fe633);
+            if (_0x125c30 !== -0x1) {
+                this[_0x3810e8(0x393)][_0x3810e8(0x3d1)](_0x125c30, 0x1), this[_0x3810e8(0x2d2)]();
+                if (this[_0x3810e8(0x393)][_0x3810e8(0x56d)] === 0x0) {
+                    const _0x19ec80 = document['getElementById'](_0x3810e8(0x1b4));
+                    if (_0x19ec80) {
+                        _0x19ec80['style'][_0x3810e8(0x180)] = _0x3810e8(0x4f5);
+                        const _0x590c3d = document['getElementById']('progressCircle');
+                        _0x590c3d && (_0x590c3d['style'][_0x3810e8(0x347)] = _0x3810e8(0x4d7));
+                    }
+                }
+            }
+        }), _0x3e82a3['on']('processing_error', _0x3bbe18 => {
+            const _0x300eff = _0x4e521c, {
+                    taskId: _0x17553d,
+                    error: _0x2dcd15,
+                    message: _0x255cce
+                } = _0x3bbe18, _0x1a48f9 = _0x255cce || _0x2dcd15 || _0x300eff(0x42b);
+            _0x5e766a(_0x300eff(0x589) + _0x1a48f9);
+            const _0x34a8ae = document[_0x300eff(0x1ff)](_0x300eff(0x1a9) + _0x17553d + '\x22]');
+            if (_0x34a8ae) {
+                _0x34a8ae['style'][_0x300eff(0x415)] = _0x300eff(0x3a7), _0x34a8ae[_0x300eff(0x344)]['borderColor'] = _0x300eff(0x58e), _0x34a8ae[_0x300eff(0x344)][_0x300eff(0x1e1)] = _0x300eff(0x442);
+                const _0x3ef958 = _0x34a8ae[_0x300eff(0x1ff)]('.card-title');
+                _0x3ef958 && (_0x3ef958['textContent'] = _0x300eff(0x1fd));
+                const _0x2a5b25 = _0x34a8ae[_0x300eff(0x1ff)](_0x300eff(0x41e)) || _0x34a8ae[_0x300eff(0x1ff)](_0x300eff(0x2fd));
+                if (_0x2a5b25) {
+                    let _0x3d229a = _0x1a48f9;
+                    if (_0x1a48f9[_0x300eff(0x220)]('Video\x20is\x20too\x20long')) {
+                        const _0x19d8b7 = _0x1a48f9[_0x300eff(0x2e4)](/(\d+)\s*minute/g);
+                        _0x3d229a = _0x1a48f9;
+                    }
+                    _0x2a5b25[_0x300eff(0x345)] = _0x3d229a['substring'](0x0, 0x64), _0x2a5b25[_0x300eff(0x4fc)] = _0x3d229a;
+                }
+            }
+            const _0x5c5202 = this[_0x300eff(0x393)]['findIndex'](_0x2b6986 => _0x2b6986['id'] === _0x17553d);
+            if (_0x5c5202 !== -0x1) {
+                this[_0x300eff(0x393)][_0x300eff(0x3d1)](_0x5c5202, 0x1), this[_0x300eff(0x2d2)]();
+                if (this['processingItems'][_0x300eff(0x56d)] === 0x0) {
+                    const _0x36d783 = document[_0x300eff(0x1b9)](_0x300eff(0x1b4));
+                    if (_0x36d783) {
+                        _0x36d783[_0x300eff(0x344)][_0x300eff(0x180)] = _0x300eff(0x4f5);
+                        const _0x2cca65 = document[_0x300eff(0x1b9)](_0x300eff(0x4ea));
+                        _0x2cca65 && (_0x2cca65['style']['strokeDasharray'] = _0x300eff(0x4d7));
+                        const _0x5701ce = document[_0x300eff(0x1b9)]('generationProgressText');
+                        _0x5701ce && (_0x5701ce[_0x300eff(0x345)] = '0%');
+                    }
+                }
+            }
+        }), _0x5e766a(_0x4e521c(0x21f));
+    }
+    ['safeAddEventListener'](_0x1cccdb, _0x4c2c66, _0x3d592e) {
+        const _0x3a51af = _0x4afe9d, _0x44ccca = document[_0x3a51af(0x350)](_0x1cccdb);
+        _0x44ccca[_0x3a51af(0x321)](_0x4ade36 => {
+            const _0x85487e = _0x3a51af;
+            if (!_0x4ade36[_0x85487e(0x3c2)])
+                _0x4ade36[_0x85487e(0x3c2)] = {};
+            const _0x3cef17 = _0x4c2c66 + '_' + _0x1cccdb;
+            _0x4ade36[_0x85487e(0x3c2)][_0x3cef17] && _0x4ade36['_eventControllers'][_0x3cef17][_0x85487e(0x511)]();
+            const _0x4672e2 = new AbortController();
+            _0x4ade36[_0x85487e(0x3c2)][_0x3cef17] = _0x4672e2, _0x4ade36[_0x85487e(0x412)](_0x4c2c66, _0x3d592e, { 'signal': _0x4672e2['signal'] });
+        });
+    }
+    [_0x4afe9d(0x30f)](_0x57bc07, _0x338192, _0x252883) {
+        const _0x5a3337 = _0x4afe9d, _0x4b0815 = document[_0x5a3337(0x1b9)](_0x57bc07);
+        if (_0x4b0815) {
+            _0x5e766a(_0x5a3337(0x4b2) + _0x57bc07);
+            !_0x4b0815[_0x5a3337(0x3c2)] && (_0x4b0815['_eventControllers'] = {});
+            const _0x15c9e3 = _0x338192 + '_' + _0x57bc07;
+            _0x4b0815['_eventControllers'][_0x15c9e3] && _0x4b0815[_0x5a3337(0x3c2)][_0x15c9e3][_0x5a3337(0x511)]();
+            const _0x14061c = new AbortController();
+            _0x4b0815[_0x5a3337(0x3c2)][_0x15c9e3] = _0x14061c, _0x4b0815['addEventListener'](_0x338192, _0x252883, { 'signal': _0x14061c[_0x5a3337(0x257)] });
+        } else
+            _0x5e766a(_0x5a3337(0x334) + _0x57bc07 + _0x5a3337(0x28a));
     }
 }
-// Initiate YouTube Connection with CSRF Protection
-function initiateYouTubeConnection() {
-    if (!currentUser) {
-        alert('Please log in first to connect YouTube');
+function _0x1edcf2() {
+    const _0x4b15ca = _0x4afe9d;
+    !window[_0x4b15ca(0x27c)] && (clipsStudio = new _0x4402fa(), clipsStudio[_0x4b15ca(0x25d)](), window[_0x4b15ca(0x27c)] = clipsStudio, setTimeout(() => {
+    }, 0x1f4));
+}
+function _0x30e543() {
+    const _0xaff0f4 = _0x4afe9d;
+    fetch(API_BASE_URL + '/auth/logout', {
+        'method': _0xaff0f4(0x55a),
+        'credentials': _0xaff0f4(0x3cd)
+    })['then'](_0x30cc40 => {
+        const _0x5c5fc7 = _0xaff0f4;
+        localStorage[_0x5c5fc7(0x24e)](_0x5c5fc7(0x396)), localStorage[_0x5c5fc7(0x24e)](_0x5c5fc7(0x57e)), localStorage['removeItem'](_0x5c5fc7(0x41d)), localStorage[_0x5c5fc7(0x24e)](_0x5c5fc7(0x33b)), _0x5e766a(_0x5c5fc7(0x241)), window[_0x5c5fc7(0x2f2)][_0x5c5fc7(0x573)] = _0x5c5fc7(0x418);
+    })[_0xaff0f4(0x4f3)](_0x4aae41 => {
+        const _0x418c27 = _0xaff0f4;
+        _0x5e766a(_0x418c27(0x2c8), _0x4aae41), setTimeout(() => {
+            const _0x1eda4c = _0x418c27;
+            window[_0x1eda4c(0x2f2)][_0x1eda4c(0x573)] = _0x1eda4c(0x418);
+        }, 0x3e8);
+    });
+}
+function _0x950268() {
+    const _0x4f4c09 = _0x4afe9d, _0x1965ed = document['getElementById'](_0x4f4c09(0x398));
+    _0x1965ed && _0x1965ed[_0x4f4c09(0x412)](_0x4f4c09(0x185), _0x214da5 => {
+        const _0x10da55 = _0x4f4c09;
+        _0x214da5[_0x10da55(0x4aa)](), _0x4bb350(_0x214da5);
+    });
+    const _0x1a8f62 = document[_0x4f4c09(0x1b9)](_0x4f4c09(0x2fa));
+    _0x1a8f62 && _0x1a8f62[_0x4f4c09(0x412)](_0x4f4c09(0x185), _0x433576 => {
+        const _0x30defb = _0x4f4c09;
+        _0x433576[_0x30defb(0x212)](), _0x433576[_0x30defb(0x4aa)](), _0x30e543();
+    });
+    const _0xbb3f02 = document[_0x4f4c09(0x1b9)]('menuSettings');
+    _0xbb3f02 && _0xbb3f02[_0x4f4c09(0x412)]('click', _0x353483 => {
+        const _0x22a238 = _0x4f4c09;
+        _0x353483[_0x22a238(0x4aa)](), _0x4b838b();
+    });
+    _0x24712d && _0x24712d[_0x4f4c09(0x412)](_0x4f4c09(0x185), _0x4b838b);
+    _0x13392e && _0x13392e['addEventListener'](_0x4f4c09(0x185), _0x471d88);
+    const _0x246684 = document[_0x4f4c09(0x1b9)](_0x4f4c09(0x4ee));
+    _0x246684 && _0x246684['addEventListener'](_0x4f4c09(0x185), () => {
+        const _0x1eb0a4 = _0x4f4c09;
+        confirm('Are\x20you\x20sure\x20you\x20want\x20to\x20delete\x20all\x20chat\x20history?\x20This\x20action\x20cannot\x20be\x20undone.') && (_0x522dab(), clipsStudio[_0x1eb0a4(0x400)](_0x1eb0a4(0x506), 'success'));
+    });
+    const _0x1e7516 = document[_0x4f4c09(0x1ff)](_0x4f4c09(0x4e0));
+    _0x1e7516 && _0x1e7516[_0x4f4c09(0x412)](_0x4f4c09(0x185), _0x471d88);
+    const _0x222d68 = localStorage[_0x4f4c09(0x394)](_0x4f4c09(0x1ef));
+    _0x222d68 && (_0x3b2ebf(_0x222d68), _0xa645c4 && (_0xa645c4['checked'] = _0x222d68 === _0x4f4c09(0x1c0)));
+    _0xa645c4 && (_0x5e766a(_0x4f4c09(0x3c5)), (_0xa645c4[_0x4f4c09(0x4bb)] !== 'INPUT' || _0xa645c4[_0x4f4c09(0x27d)] !== 'checkbox') && _0x5e766a(_0x4f4c09(0x4d5)), _0xa645c4[_0x4f4c09(0x412)](_0x4f4c09(0x1c1), () => {
+        const _0x4a3f4b = _0x4f4c09, _0x213686 = _0xa645c4[_0x4a3f4b(0x17c)] ? _0x4a3f4b(0x1c0) : _0x4a3f4b(0x42f);
+        _0x5e766a('darkModeSettingsToggle\x20change\x20event\x20fired.\x20New\x20theme:', _0x213686), _0x3b2ebf(_0x213686);
+    }));
+    const _0x1656fb = document[_0x4f4c09(0x1b9)](_0x4f4c09(0x23a));
+    _0x1656fb && _0x1656fb[_0x4f4c09(0x412)](_0x4f4c09(0x185), _0x4a1509);
+    const _0x4fe7fc = document[_0x4f4c09(0x1b9)](_0x4f4c09(0x543));
+    _0x4fe7fc && (_0x4fe7fc[_0x4f4c09(0x17c)] = !![], localStorage[_0x4f4c09(0x3b0)](_0x4f4c09(0x4ed), _0x4f4c09(0x4fe)), _0x4fe7fc[_0x4f4c09(0x412)](_0x4f4c09(0x1c1), _0x496e9d => {
+        const _0xfdf059 = _0x4f4c09, _0x2f3f9c = _0x496e9d['target']['checked'];
+        localStorage[_0xfdf059(0x3b0)](_0xfdf059(0x4ed), _0x2f3f9c ? _0xfdf059(0x4fe) : _0xfdf059(0x340)), window[_0xfdf059(0x27c)] && window[_0xfdf059(0x27c)][_0xfdf059(0x175)] && (window[_0xfdf059(0x27c)][_0xfdf059(0x175)][_0xfdf059(0x250)] = _0x2f3f9c), window[_0xfdf059(0x27c)] && window[_0xfdf059(0x27c)][_0xfdf059(0x1e0)](), _0x5e766a(_0xfdf059(0x31e) + (_0x2f3f9c ? _0xfdf059(0x287) : _0xfdf059(0x413)) + _0xfdf059(0x389));
+    }));
+    const _0x3c7c2b = document[_0x4f4c09(0x1b9)](_0x4f4c09(0x49c));
+    _0x3c7c2b && _0x3c7c2b['addEventListener'](_0x4f4c09(0x185), _0x556de9), _0x353a21();
+}
+_0x4ea2fe && _0x4ea2fe[_0x4afe9d(0x412)](_0x4afe9d(0x185), _0x2a6e7d);
+_0x1191b7 && _0x1191b7[_0x4afe9d(0x412)](_0x4afe9d(0x185), _0x4846b1);
+const _0x5fbff3 = document[_0x4afe9d(0x1b9)]('clips-toggle');
+_0x5fbff3 && _0x5fbff3[_0x4afe9d(0x412)](_0x4afe9d(0x185), function (_0x48fcc8) {
+    const _0x5c60f4 = _0x4afe9d;
+    _0x48fcc8[_0x5c60f4(0x4aa)]();
+    const _0x32935a = document[_0x5c60f4(0x1b9)]('clips-submenu'), _0x4423e3 = this['querySelector'](_0x5c60f4(0x31b));
+    if (_0x32935a)
+        _0x32935a[_0x5c60f4(0x2d9)][_0x5c60f4(0x4dc)](_0x5c60f4(0x2b1));
+    if (_0x4423e3)
+        _0x4423e3['classList']['toggle'](_0x5c60f4(0x535));
+});
+_0x37e8a6[_0x4afe9d(0x321)](_0x4b164b => {
+    const _0x1c6b72 = _0x4afe9d;
+    _0x4b164b['addEventListener'](_0x1c6b72(0x185), () => {
+        const _0x127b41 = _0x1c6b72;
+        !_0x4b164b[_0x127b41(0x2db)](_0x127b41(0x419)) && (_0x37e8a6[_0x127b41(0x321)](_0x40cf26 => {
+            const _0x21739e = _0x127b41;
+            _0x40cf26['id'] !== _0x21739e(0x2ee) && !_0x40cf26[_0x21739e(0x2db)]('.clips-submenu') && _0x40cf26[_0x21739e(0x2d9)][_0x21739e(0x40f)](_0x21739e(0x289));
+        }), _0x4b164b['id'] !== _0x127b41(0x2ee) && _0x4b164b[_0x127b41(0x2d9)][_0x127b41(0x3ed)](_0x127b41(0x289)));
+        const _0x20a309 = _0x4b164b[_0x127b41(0x3dd)]['target'];
+        _0x20a309 && (_0x48821f(_0x20a309), window[_0x127b41(0x4f9)] <= 0x300 && _0x154927[_0x127b41(0x2d9)][_0x127b41(0x369)](_0x127b41(0x4c0)) && _0x154927[_0x127b41(0x2d9)][_0x127b41(0x40f)]('expanded'));
+    });
+}), document[_0x4afe9d(0x412)]('click', _0xe96aab => {
+    const _0x162f3e = _0x4afe9d;
+    _0x69ecb9 && !_0x69ecb9[_0x162f3e(0x369)](_0xe96aab['target']) && _0x46a560 && !_0x46a560[_0x162f3e(0x369)](_0xe96aab['target']) && (_0x69ecb9[_0x162f3e(0x2d9)][_0x162f3e(0x40f)](_0x162f3e(0x289)), _0x46a560['classList'][_0x162f3e(0x40f)](_0x162f3e(0x21d))), _0x52b9b8 && !_0x52b9b8[_0x162f3e(0x369)](_0xe96aab[_0x162f3e(0x463)]) && _0xe96aab['target'] !== _0x4ea2fe && _0x4846b1(), _0xe96aab[_0x162f3e(0x463)][_0x162f3e(0x2d9)][_0x162f3e(0x369)](_0x162f3e(0x46f)) && (_0xe96aab[_0x162f3e(0x463)][_0x162f3e(0x344)]['display'] = _0x162f3e(0x4f5));
+}), document[_0x4afe9d(0x412)](_0x4afe9d(0x377), () => {
+    const _0x34cb75 = _0x4afe9d;
+    try {
+        document[_0x34cb75(0x2ff)] && _0x2e7abc();
+    } catch (_0x48ad6a) {
+        _0x5e766a(_0x34cb75(0x4f0), _0x48ad6a);
+    }
+}), document[_0x4afe9d(0x412)](_0x4afe9d(0x268), _0x4a4d50 => {
+    const _0x1d27d3 = _0x4afe9d;
+    (_0x4a4d50[_0x1d27d3(0x4ba)] || _0x4a4d50['metaKey']) && _0x4a4d50[_0x1d27d3(0x224)] === 'k' && (_0x4a4d50[_0x1d27d3(0x212)](), _0x22f116());
+});
+function _0x22f116() {
+    const _0x4de1b4 = _0x4afe9d;
+    _0x154927[_0x4de1b4(0x2d9)][_0x4de1b4(0x4dc)](_0x4de1b4(0x4c0));
+    const _0x137210 = _0x154927[_0x4de1b4(0x2d9)][_0x4de1b4(0x369)](_0x4de1b4(0x4c0));
+    localStorage[_0x4de1b4(0x3b0)](_0x4de1b4(0x470), _0x137210);
+}
+function _0x4bb350(_0x41651e) {
+    const _0x51fdf7 = _0x4afe9d;
+    _0x5e766a(_0x51fdf7(0x2b5));
+    if (!_0x69ecb9 || !_0x46a560)
+        return;
+    _0x41651e[_0x51fdf7(0x4aa)]();
+}
+function _0x4b838b() {
+    const _0x4765bc = _0x4afe9d;
+    if (!_0x399c40)
+        return;
+    _0x399c40['classList']['add'](_0x4765bc(0x2b1));
+    const _0x3b4ff6 = document[_0x4765bc(0x1b9)]('settingsBackdrop');
+    _0x3b4ff6 && (_0x3b4ff6[_0x4765bc(0x344)][_0x4765bc(0x415)] = '1', _0x3b4ff6[_0x4765bc(0x344)][_0x4765bc(0x202)] = 'visible');
+    if (_0x69ecb9)
+        _0x69ecb9['classList'][_0x4765bc(0x40f)](_0x4765bc(0x289));
+    _0x34ba92 && _0x4ba974();
+}
+function _0x471d88() {
+    const _0x5d6dfb = _0x4afe9d;
+    if (!_0x399c40)
+        return;
+    _0x399c40['classList']['remove']('open');
+    const _0x286949 = document['getElementById']('settingsBackdrop');
+    _0x286949 && (_0x286949[_0x5d6dfb(0x344)][_0x5d6dfb(0x415)] = '0', _0x286949['style'][_0x5d6dfb(0x202)] = _0x5d6dfb(0x2ff));
+}
+async function _0x353a21() {
+    const _0x56ae1d = _0x4afe9d, _0x2d1c0d = document['getElementById']('analyticsLockOverlay'), _0x3575cb = document[_0x56ae1d(0x1b9)]('dashboardGrid'), _0xd26941 = document[_0x56ae1d(0x1ff)](_0x56ae1d(0x234));
+    if (!_0x2d1c0d)
+        return;
+    try {
+        const _0x2e1301 = await fetch(window[_0x56ae1d(0x3c4)] + _0x56ae1d(0x48e), {
+            'method': _0x56ae1d(0x597),
+            'headers': {
+                'X-CSRF-Token': _0x69c3dc() || '',
+                'Content-Type': _0x56ae1d(0x1aa)
+            },
+            'credentials': _0x56ae1d(0x3cd)
+        });
+        if (!_0x2e1301['ok']) {
+            _0x5e766a(_0x56ae1d(0x2a8), _0x2e1301[_0x56ae1d(0x51f)]), _0x2d1c0d['style'][_0x56ae1d(0x180)] = _0x56ae1d(0x44b);
+            return;
+        }
+        const _0x18b3a8 = await _0x2e1301[_0x56ae1d(0x494)](), _0x626a44 = _0x18b3a8[_0x56ae1d(0x529)] === !![];
+        _0x5e766a('🔍\x20YouTube\x20Connection\x20Status\x20(from\x20backend):', _0x626a44);
+        !_0x626a44 ? (_0x2d1c0d[_0x56ae1d(0x344)][_0x56ae1d(0x180)] = _0x56ae1d(0x44b), _0x3575cb && _0x3575cb[_0x56ae1d(0x2d9)][_0x56ae1d(0x3ed)](_0x56ae1d(0x3b1)), _0xd26941 && _0xd26941['classList']['add'](_0x56ae1d(0x3b1))) : (_0x2d1c0d['style'][_0x56ae1d(0x180)] = 'none', _0x3575cb && _0x3575cb['classList'][_0x56ae1d(0x40f)](_0x56ae1d(0x3b1)), _0xd26941 && _0xd26941['classList'][_0x56ae1d(0x40f)](_0x56ae1d(0x3b1)));
+        if (!_0x34ba92)
+            _0x34ba92 = {};
+        _0x34ba92[_0x56ae1d(0x3d0)] = _0x626a44;
+    } catch (_0x3ddb0b) {
+        _0x5e766a('❌\x20Error\x20checking\x20YouTube\x20connection:', _0x3ddb0b), _0x2d1c0d['style'][_0x56ae1d(0x180)] = _0x56ae1d(0x44b);
+    }
+}
+function _0x556de9() {
+    const _0x45859e = _0x4afe9d;
+    if (!_0x34ba92) {
+        alert(_0x45859e(0x1b1));
         return;
     }
-    
-    // Get CSRF token from cookie or meta tag
-    const csrfToken = getCSRFToken();
-    
-    // Call backend to get OAuth URL with state token
-    fetch(`${window.API_BASE_URL}/auth/youtube`, {
-        method: 'GET',
-        headers: {
-            'X-CSRF-Token': csrfToken || '',
+    const _0x341219 = _0x69c3dc();
+    fetch(window['API_BASE_URL'] + _0x45859e(0x299), {
+        'method': _0x45859e(0x597),
+        'headers': {
+            'X-CSRF-Token': _0x341219 || '',
             'Content-Type': 'application/json'
         },
-        credentials: 'include'  // 🔐 Auth via httpOnly cookie, not Bearer token
-    })
-    .then(response => {
-        if (!response.ok) {
-            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-        }
-        return response.json();
-    })
-    .then(data => {
-        if (!data.auth_url) {
-            throw new Error('No authorization URL received from server');
-        }
-        
-        safeLog('✓ Got OAuth URL from backend');
-        
-        // Open OAuth flow in popup with security hardening
-        const width = 500;
-        const height = 600;
-        const left = (window.innerWidth - width) / 2;
-        const top = (window.innerHeight - height) / 2;
-        
-        // SECURITY: Use rel="noopener noreferrer" to prevent reverse tabnabbing
-        const oauthWindow = window.open(
-            data.auth_url,
-            'YouTubeOAuth',
-            `width=${width},height=${height},left=${left},top=${top},noopener,noreferrer`
-        );
-        
-        if (!oauthWindow) {
-            safeLog('⚠️ Popup blocked, falling back to redirect');
-            window.location.href = data.auth_url;
-        } else {
-            safeLog('✓ OAuth window opened');
-            
-            // Create message handler with proper scope and cleanup
-            const handleOAuthMessage = function handleOAuthMessage(event) {
-                // 🔐 SECURITY: Strict origin whitelist - production domains only
-                const allowedOrigins = [
-                    window.location.origin,
-                    // Add production domains here if needed
-                    // 'https://yourapp.com',
-                    // 'https://www.yourapp.com'
-                ];
-                
-                if (!allowedOrigins.includes(event.origin)) {
-                    safeLog('🔒 Blocked postMessage from untrusted origin:', event.origin);
+        'credentials': 'include'
+    })[_0x45859e(0x515)](_0x66a01e => {
+        const _0x37332a = _0x45859e;
+        if (!_0x66a01e['ok'])
+            throw new Error(_0x37332a(0x592) + _0x66a01e[_0x37332a(0x51f)] + ':\x20' + _0x66a01e[_0x37332a(0x503)]);
+        return _0x66a01e['json']();
+    })[_0x45859e(0x515)](_0x158ba5 => {
+        const _0x8510da = _0x45859e;
+        if (!_0x158ba5[_0x8510da(0x563)])
+            throw new Error(_0x8510da(0x29b));
+        _0x5e766a(_0x8510da(0x244));
+        const _0x575d08 = 0x1f4, _0x57bffd = 0x258, _0x2887ac = (window['innerWidth'] - _0x575d08) / 0x2, _0x17a7c0 = (window[_0x8510da(0x461)] - _0x57bffd) / 0x2, _0x3db86a = window[_0x8510da(0x2b1)](_0x158ba5[_0x8510da(0x563)], 'YouTubeOAuth', _0x8510da(0x48f) + _0x575d08 + _0x8510da(0x408) + _0x57bffd + _0x8510da(0x531) + _0x2887ac + _0x8510da(0x1eb) + _0x17a7c0 + _0x8510da(0x38a));
+        if (!_0x3db86a)
+            _0x5e766a(_0x8510da(0x38e)), window[_0x8510da(0x2f2)]['href'] = _0x158ba5[_0x8510da(0x563)];
+        else {
+            _0x5e766a(_0x8510da(0x23f));
+            const _0x148576 = function _0x4cb5b0(_0x4b0116) {
+                const _0x515e10 = _0x8510da, _0x2af14a = [window[_0x515e10(0x2f2)]['origin']];
+                if (!_0x2af14a[_0x515e10(0x220)](_0x4b0116['origin'])) {
+                    _0x5e766a(_0x515e10(0x4c1), _0x4b0116['origin']);
                     return;
                 }
-                
-                if (event.data.type === 'YOUTUBE_AUTH_SUCCESS') {
-                    safeLog('✅ YouTube authentication successful!');
-                    // Remove listener immediately
-                    window.removeEventListener('message', handleOAuthMessage);
-                    clearInterval(checkInterval);
-                    
-                    // Refresh connection status
-                    setTimeout(() => {
-                        checkYouTubeConnection();
-                        if (typeof analyticsManager !== 'undefined' && analyticsManager) {
-                            analyticsManager.loadAnalyticsData();
-                        }
-                        showNotification('✅ YouTube connected successfully!', 'success');
-                    }, 1000);
-                } else if (event.data.type === 'YOUTUBE_AUTH_ERROR') {
-                    safeLog('✗ Authentication error:', event.data.error);
-                    window.removeEventListener('message', handleOAuthMessage);
-                    clearInterval(checkInterval);
-                    showNotification(`✗ YouTube connection failed: ${event.data.error}`, 'error');
-                }
+                if (_0x4b0116[_0x515e10(0x1f1)][_0x515e10(0x27d)] === _0x515e10(0x49a))
+                    _0x5e766a('✅\x20YouTube\x20authentication\x20successful!'), window['removeEventListener']('message', _0x4cb5b0), clearInterval(_0x396fb1), setTimeout(() => {
+                        const _0x58acd8 = _0x515e10;
+                        _0x353a21(), typeof analyticsManager !== 'undefined' && analyticsManager && analyticsManager['loadAnalyticsData'](), _0x41706e('✅\x20YouTube\x20connected\x20successfully!', _0x58acd8(0x1a6));
+                    }, 0x3e8);
+                else
+                    _0x4b0116['data'][_0x515e10(0x27d)] === _0x515e10(0x33d) && (_0x5e766a(_0x515e10(0x56e), _0x4b0116[_0x515e10(0x1f1)][_0x515e10(0x302)]), window[_0x515e10(0x524)](_0x515e10(0x45b), _0x4cb5b0), clearInterval(_0x396fb1), _0x41706e(_0x515e10(0x3e7) + _0x4b0116[_0x515e10(0x1f1)][_0x515e10(0x302)], _0x515e10(0x302)));
             };
-            
-            // Listen for postMessage from OAuth callback
-            window.addEventListener('message', handleOAuthMessage);
-            
-            // Also handle window close as fallback - with proper cleanup
-            let checkInterval = setInterval(() => {
+            window[_0x8510da(0x412)](_0x8510da(0x45b), _0x148576);
+            let _0x396fb1 = setInterval(() => {
+                const _0x58223a = _0x8510da;
                 try {
-                    if (oauthWindow.closed) {
-                        clearInterval(checkInterval);
-                        safeLog('🔄 OAuth window closed, verifying connection...');
-                        // Clean up message listener
-                        window.removeEventListener('message', handleOAuthMessage);
-                        
-                        // Wait for backend to process, then verify
-                        setTimeout(() => {
-                            verifyToken();
-                            checkYouTubeConnection();
-                        }, 2000);
-                    }
-                } catch (e) {
-                    // Cross-origin error, ignore
+                    _0x3db86a['closed'] && (clearInterval(_0x396fb1), _0x5e766a(_0x58223a(0x22e)), window['removeEventListener'](_0x58223a(0x45b), _0x148576), setTimeout(() => {
+                        _0x4cb544(), _0x353a21();
+                    }, 0x7d0));
+                } catch (_0x150075) {
                 }
-            }, 500);
+            }, 0x1f4);
         }
-    })
-    .catch(error => {
-        safeLog('❌ YouTube connection error:', error);
-        showNotification(`✗ Failed to initiate YouTube connection: ${error.message}`, 'error');
+    })[_0x45859e(0x4f3)](_0x36f37f => {
+        const _0x5e8d9e = _0x45859e;
+        _0x5e766a(_0x5e8d9e(0x31d), _0x36f37f), _0x41706e(_0x5e8d9e(0x3c0) + _0x36f37f[_0x5e8d9e(0x45b)], _0x5e8d9e(0x302));
     });
 }
-
-
-// Set theme
-function setTheme(theme) {
-    currentTheme = theme;
-    safeLog('setTheme(): Applying theme:', theme);
-    document.documentElement.setAttribute('data-theme', theme); // Apply theme to HTML element
-    localStorage.setItem('theme', theme); // Save theme to local storage
-    safeLog('setTheme(): Theme saved to localStorage. Current stored theme:', localStorage.getItem('theme'));
+function _0x3b2ebf(_0x415125) {
+    const _0x129eae = _0x4afe9d;
+    _0x362b2d = _0x415125, _0x5e766a(_0x129eae(0x2e2), _0x415125), document[_0x129eae(0x519)][_0x129eae(0x4ef)]('data-theme', _0x415125), localStorage[_0x129eae(0x3b0)](_0x129eae(0x1ef), _0x415125), _0x5e766a('setTheme():\x20Theme\x20saved\x20to\x20localStorage.\x20Current\x20stored\x20theme:', localStorage[_0x129eae(0x394)](_0x129eae(0x1ef)));
 }
-
-// AI section removed - no longer needed
-
-// Send message function removed - AI section no longer needed
-// Stop generation function removed - AI section no longer needed
-// Handle clip compilation requests from chat
-async function handleClipCompilationRequest(userMessage, youtubeUrl) {
+async function _0x54cf84(_0x355d47, _0x57c4a3) {
+    const _0xb1072a = _0x4afe9d;
     try {
-        // 🔐 SECURITY: Check if user is logged in via currentUser (httpOnly cookie authenticated)
-        if (!currentUser) {
-            addMessageToChat('ai', '❌ Please log in to create clip compilations. Click the login button in the top right.');
+        if (!_0x34ba92) {
+            _0x2259b6('ai', _0xb1072a(0x2e1));
             return;
         }
-        
-        // Show confirmation dialog first
-        showClipConfirmationDialog(userMessage, youtubeUrl);
-        
-    } catch (error) {
-        safeLog('Clip compilation error:', error);
-        addMessageToChat('ai', `❌ Error: ${error.message}`);
+        _0x30c661(_0x355d47, _0x57c4a3);
+    } catch (_0x208722) {
+        _0x5e766a(_0xb1072a(0x443), _0x208722), _0x2259b6('ai', _0xb1072a(0x4f4) + _0x208722[_0xb1072a(0x45b)]);
     }
 }
-
-// Show confirmation dialog for clip creation
-function showClipConfirmationDialog(userMessage, youtubeUrl) {
-    // Create modal
-    const modal = document.createElement('div');
-    modal.className = 'clip-confirm-modal';
-    modal.innerHTML = `
-        <style>
-            .clip-confirm-modal {
-                position: fixed;
-                top: 0;
-                left: 0;
-                right: 0;
-                bottom: 0;
-                background: rgba(0, 0, 0, 0.6);
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                z-index: 10000;
-                animation: fadeIn 0.2s ease;
-            }
-            
-            @keyframes fadeIn {
-                from { opacity: 0; }
-                to { opacity: 1; }
-            }
-            
-            .clip-confirm-dialog {
-                background: var(--surface);
-                border: 1px solid var(--border);
-                border-radius: 12px;
-                padding: 32px;
-                max-width: 420px;
-                animation: slideUp 0.3s ease;
-                box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-            }
-            
-            @keyframes slideUp {
-                from { transform: translateY(20px); opacity: 0; }
-                to { transform: translateY(0); opacity: 1; }
-            }
-            
-            .clip-confirm-header {
-                display: flex;
-                align-items: center;
-                gap: 12px;
-                margin-bottom: 16px;
-            }
-            
-            .clip-confirm-header h2 {
-                margin: 0;
-                font-size: 18px;
-                color: var(--text);
-                font-weight: 600;
-            }
-            
-            .clip-confirm-content {
-                margin-bottom: 24px;
-            }
-            
-            .clip-confirm-content p {
-                margin: 0 0 12px 0;
-                color: var(--muted);
-                font-size: 14px;
-                line-height: 1.6;
-            }
-            
-            .clip-confirm-url {
-                padding: 12px;
-                background: rgba(255, 107, 53, 0.1);
-                border: 1px solid rgba(255, 107, 53, 0.2);
-                border-radius: 6px;
-                font-size: 12px;
-                color: var(--muted);
-                word-break: break-all;
-                font-family: monospace;
-            }
-            
-            .clip-confirm-actions {
-                display: flex;
-                gap: 12px;
-                justify-content: flex-end;
-            }
-            
-            .clip-btn {
-                padding: 10px 20px;
-                border: none;
-                border-radius: 8px;
-                cursor: pointer;
-                font-weight: 600;
-                font-size: 14px;
-                transition: all 0.2s ease;
-            }
-            
-            .clip-btn-reject {
-                background: rgba(255, 107, 53, 0.1);
-                color: var(--muted);
-            }
-            
-            .clip-btn-reject:hover {
-                background: rgba(255, 107, 53, 0.2);
-            }
-            
-            .clip-btn-accept {
-                background: linear-gradient(135deg, #ff6b35 0%, #ff8856 100%);
-                color: white;
-            }
-            
-            .clip-btn-accept:hover {
-                transform: translateY(-2px);
-                box-shadow: 0 4px 12px rgba(255, 107, 53, 0.3);
-            }
-        </style>
-        
-        <div class="clip-confirm-dialog">
-            <div class="clip-confirm-header">
-                <span style="font-size: 20px;">🎬</span>
-                <h2>Create Clip Compilation</h2>
-            </div>
-            
-            <div class="clip-confirm-content">
-                <p>Ready to create a clip compilation from your YouTube video?</p>
-                <div class="clip-confirm-url" id="urlDisplay"></div>
-                <p style="margin-top: 12px; font-size: 12px; opacity: 0.7;">This may take a few minutes. You can monitor progress in the Processing tab.</p>
-            </div>
-            
-            <div class="clip-confirm-actions">
-                <button class="clip-btn clip-btn-reject" id="clipConfirmCancel">
-                    ✕ Cancel
-                </button>
-                <button class="clip-btn clip-btn-accept" id="clipConfirmAccept">
-                    ✓ Create Compilation
-                </button>
-            </div>
-        </div>
-    `;
-    
-    document.body.appendChild(modal);
-    
-    // SECURITY: Use textContent instead of innerHTML to prevent XSS
-    const urlDisplay = document.getElementById('urlDisplay');
-    if (urlDisplay) {
-        urlDisplay.textContent = youtubeUrl;
-    }
-    
-    // Handle cancel button
-    document.getElementById('clipConfirmCancel').addEventListener('click', () => {
-        modal.remove();
-    });
-    
-    // Handle accept button
-    document.getElementById('clipConfirmAccept').addEventListener('click', async () => {
-        modal.remove();
-        window.location.hash = '#/clips';
-        
-        // Wait for navigation to complete
-        setTimeout(() => {
-            startClipCompilation(youtubeUrl);
-        }, 500);
-    });
-    
-    // Handle outside click to close
-    modal.addEventListener('click', (e) => {
-        if (e.target === modal) {
-            modal.remove();
-        }
+function _0x30c661(_0x51b347, _0x104b74) {
+    const _0x54ddc7 = _0x4afe9d, _0x2e059f = document[_0x54ddc7(0x227)]('div');
+    _0x2e059f[_0x54ddc7(0x2a5)] = 'clip-confirm-modal', _0x2e059f[_0x54ddc7(0x471)] = _0x54ddc7(0x27f), document[_0x54ddc7(0x384)][_0x54ddc7(0x304)](_0x2e059f);
+    const _0x508cb3 = document['getElementById'](_0x54ddc7(0x539));
+    _0x508cb3 && (_0x508cb3[_0x54ddc7(0x345)] = _0x104b74), document[_0x54ddc7(0x1b9)](_0x54ddc7(0x33a))[_0x54ddc7(0x412)](_0x54ddc7(0x185), () => {
+        _0x2e059f['remove']();
+    }), document[_0x54ddc7(0x1b9)](_0x54ddc7(0x430))[_0x54ddc7(0x412)](_0x54ddc7(0x185), async () => {
+        const _0x114dec = _0x54ddc7;
+        _0x2e059f['remove'](), window['location']['hash'] = _0x114dec(0x1bc), setTimeout(() => {
+            _0x2d60f0(_0x104b74);
+        }, 0x1f4);
+    }), _0x2e059f[_0x54ddc7(0x412)](_0x54ddc7(0x185), _0x30b6b0 => {
+        const _0x331736 = _0x54ddc7;
+        _0x30b6b0[_0x331736(0x463)] === _0x2e059f && _0x2e059f[_0x331736(0x40f)]();
     });
 }
-
-// Start actual clip compilation with processing screen
-async function startClipCompilation(youtubeUrl) {
+async function _0x2d60f0(_0x1dd65b) {
+    const _0x597fac = _0x4afe9d;
     try {
-        const headers = getAuthHeaders();
-        
-        // Save processing state in case page refreshes
-        // 🔐 SECURITY: Do NOT store full URL - extract video ID only to prevent data leakage
-        const videoId = clipsStudio ? clipsStudio.extractYouTubeVideoId(youtubeUrl) : null;
-        sessionStorage.setItem('clipProcessing', JSON.stringify({
-            videoId: videoId,  // Only the video ID, not full URL with parameters
-            startTime: Date.now()
+        const _0x475809 = _0x67ee3(), _0x38d356 = clipsStudio ? clipsStudio[_0x597fac(0x2c5)](_0x1dd65b) : null;
+        sessionStorage[_0x597fac(0x3b0)]('clipProcessing', JSON[_0x597fac(0x4d1)]({
+            'videoId': _0x38d356,
+            'startTime': Date[_0x597fac(0x1df)]()
         }));
-        
-        // Create processing modal that spans the whole clips container
-        const processingModal = document.createElement('div');
-        processingModal.id = 'clip-processing-modal';
-        processingModal.innerHTML = `
-            <style>
-                #clip-processing-modal {
-                    position: fixed;
-                    top: 0;
-                    left: 0;
-                    right: 0;
-                    bottom: 0;
-                    background: linear-gradient(135deg, #fff5eb 0%, #ffe4d1 100%);
-                    display: flex;
-                    flex-direction: column;
-                    align-items: center;
-                    justify-content: center;
-                    z-index: 99999;
-                    overflow: hidden;
-                }
-                
-                .clip-processing-container {
-                    text-align: center;
-                    position: relative;
-                    z-index: 10;
-                }
-                
-                .clip-atom {
-                    width: 140px;
-                    height: 140px;
-                    margin: 0 auto 32px;
-                }
-                
-                .clip-atom svg {
-                    width: 100%;
-                    height: 100%;
-                    filter: drop-shadow(0 0 20px rgba(255, 107, 53, 0.3));
-                }
-                
-                .clip-nucleus {
-                    animation: nucleusPulse 1.5s ease-in-out infinite;
-                    transform-origin: center;
-                }
-                
-                @keyframes nucleusPulse {
-                    0% { transform: scale(0.8); opacity: 0.6; }
-                    50% { transform: scale(1); opacity: 1; }
-                    100% { transform: scale(0.8); opacity: 0.6; }
-                }
-                
-                .clip-orbit {
-                    transform-origin: 50px 50px;
-                    stroke-dasharray: 300;
-                    stroke-dashoffset: 300;
-                }
-                
-                .clip-orbit-1 {
-                    transform: rotate(75deg);
-                    animation: drawOrbit 1.5s ease-in-out infinite;
-                }
-                
-                .clip-orbit-2 {
-                    transform: rotate(-20deg);
-                    animation: drawOrbit 1.5s ease-in-out 0.3s infinite;
-                }
-                
-                @keyframes drawOrbit {
-                    0% { stroke-dashoffset: 300; opacity: 0.3; }
-                    50% { stroke-dashoffset: 0; opacity: 0.7; }
-                    100% { stroke-dashoffset: 300; opacity: 0.3; }
-                }
-                
-                .clip-title {
-                    font-size: 28px;
-                    font-weight: 700;
-                    color: #1a1a1a;
-                    margin-bottom: 8px;
-                }
-                
-                .clip-subtitle {
-                    font-size: 14px;
-                    color: #666;
-                    margin-bottom: 32px;
-                }
-                
-                .clip-progress-container {
-                    width: 280px;
-                    margin: 0 auto 24px;
-                }
-                
-                .clip-progress-bar {
-                    width: 100%;
-                    height: 4px;
-                    background: rgba(255, 107, 53, 0.15);
-                    border-radius: 2px;
-                    overflow: hidden;
-                    margin-bottom: 12px;
-                }
-                
-                .clip-progress-fill {
-                    height: 100%;
-                    background: linear-gradient(90deg, #ff6b35 0%, #ff8856 100%);
-                    width: 0%;
-                    transition: width 0.4s ease;
-                    border-radius: 2px;
-                }
-                
-                .clip-stats {
-                    display: flex;
-                    justify-content: space-between;
-                    gap: 20px;
-                    margin-top: 24px;
-                    padding: 16px;
-                    background: rgba(255, 107, 53, 0.08);
-                    border-radius: 8px;
-                }
-                
-                .clip-stat {
-                    text-align: center;
-                }
-                
-                .clip-stat-value {
-                    font-size: 20px;
-                    font-weight: 700;
-                    color: #ff6b35;
-                }
-                
-                .clip-stat-label {
-                    font-size: 11px;
-                    color: #999;
-                    margin-top: 4px;
-                    text-transform: uppercase;
-                    letter-spacing: 0.05em;
-                }
-            </style>
-            
-            <div class="clip-processing-container">
-                <div class="clip-atom">
-                    <svg width="140" height="140" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <g class="clip-nucleus">
-                            <circle cx="50" cy="50" r="8" fill="#ff6b35"/>
-                            <circle cx="50" cy="50" r="12" fill="#ff6b35" opacity="0.3"/>
-                        </g>
-                        <ellipse class="clip-orbit clip-orbit-1" rx="45" ry="25" cx="50" cy="50" stroke="#ff6b35" stroke-width="2.5" fill="none" stroke-linecap="round" opacity="0.7"/>
-                        <ellipse class="clip-orbit clip-orbit-2" rx="45" ry="25" cx="50" cy="50" stroke="#ff6b35" stroke-width="2.5" fill="none" stroke-linecap="round" opacity="0.7"/>
-                    </svg>
-                </div>
-                
-                <h1 class="clip-title">Cooking!</h1>
-                <p class="clip-subtitle" id="clipStatus">HAHAHAHA</p>
-                
-                <div class="clip-progress-container">
-                    <div class="clip-progress-bar">
-                        <div class="clip-progress-fill" id="clipProgressFill"></div>
-                    </div>
-                    <div style="display: flex; justify-content: space-between; gap: 12px;">
-                        <span id="clipProgress" style="font-size: 12px; color: #999;">0%</span>
-                        <span id="clipTimeLeft" style="font-size: 12px; color: #999;">--:--</span>
-                    </div>
-                </div>
-                
-                <div class="clip-stats">
-                    <div class="clip-stat">
-                        <div class="clip-stat-value" id="clipStatDownload">0%</div>
-                        <div class="clip-stat-label">Downloading</div>
-                    </div>
-                    <div class="clip-stat">
-                        <div class="clip-stat-value" id="clipStatProcessing">0%</div>
-                        <div class="clip-stat-label">Processing</div>
-                    </div>
-                    <div class="clip-stat">
-                        <div class="clip-stat-value" id="clipStatRendering">0%</div>
-                        <div class="clip-stat-label">Rendering</div>
-                    </div>
-                </div>
-            </div>
-        `;
-        
-        document.body.appendChild(processingModal);
-        
-        // Start clip processing
-        const startResponse = await fetch(`${API_BASE_URL}/clips/start`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                ...headers
+        const _0x2f7480 = document['createElement'](_0x597fac(0x20f));
+        _0x2f7480['id'] = _0x597fac(0x4d0), _0x2f7480['innerHTML'] = _0x597fac(0x296), document[_0x597fac(0x384)][_0x597fac(0x304)](_0x2f7480);
+        const _0x267574 = await fetch(API_BASE_URL + _0x597fac(0x28b), {
+            'method': 'POST',
+            'headers': {
+                'Content-Type': _0x597fac(0x1aa),
+                ..._0x475809
             },
-            credentials: 'include',  // 🔐 Send httpOnly cookie
-            body: JSON.stringify({
-                url: youtubeUrl,
-                template_id: 'splitscreen',
-                gameplay_clip_id: selectedGameplayClip
+            'credentials': _0x597fac(0x3cd),
+            'body': JSON[_0x597fac(0x4d1)]({
+                'url': _0x1dd65b,
+                'template_id': _0x597fac(0x360),
+                'gameplay_clip_id': _0xe403d9
             })
         });
-        
-        if (!startResponse.ok) {
-            let errorMsg = 'Failed to start processing';
-            let errorCode = '';
+        if (!_0x267574['ok']) {
+            let _0x49116d = _0x597fac(0x31a), _0x12d7c6 = '';
             try {
-                const errorData = await startResponse.json();
-                errorMsg = errorData.error || errorMsg;
-                errorCode = errorData.error_code || '';
-            } catch (e) {
-                errorMsg = `Server error: ${startResponse.status}`;
+                const _0x4fb68c = await _0x267574[_0x597fac(0x494)]();
+                _0x49116d = _0x4fb68c['error'] || _0x49116d, _0x12d7c6 = _0x4fb68c['error_code'] || '';
+            } catch (_0x19b377) {
+                _0x49116d = _0x597fac(0x551) + _0x267574[_0x597fac(0x51f)];
             }
-            
-            // Handle GENERATION_COOLDOWN specially
-            if (errorCode === 'GENERATION_COOLDOWN') {
-                const errorData = await startResponse.json();
-                const remainingSeconds = errorData.remaining_seconds || errorData.cooldown_seconds || 30;
-                const remainingMinutes = Math.floor(remainingSeconds / 60);
-                const remainingSecsOnly = remainingSeconds % 60;
-                
-                // Start countdown timer on submit button
-                startCooldownTimer(remainingSeconds);
-                
-                let timestr = '';
-                if (remainingMinutes > 0) {
-                    timestr = `in ${remainingMinutes}m ${remainingSecsOnly}s`;
-                } else {
-                    timestr = `in ${remainingSeconds}s`;
-                }
-                
-                errorMsg = `You can generate another video ${timestr}.`;
+            if (_0x12d7c6 === _0x597fac(0x1e4)) {
+                const _0x58347b = await _0x267574[_0x597fac(0x494)](), _0x2b5636 = _0x58347b['remaining_seconds'] || _0x58347b[_0x597fac(0x2b8)] || 0x1e, _0x44c78e = Math[_0x597fac(0x48a)](_0x2b5636 / 0x3c), _0x2c9145 = _0x2b5636 % 0x3c;
+                _0x4c2c2a(_0x2b5636);
+                let _0x4f377e = '';
+                _0x44c78e > 0x0 ? _0x4f377e = _0x597fac(0x182) + _0x44c78e + 'm\x20' + _0x2c9145 + 's' : _0x4f377e = _0x597fac(0x182) + _0x2b5636 + 's', _0x49116d = 'You\x20can\x20generate\x20another\x20video\x20' + _0x4f377e + '.';
             }
-            
-            processingModal.innerHTML = `
-                <div style="text-align: center;">
-                    <div style="font-size: 48px; margin-bottom: 16px;">❌</div>
-                    <h1 style="font-size: 24px; color: var(--text); margin-bottom: 8px;">Error</h1>
-                    <p style="color: var(--muted); margin-bottom: 24px;">${errorMsg}</p>
-                    <button onclick="this.closest('#clip-processing-modal').remove()" style="
-                        padding: 10px 20px;
-                        background: linear-gradient(135deg, #ff6b35 0%, #ff8856 100%);
-                        color: white;
-                        border: none;
-                        border-radius: 8px;
-                        cursor: pointer;
-                        font-weight: 600;
-                    ">Close</button>
-                </div>
-            `;
+            _0x2f7480[_0x597fac(0x471)] = '\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20style=\x22text-align:\x20center;\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20style=\x22font-size:\x2048px;\x20margin-bottom:\x2016px;\x22>❌</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<h1\x20style=\x22font-size:\x2024px;\x20color:\x20var(--text);\x20margin-bottom:\x208px;\x22>Error</h1>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<p\x20style=\x22color:\x20var(--muted);\x20margin-bottom:\x2024px;\x22>' + _0x49116d + _0x597fac(0x348);
             return;
         }
-        
-        const startData = await startResponse.json();
-        const projectId = startData.project_id;
-        
-        // Poll for status updates
-        let isComplete = false;
-        let pollCount = 0;
-        const maxPolls = 300; // 10 minutes max
-        let startTime = Date.now();
-        let estimatedTotalTime = null;
-        
-        while (!isComplete && pollCount < maxPolls) {
-            pollCount++;
-            
+        const _0x30ba78 = await _0x267574['json'](), _0x5a5fe8 = _0x30ba78[_0x597fac(0x2cf)];
+        let _0x42b6a = ![], _0x2e8186 = 0x0;
+        const _0x3d6ccd = 0x12c;
+        let _0x4f109a = Date[_0x597fac(0x1df)](), _0x7df1a0 = null;
+        while (!_0x42b6a && _0x2e8186 < _0x3d6ccd) {
+            _0x2e8186++;
             try {
-                const statusResponse = await fetch(`${API_BASE_URL}/clips/status/${projectId}`, {
-                    headers: headers,
-                    credentials: 'include'  // 🔐 Send httpOnly cookie
+                const _0x1dde4c = await fetch(API_BASE_URL + _0x597fac(0x2d5) + _0x5a5fe8, {
+                    'headers': _0x475809,
+                    'credentials': _0x597fac(0x3cd)
                 });
-                
-                if (statusResponse.ok) {
-                    let statusData;
+                if (_0x1dde4c['ok']) {
+                    let _0x12e648;
                     try {
-                        statusData = await statusResponse.json();
-                    } catch (e) {
-                        safeLog('Status JSON parse error:', e);
-                        await new Promise(resolve => setTimeout(resolve, 2000));
+                        _0x12e648 = await _0x1dde4c[_0x597fac(0x494)]();
+                    } catch (_0x115633) {
+                        _0x5e766a(_0x597fac(0x4c5), _0x115633), await new Promise(_0x2dac34 => setTimeout(_0x2dac34, 0x7d0));
                         continue;
                     }
-                    
-                    const status = statusData.status || 'processing';
-                    const progress = statusData.progress || 0;
-                    
-                    // Estimate total time based on current progress
-                    const elapsedMs = Date.now() - startTime;
-                    const elapsedSecs = elapsedMs / 1000;
-                    if (progress > 0 && !estimatedTotalTime) {
-                        estimatedTotalTime = (elapsedSecs / progress) * 100;
+                    const _0x2346ad = _0x12e648[_0x597fac(0x51f)] || _0x597fac(0x3f5), _0x16a054 = _0x12e648[_0x597fac(0x312)] || 0x0, _0xda166e = Date[_0x597fac(0x1df)]() - _0x4f109a, _0x145be1 = _0xda166e / 0x3e8;
+                    _0x16a054 > 0x0 && !_0x7df1a0 && (_0x7df1a0 = _0x145be1 / _0x16a054 * 0x64);
+                    const _0x49a214 = _0x7df1a0 ? _0x7df1a0 * (0x64 - _0x16a054) / 0x64 * 0x3e8 : 0x0, _0x51a081 = Math['floor'](_0x49a214 / 0xea60), _0x3897f6 = Math[_0x597fac(0x48a)](_0x49a214 % 0xea60 / 0x3e8), _0x40f537 = document[_0x597fac(0x1b9)]('clipStatus');
+                    if (_0x40f537) {
+                        const _0x48580a = {
+                                'downloading': [
+                                    _0x597fac(0x305),
+                                    _0x597fac(0x3b6),
+                                    _0x597fac(0x466),
+                                    _0x597fac(0x44c),
+                                    'LEMME\x20GET\x20THIS'
+                                ],
+                                'processing': [
+                                    'HAHAHAHA',
+                                    _0x597fac(0x273),
+                                    'STOP\x20IT',
+                                    _0x597fac(0x3ef),
+                                    _0x597fac(0x264)
+                                ],
+                                'rendering': [
+                                    _0x597fac(0x23e),
+                                    'YOOO',
+                                    _0x597fac(0x507),
+                                    'TOO\x20GOOD',
+                                    _0x597fac(0x3b9)
+                                ],
+                                'completed': [
+                                    _0x597fac(0x223),
+                                    _0x597fac(0x335),
+                                    _0x597fac(0x2f1),
+                                    _0x597fac(0x189),
+                                    _0x597fac(0x3a1)
+                                ]
+                            }, _0x3217c6 = _0x48580a[_0x2346ad] || [
+                                'LOL',
+                                _0x597fac(0x548),
+                                _0x597fac(0x23e)
+                            ];
+                        _0x40f537[_0x597fac(0x345)] = _0x3217c6[Math[_0x597fac(0x48a)](Math[_0x597fac(0x41f)]() * _0x3217c6[_0x597fac(0x56d)])];
                     }
-                    
-                    const remainingMs = estimatedTotalTime ? (estimatedTotalTime * (100 - progress) / 100) * 1000 : 0;
-                    const minutes = Math.floor(remainingMs / 60000);
-                    const seconds = Math.floor((remainingMs % 60000) / 1000);
-                    
-                    // Update UI with fun messages
-                    const statusEl = document.getElementById('clipStatus');
-                    if (statusEl) {
-                        const funMessages = {
-                            'downloading': ['LOLOL', 'BRUH', 'OK WAIT', 'NO WAY', 'LEMME GET THIS'],
-                            'processing': ['HAHAHAHA', 'OK THIS IS INSANE', 'STOP IT', 'WHAT IS HAPPENING', 'I CANT'],
-                            'rendering': ['LMAOOO', 'YOOO', 'IM DYING', 'TOO GOOD', 'STOP STOP'],
-                            'completed': ['YESSS', 'LETS GOOOO', 'FIRE FIRE FIRE', 'POGGGG', 'SHEEEESH']
-                        };
-                        const messages = funMessages[status] || ['LOL', 'HAHAHAHA', 'LMAOOO'];
-                        statusEl.textContent = messages[Math.floor(Math.random() * messages.length)];
+                    document[_0x597fac(0x1b9)](_0x597fac(0x1da))['style']['width'] = Math['min'](_0x16a054, 0x63) + '%', document[_0x597fac(0x1b9)](_0x597fac(0x58b))[_0x597fac(0x345)] = Math[_0x597fac(0x274)](_0x16a054, 0x63) + '%', document['getElementById']('clipTimeLeft')['textContent'] = _0x51a081 > 0x0 ? _0x51a081 + ':' + _0x3897f6[_0x597fac(0x2df)]()[_0x597fac(0x50a)](0x2, '0') : _0x3897f6 + 's';
+                    if (_0x2346ad === _0x597fac(0x57c))
+                        document['getElementById'](_0x597fac(0x554))[_0x597fac(0x345)] = Math['min'](_0x16a054, 0x63) + '%';
+                    else {
+                        if (_0x2346ad === _0x597fac(0x3f5))
+                            document[_0x597fac(0x1b9)](_0x597fac(0x4a7))['textContent'] = Math[_0x597fac(0x274)](_0x16a054, 0x63) + '%';
+                        else
+                            _0x2346ad === _0x597fac(0x2d0) && (document['getElementById'](_0x597fac(0x4bc))[_0x597fac(0x345)] = Math[_0x597fac(0x274)](_0x16a054, 0x63) + '%');
                     }
-                    document.getElementById('clipProgressFill').style.width = Math.min(progress, 99) + '%';
-                    document.getElementById('clipProgress').textContent = Math.min(progress, 99) + '%';
-                    document.getElementById('clipTimeLeft').textContent = minutes > 0 ? `${minutes}:${seconds.toString().padStart(2, '0')}` : `${seconds}s`;
-                    
-                    // Update phase stats
-                    if (status === 'downloading') {
-                        document.getElementById('clipStatDownload').textContent = `${Math.min(progress, 99)}%`;
-                    } else if (status === 'processing') {
-                        document.getElementById('clipStatProcessing').textContent = `${Math.min(progress, 99)}%`;
-                    } else if (status === 'rendering') {
-                        document.getElementById('clipStatRendering').textContent = `${Math.min(progress, 99)}%`;
-                    }
-                    
-                    if (status === 'completed') {
-                        isComplete = true;
-                        sessionStorage.removeItem('clipProcessing');
-                        
-                        processingModal.innerHTML = `
-                            <div style="text-align: center; animation: slideUp 0.3s ease;">
-                                <div style="font-size: 80px; margin-bottom: 16px; animation: popIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);">✅</div>
-                                <h1 style="font-size: 32px; color: var(--text); margin-bottom: 8px; font-weight: 700;">Compilation Ready!</h1>
-                                <p style="color: var(--muted); margin-bottom: 32px;">Your video is ready to edit and publish</p>
-                                <button onclick="
-                                    document.getElementById('clip-processing-modal').remove();
-                                    window.location.hash = '#/clips';
-                                " style="
-                                    padding: 12px 24px;
-                                    background: linear-gradient(135deg, #ff6b35 0%, #ff8856 100%);
-                                    color: white;
-                                    border: none;
-                                    border-radius: 8px;
-                                    cursor: pointer;
-                                    font-weight: 600;
-                                    font-size: 14px;
-                                    transition: all 0.2s;
-                                " onmouseover="this.style.transform='translateY(-2px); this.style.boxShadow='0 4px 12px rgba(255, 107, 53, 0.3)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='none'>
-                                    📎 Open Project
-                                </button>
-                            </div>
-                            <style>
-                                @keyframes popIn {
-                                    0% { transform: scale(0.3); opacity: 0; }
-                                    70% { transform: scale(1.1); }
-                                    100% { transform: scale(1); opacity: 1; }
-                                }
-                                @keyframes slideUp {
-                                    from { transform: translateY(20px); opacity: 0; }
-                                    to { transform: translateY(0); opacity: 1; }
-                                }
-                            </style>
-                        `;
-                        
-                    } else if (status === 'failed') {
-                        isComplete = true;
-                        sessionStorage.removeItem('clipProcessing');
-                        processingModal.innerHTML = `
-                            <div style="text-align: center;">
-                                <div style="font-size: 48px; margin-bottom: 16px;">❌</div>
-                                <h1 style="font-size: 24px; color: var(--text); margin-bottom: 8px;">Processing Failed</h1>
-                                <p style="color: var(--muted); margin-bottom: 24px;">${statusData.message || 'Unknown error'}</p>
-                                <button onclick="this.closest('#clip-processing-modal').remove()" style="
-                                    padding: 10px 20px;
-                                    background: linear-gradient(135deg, #ff6b35 0%, #ff8856 100%);
-                                    color: white;
-                                    border: none;
-                                    border-radius: 8px;
-                                    cursor: pointer;
-                                    font-weight: 600;
-                                ">Close</button>
-                            </div>
-                        `;
-                    }
+                    if (_0x2346ad === _0x597fac(0x427))
+                        _0x42b6a = !![], sessionStorage['removeItem'](_0x597fac(0x46e)), _0x2f7480['innerHTML'] = _0x597fac(0x24c);
+                    else
+                        _0x2346ad === 'failed' && (_0x42b6a = !![], sessionStorage[_0x597fac(0x24e)](_0x597fac(0x46e)), _0x2f7480['innerHTML'] = _0x597fac(0x18c) + (_0x12e648[_0x597fac(0x45b)] || _0x597fac(0x4d2)) + '</p>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<button\x20onclick=\x22this.closest(\x27#clip-processing-modal\x27).remove()\x22\x20style=\x22\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20padding:\x2010px\x2020px;\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20background:\x20linear-gradient(135deg,\x20#ff6b35\x200%,\x20#ff8856\x20100%);\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20color:\x20white;\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20border:\x20none;\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20border-radius:\x208px;\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20cursor:\x20pointer;\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20font-weight:\x20600;\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x22>Close</button>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20');
                 }
-            } catch (pollError) {
-                safeLog('Status poll error:', pollError);
+            } catch (_0x17b845) {
+                _0x5e766a(_0x597fac(0x25f), _0x17b845);
             }
-            
-            // Wait 2 seconds before next poll
-            if (!isComplete) {
-                await new Promise(resolve => setTimeout(resolve, 2000));
-            }
+            !_0x42b6a && await new Promise(_0x58dad0 => setTimeout(_0x58dad0, 0x7d0));
         }
-        
-        if (!isComplete) {
-            sessionStorage.removeItem('clipProcessing');
-            processingModal.innerHTML = `
-                <div style="text-align: center;">
-                    <div style="font-size: 48px; margin-bottom: 16px;">⏱️</div>
-                    <h1 style="font-size: 24px; color: var(--text); margin-bottom: 8px;">Processing Timeout</h1>
-                    <p style="color: var(--muted); margin-bottom: 24px;">Your compilation is still being processed. Check back in a moment.</p>
-                    <button onclick="this.closest('#clip-processing-modal').remove(); window.location.hash = '#/clips'" style="
-                        padding: 10px 20px;
-                        background: linear-gradient(135deg, #ff6b35 0%, #ff8856 100%);
-                        color: white;
-                        border: none;
-                        border-radius: 8px;
-                        cursor: pointer;
-                        font-weight: 600;
-                    ">View in Clips</button>
-                </div>
-            `;
-        }
-        
-    } catch (error) {
-        safeLog('Clip compilation error:', error);
-        document.getElementById('clip-processing-modal')?.remove();
-        addMessageToChat('ai', `❌ Error: ${error.message}`);
+        !_0x42b6a && (sessionStorage[_0x597fac(0x24e)](_0x597fac(0x46e)), _0x2f7480[_0x597fac(0x471)] = _0x597fac(0x310));
+    } catch (_0x50e3c9) {
+        _0x5e766a(_0x597fac(0x443), _0x50e3c9), document['getElementById'](_0x597fac(0x4d0))?.[_0x597fac(0x40f)](), _0x2259b6('ai', '❌\x20Error:\x20' + _0x50e3c9[_0x597fac(0x45b)]);
     }
 }
-
-// Generate video ideas with shuffle button
-async function generateVideoIdeas() {
-
-    const videoIdeas = [
-        "Create a fast-paced gaming montage with epic plays and reactions",
-        "Make a 30-second motivational workout compilation with trending music",
-        "Put together viral dance clips from your latest YouTube video",
-        "Compile your best commentary moments into shareable shorts",
-        "Create a highlight reel of epic fails and funny moments",
-        "Make a trending audio mashup with video clips synced to the beat",
-        "Compile before and after transformation clips",
-        "Create a speed painting or creation process video",
-        "Make a \"Day in my life\" quick clips compilation",
-        "Create a tutorial snippet series from your longer videos",
-        "Compile your best one-liners and funny quotes",
-        "Make a seasonal/holiday themed clip collection",
-        "Create a reaction compilation video",
-        "Compile jaw-dropping moments and plot twists",
-        "Make a \"Top 10 moments\" video from your content"
-    ];
-    
-    const randomIdea = videoIdeas[Math.floor(Math.random() * videoIdeas.length)];
-    
-    // Add the idea to the input field
-    if (userInput) {
-        userInput.value = randomIdea;
-        userInput.focus();
-        // Trigger input event to update button state
-        userInput.dispatchEvent(new Event('input'));
-    }
-    
-    // Add animation to shuffle button
-    const shuffleBtn = document.getElementById('shuffleIdeasBtn');
-    if (shuffleBtn) {
-        shuffleBtn.style.animation = 'none';
-        setTimeout(() => {
-            shuffleBtn.style.animation = 'spin 0.6s ease-in-out';
-        }, 10);
-    }
+async function _0x4a1509() {
+    const _0x2234bf = _0x4afe9d, _0x28294a = [
+            'Create\x20a\x20fast-paced\x20gaming\x20montage\x20with\x20epic\x20plays\x20and\x20reactions',
+            _0x2234bf(0x571),
+            _0x2234bf(0x228),
+            'Compile\x20your\x20best\x20commentary\x20moments\x20into\x20shareable\x20shorts',
+            _0x2234bf(0x4b0),
+            _0x2234bf(0x311),
+            _0x2234bf(0x43f),
+            _0x2234bf(0x34f),
+            _0x2234bf(0x28c),
+            _0x2234bf(0x54b),
+            'Compile\x20your\x20best\x20one-liners\x20and\x20funny\x20quotes',
+            _0x2234bf(0x1a0),
+            _0x2234bf(0x341),
+            _0x2234bf(0x550),
+            _0x2234bf(0x3e5)
+        ], _0xbc9dca = _0x28294a[Math[_0x2234bf(0x48a)](Math[_0x2234bf(0x41f)]() * _0x28294a[_0x2234bf(0x56d)])];
+    userInput && (userInput[_0x2234bf(0x328)] = _0xbc9dca, userInput[_0x2234bf(0x2ad)](), userInput[_0x2234bf(0x4a5)](new Event(_0x2234bf(0x200))));
+    const _0x3658b2 = document[_0x2234bf(0x1b9)](_0x2234bf(0x23a));
+    _0x3658b2 && (_0x3658b2[_0x2234bf(0x344)][_0x2234bf(0x36d)] = _0x2234bf(0x4f5), setTimeout(() => {
+        const _0x5add27 = _0x2234bf;
+        _0x3658b2[_0x5add27(0x344)][_0x5add27(0x36d)] = _0x5add27(0x349);
+    }, 0xa));
 }
-
-// Add message to chat
-function addMessageToChat(sender, content) {
-    if (!chatContainer) return;
-    
-    const messageRow = document.createElement('div');
-    messageRow.className = `message-row ${sender}-message-row`;
-    
-    const messageElement = document.createElement('div');
-    messageElement.className = `message ${sender}-message`;
-    
-    messageElement.innerHTML = `
-        <div class="message-content">
-            ${formatMessageContent(content)}
-        </div>
-        <div class="message-actions">
-            <button class="message-action copy-btn" title="Copy">
-                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-copy-icon lucide-copy"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>
-            </button>
-        </div>
-    `;
-
-    const copyButton = messageElement.querySelector('.copy-btn');
-    copyButton.addEventListener('click', () => {
-        navigator.clipboard.writeText(content).then(() => {
-            copyButton.classList.add('copied');
-            copyButton.innerHTML = '<i class="fas fa-check"></i>';
-            
-            setTimeout(() => {
-                copyButton.classList.remove('copied');
-                copyButton.innerHTML = '<i class="fas fa-copy"></i>';
-            }, 2000);
-        }).catch(err => {
-            safeLog('Failed to copy:', err);
+function _0x2259b6(_0xb94777, _0x34a82c) {
+    const _0x5db880 = _0x4afe9d;
+    if (!chatContainer)
+        return;
+    const _0x17a85e = document[_0x5db880(0x227)](_0x5db880(0x20f));
+    _0x17a85e[_0x5db880(0x2a5)] = _0x5db880(0x1f7) + _0xb94777 + '-message-row';
+    const _0x2dc151 = document['createElement'](_0x5db880(0x20f));
+    _0x2dc151[_0x5db880(0x2a5)] = _0x5db880(0x391) + _0xb94777 + _0x5db880(0x59b), _0x2dc151[_0x5db880(0x471)] = _0x5db880(0x2a1) + formatMessageContent(_0x34a82c) + '\x0a\x20\x20\x20\x20\x20\x20\x20\x20</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20<div\x20class=\x22message-actions\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<button\x20class=\x22message-action\x20copy-btn\x22\x20title=\x22Copy\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<svg\x20xmlns=\x22http://www.w3.org/2000/svg\x22\x20width=\x2218\x22\x20height=\x2218\x22\x20viewBox=\x220\x200\x2024\x2024\x22\x20fill=\x22none\x22\x20stroke=\x22currentColor\x22\x20stroke-width=\x221.75\x22\x20stroke-linecap=\x22round\x22\x20stroke-linejoin=\x22round\x22\x20class=\x22lucide\x20lucide-copy-icon\x20lucide-copy\x22><rect\x20width=\x2214\x22\x20height=\x2214\x22\x20x=\x228\x22\x20y=\x228\x22\x20rx=\x222\x22\x20ry=\x222\x22/><path\x20d=\x22M4\x2016c-1.1\x200-2-.9-2-2V4c0-1.1.9-2\x202-2h10c1.1\x200\x202\x20.9\x202\x202\x22/></svg>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</button>\x0a\x20\x20\x20\x20\x20\x20\x20\x20</div>\x0a\x20\x20\x20\x20';
+    const _0x38a60e = _0x2dc151[_0x5db880(0x1ff)](_0x5db880(0x193));
+    _0x38a60e[_0x5db880(0x412)]('click', () => {
+        const _0x39f80d = _0x5db880;
+        navigator[_0x39f80d(0x1c7)][_0x39f80d(0x3ad)](_0x34a82c)[_0x39f80d(0x515)](() => {
+            const _0x403029 = _0x39f80d;
+            _0x38a60e[_0x403029(0x2d9)][_0x403029(0x3ed)](_0x403029(0x32f)), _0x38a60e[_0x403029(0x471)] = '<i\x20class=\x22fas\x20fa-check\x22></i>', setTimeout(() => {
+                const _0x5bb60a = _0x403029;
+                _0x38a60e['classList']['remove'](_0x5bb60a(0x32f)), _0x38a60e[_0x5bb60a(0x471)] = '<i\x20class=\x22fas\x20fa-copy\x22></i>';
+            }, 0x7d0);
+        })[_0x39f80d(0x4f3)](_0x440d9b => {
+            const _0x4cf4a4 = _0x39f80d;
+            _0x5e766a(_0x4cf4a4(0x1c6), _0x440d9b);
         });
+    }), _0x17a85e[_0x5db880(0x304)](_0x2dc151), chatContainer[_0x5db880(0x304)](_0x17a85e), chatContainer[_0x5db880(0x355)] = chatContainer[_0x5db880(0x32c)], window['dispatchEvent'](new CustomEvent(_0x5db880(0x4d8))), (_0xb94777 === 'user' || !_0x36bf43) && (chatHistory[_0x5db880(0x33e)]({
+        'sender': _0xb94777,
+        'content': _0x34a82c,
+        'timestamp': new Date()[_0x5db880(0x24b)]()
+    }), localStorage[_0x5db880(0x3b0)](_0x5db880(0x1f0), JSON[_0x5db880(0x4d1)](chatHistory)));
+}
+function _0x4c1bdf() {
+    const _0x4f5b4c = _0x4afe9d;
+    (chatContainer && chatContainer[_0x4f5b4c(0x40b)][_0x4f5b4c(0x56d)] > 0x1 || welcomeCard && !welcomeCard[_0x4f5b4c(0x2d9)][_0x4f5b4c(0x369)](_0x4f5b4c(0x2ff))) && (confirm(_0x4f5b4c(0x29c)) && _0x522dab());
+}
+function _0x522dab() {
+    const _0x1987c4 = _0x4afe9d;
+    if (!chatContainer)
+        return;
+    while (chatContainer[_0x1987c4(0x1f5)]) {
+        chatContainer[_0x1987c4(0x3d8)](chatContainer[_0x1987c4(0x1f5)]);
+    }
+    welcomeCard && (chatContainer[_0x1987c4(0x304)](welcomeCard), welcomeCard[_0x1987c4(0x2d9)][_0x1987c4(0x40f)]('hidden'));
+    _0xce993c = [];
+    const _0x4331f2 = document[_0x1987c4(0x1b9)]('filePreviewContainer');
+    _0x4331f2 && (_0x4331f2[_0x1987c4(0x471)] = '', _0x4331f2[_0x1987c4(0x2d9)][_0x1987c4(0x40f)](_0x1987c4(0x289)));
+    _0x10e293 = 0x0;
+    const _0x2656eb = document[_0x1987c4(0x1ff)]('.input-section'), _0x3141f2 = _0x2656eb ? _0x2656eb[_0x1987c4(0x1ff)]('.input-container') : null;
+    _0x3141f2 && _0x3141f2[_0x1987c4(0x2d9)][_0x1987c4(0x3ed)](_0x1987c4(0x51d)), _0x2656eb && _0x2656eb[_0x1987c4(0x2d9)][_0x1987c4(0x3ed)](_0x1987c4(0x2b3)), chatHistory = [], localStorage['removeItem'](_0x1987c4(0x1f0));
+}
+function _0x2a6e7d() {
+    const _0x59fa08 = _0x4afe9d;
+    if (!_0x52b9b8)
+        return;
+    _0x52b9b8[_0x59fa08(0x2d9)]['add'](_0x59fa08(0x289));
+}
+function _0x4846b1() {
+    const _0xc8199e = _0x4afe9d;
+    if (!_0x52b9b8)
+        return;
+    _0x52b9b8[_0xc8199e(0x2d9)][_0xc8199e(0x40f)](_0xc8199e(0x289));
+}
+function _0x48821f(_0x10b338) {
+    const _0x539e71 = _0x4afe9d;
+    _0x37e8a6['forEach'](_0x112285 => {
+        const _0xe3f385 = _0xd7fc;
+        _0x112285[_0xe3f385(0x2d9)][_0xe3f385(0x40f)](_0xe3f385(0x289)), _0x112285[_0xe3f385(0x3dd)][_0xe3f385(0x463)] === _0x10b338 && _0x112285[_0xe3f385(0x2d9)][_0xe3f385(0x3ed)]('active');
     });
-    
-    messageRow.appendChild(messageElement);
-    chatContainer.appendChild(messageRow);
-    chatContainer.scrollTop = chatContainer.scrollHeight;
-    
-    // Dispatch custom event to update quick actions visibility
-    window.dispatchEvent(new CustomEvent('messageAdded'));
-    
-    if (sender === 'user' || !isGenerating) {
-        chatHistory.push({
-            sender,
-            content,
-            timestamp: new Date().toISOString()
-        });
-        
-        localStorage.setItem('chatHistory', JSON.stringify(chatHistory));
-    }
-}
-
-// Start new chat
-function startNewChat() {
-    if (chatContainer && chatContainer.children.length > 1 || (welcomeCard && !welcomeCard.classList.contains('hidden'))) {
-        if (confirm('Start a new chat? Current chat will be cleared.')) {
-            clearChat();
+    switch (_0x10b338) {
+    case _0x539e71(0x24d):
+        if (_0x10e293 === 0x0) {
+            const _0x4a8d1c = document[_0x539e71(0x1ff)](_0x539e71(0x33c)), _0x320f53 = _0x4a8d1c ? _0x4a8d1c[_0x539e71(0x1ff)](_0x539e71(0x36a)) : null;
+            _0x320f53 && _0x320f53[_0x539e71(0x2d9)][_0x539e71(0x3ed)](_0x539e71(0x51d)), _0x4a8d1c && _0x4a8d1c['classList'][_0x539e71(0x3ed)](_0x539e71(0x2b3));
         }
+        break;
+    case _0x539e71(0x3f9):
+        openHistory();
+        break;
+    case _0x539e71(0x2e0):
+        openSaved();
+        break;
+    default:
+        break;
     }
 }
-
-// Clear chat
-function clearChat() {
-    if (!chatContainer) return;
-    
-    while (chatContainer.firstChild) {
-        chatContainer.removeChild(chatContainer.firstChild);
-    }
-    
-    if (welcomeCard) {
-        chatContainer.appendChild(welcomeCard);
-        welcomeCard.classList.remove('hidden');
-    }
-    
-    uploadedFiles = [];
-    const filePreviewContainer = document.getElementById('filePreviewContainer');
-    if (filePreviewContainer) {
-        filePreviewContainer.innerHTML = '';
-        filePreviewContainer.classList.remove('active');
-    }
-    
-    // Reset prompt count and restore centered style for next conversation
-    promptCount = 0;
-    const inputSection = document.querySelector('.input-section');
-    const inputContainer = inputSection ? inputSection.querySelector('.input-container') : null;
-    if (inputContainer) {
-        inputContainer.classList.add('first-prompt');
-    }
-    if (inputSection) {
-        inputSection.classList.add('is-first-prompt');
-    }
-    
-    chatHistory = [];
-    localStorage.removeItem('chatHistory');
+function _0x487f5d() {
+    const _0x2ded21 = _0x4afe9d;
+    _0x4aab65 && (_0x4aab65[_0x2ded21(0x345)] = _0x10b78b[_0x2ded21(0x239)]());
 }
-
-// Open upgrade modal
-function openUpgradeModal() {
-    if (!upgradeModal) return;
-    upgradeModal.classList.add('active');
+function _0x1043b4() {
+    const _0x28f38a = _0x4afe9d, _0x1f36d2 = _0x28f38a(0x285) + _0x10b78b + _0x28f38a(0x3f7);
+    _0x2259b6('ai', _0x1f36d2);
 }
-
-// Close upgrade modal
-function closeUpgradeModal() {
-    if (!upgradeModal) return;
-    upgradeModal.classList.remove('active');
+function _0x4de5b0() {
+    const _0x2dc64f = _0x4afe9d;
+    if (!_0x34ba92)
+        return _0x41706e('Please\x20sign\x20in\x20to\x20access\x20premium\x20features', _0x2dc64f(0x302)), ![];
+    if (_0x34ba92[_0x2dc64f(0x19b)] === _0x2dc64f(0x449))
+        return _0x41706e(_0x2dc64f(0x3e8), _0x2dc64f(0x302)), ![];
+    return !![];
 }
-
-// Navigate to different sections
-function navigateTo(section) {
-    navItems.forEach(item => {
-        item.classList.remove('active');
-        if (item.dataset.target === section) {
-            item.classList.add('active');
-        }
-    });
-    
-    switch(section) {
-        case 'chat':
-            // If returning to chat without sending any prompts, restore first-prompt styling
-            if (promptCount === 0) {
-                const inputSection = document.querySelector('.input-section');
-                const inputContainer = inputSection ? inputSection.querySelector('.input-container') : null;
-                if (inputContainer) {
-                    inputContainer.classList.add('first-prompt');
-                }
-                if (inputSection) {
-                    inputSection.classList.add('is-first-prompt');
-                }
+function _0xd7fc(_0x3017d9, _0x9a91) {
+    _0x3017d9 = _0x3017d9 - 0x175;
+    const _0xd943a8 = _0x1d18();
+    let _0x4c4b72 = _0xd943a8[_0x3017d9];
+    if (_0xd7fc['yZKWRe'] === undefined) {
+        var _0x41d230 = function (_0x2a50b9) {
+            const _0x2ff486 = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789+/=';
+            let _0x488cd3 = '', _0x36356a = '';
+            for (let _0x3e0e88 = 0x0, _0x2efb0c, _0x33f65c, _0x2869db = 0x0; _0x33f65c = _0x2a50b9['charAt'](_0x2869db++); ~_0x33f65c && (_0x2efb0c = _0x3e0e88 % 0x4 ? _0x2efb0c * 0x40 + _0x33f65c : _0x33f65c, _0x3e0e88++ % 0x4) ? _0x488cd3 += String['fromCharCode'](0xff & _0x2efb0c >> (-0x2 * _0x3e0e88 & 0x6)) : 0x0) {
+                _0x33f65c = _0x2ff486['indexOf'](_0x33f65c);
             }
-            break;
-
-        case 'history':
-            openHistory();
-            break;
-        case 'saved':
-            openSaved();
-            break;
-        default:
-            break;
+            for (let _0x4ae9b4 = 0x0, _0x4c2c2a = _0x488cd3['length']; _0x4ae9b4 < _0x4c2c2a; _0x4ae9b4++) {
+                _0x36356a += '%' + ('00' + _0x488cd3['charCodeAt'](_0x4ae9b4)['toString'](0x10))['slice'](-0x2);
+            }
+            return decodeURIComponent(_0x36356a);
+        };
+        _0xd7fc['PNMGuH'] = _0x41d230, _0xd7fc['FmzZuE'] = {}, _0xd7fc['yZKWRe'] = !![];
     }
+    const _0x5e44e9 = _0xd943a8[0x0], _0x1d186a = _0x3017d9 + _0x5e44e9, _0xd7fcd8 = _0xd7fc['FmzZuE'][_0x1d186a];
+    return !_0xd7fcd8 ? (_0x4c4b72 = _0xd7fc['PNMGuH'](_0x4c4b72), _0xd7fc['FmzZuE'][_0x1d186a] = _0x4c4b72) : _0x4c4b72 = _0xd7fcd8, _0x4c4b72;
 }
-
-// Update token display
-function updateTokenDisplay() {
-    if (tokenCount) {
-        tokenCount.textContent = tokens.toLocaleString();
-    }
-}
-
-// Show upgrade prompt when tokens are low
-function showUpgradePrompt() {
-    const message = `💡 You have ${tokens} tokens remaining. Running low? <a href="/premium.html" style="color: #ff6b35; font-weight: 700; text-decoration: underline;">Upgrade now</a> for unlimited access!`;
-    addMessageToChat('ai', message);
-}
-
-// Feature Modal Functions
-// Removed: openAdsGenerator, openTrendingProducts (deprecated features)
-
-// ⚠️ SECURITY: This only controls UI visibility. Backend MUST enforce plan restrictions!
-// Never rely on this for actual feature access control - the backend must verify on every request.
-function checkPremiumAccess() {
-    if (!currentUser) {
-        showNotification('Please sign in to access premium features', 'error');
-        return false;
-    }
-    
-    // Only show/hide UI elements - backend MUST enforce plan on actual API calls
-    if (currentUser.plan === 'free') {
-        showNotification('This is a premium feature. Please upgrade your plan.', 'error');
-        return false;
-    }
-    return true;
-}
-
-// Load saved items
-function loadSaved() {
-    const savedList = document.getElementById('savedList');
-    if (!savedList) return;
-    
-    // ⚠️ SECURITY WARNING: savedResults contains user content stored in localStorage
-    // localStorage is accessible to any script on the domain (XSS vulnerability)
-    // TODO: Migrate to server-side storage or IndexedDB with encryption
-    const savedResults = JSON.parse(localStorage.getItem('savedResults') || '[]');
-    
-    if (savedResults.length === 0) {
-        savedList.innerHTML = '<p>No saved items.</p>';
+function _0x29e9d1() {
+    const _0x267590 = _0x4afe9d, _0x387597 = document[_0x267590(0x1b9)]('savedList');
+    if (!_0x387597)
+        return;
+    const _0x378642 = JSON['parse'](localStorage[_0x267590(0x394)]('savedResults') || '[]');
+    if (_0x378642['length'] === 0x0) {
+        _0x387597[_0x267590(0x471)] = _0x267590(0x1fe);
         return;
     }
-    
-    savedList.innerHTML = savedResults.map((result, index) => `
-        <div class="saved-item">
-            <div class="saved-type">${result.type}</div>
-            <div class="saved-preview">${result.content.substring(0, 100)}...</div>
-            <div class="saved-date">${new Date(result.timestamp).toLocaleDateString()}</div>
-            <button onclick="viewSavedItem(${index})">View</button>
-        </div>
-    `).join('');
+    _0x387597['innerHTML'] = _0x378642[_0x267590(0x48c)]((_0x21284f, _0x4a83ae) => _0x267590(0x581) + _0x21284f[_0x267590(0x27d)] + '</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20class=\x22saved-preview\x22>' + _0x21284f[_0x267590(0x2d8)]['substring'](0x0, 0x64) + _0x267590(0x197) + new Date(_0x21284f['timestamp'])[_0x267590(0x382)]() + _0x267590(0x409) + _0x4a83ae + ')\x22>View</button>\x0a\x20\x20\x20\x20\x20\x20\x20\x20</div>\x0a\x20\x20\x20\x20')[_0x267590(0x19d)]('');
 }
-
-// View saved item
-function viewSavedItem(index) {
-    // ⚠️ SECURITY: savedResults in localStorage - should migrate to server storage
-    const savedResults = JSON.parse(localStorage.getItem('savedResults') || '[]');
-    const item = savedResults[index];
-    
-    if (item) {
-        alert(`Saved ${item.type}:\n\n${item.content}`);
-    }
+function _0x28cb61(_0x21687) {
+    const _0x43b83e = _0x4afe9d, _0x59a182 = JSON['parse'](localStorage[_0x43b83e(0x394)](_0x43b83e(0x184)) || '[]'), _0xbfd03e = _0x59a182[_0x21687];
+    _0xbfd03e && alert(_0x43b83e(0x43c) + _0xbfd03e['type'] + _0x43b83e(0x1cd) + _0xbfd03e['content']);
 }
-
-// Removed: generateAds and analyzeTrendingProducts (deprecated AI features)
-
-// Utility Functions
-function showError(containerId, message) {
-    const container = document.getElementById(containerId);
-    if (!container) return;
-    
-    container.style.display = 'block';
-    // SECURITY: Use safe DOM manipulation instead of innerHTML to prevent XSS
-    container.innerHTML = '';
-    const errorDiv = document.createElement('div');
-    errorDiv.className = 'error-message';
-    errorDiv.textContent = message;
-    container.appendChild(errorDiv);
+function _0x6e462e(_0x59566d, _0x12979a) {
+    const _0x1c038e = _0x4afe9d, _0x5b446d = document['getElementById'](_0x59566d);
+    if (!_0x5b446d)
+        return;
+    _0x5b446d['style'][_0x1c038e(0x180)] = _0x1c038e(0x514), _0x5b446d[_0x1c038e(0x471)] = '';
+    const _0x3dd14d = document['createElement'](_0x1c038e(0x20f));
+    _0x3dd14d[_0x1c038e(0x2a5)] = _0x1c038e(0x177), _0x3dd14d[_0x1c038e(0x345)] = _0x12979a, _0x5b446d[_0x1c038e(0x304)](_0x3dd14d);
 }
-
-function copyToClipboard(text) {
-    navigator.clipboard.writeText(text).then(() => {
-        showNotification('Copied to clipboard!', 'success');
+function _0x37a81a(_0x3c3689) {
+    const _0xd189db = _0x4afe9d;
+    navigator[_0xd189db(0x1c7)]['writeText'](_0x3c3689)['then'](() => {
+        const _0xb05da3 = _0xd189db;
+        _0x41706e(_0xb05da3(0x567), _0xb05da3(0x1a6));
     });
 }
-
-function saveResult(type, content) {
-    // ⚠️ SECURITY: Storing user content in localStorage - should use server storage
-    const savedResults = JSON.parse(localStorage.getItem('savedResults') || '[]');
-    savedResults.push({
-        type,
-        content,
-        timestamp: new Date().toISOString()
-    });
-    localStorage.setItem('savedResults', JSON.stringify(savedResults));
-    showNotification('Saved successfully!', 'success');
+function _0x38048b(_0x35b0d9, _0x381edf) {
+    const _0x381707 = _0x4afe9d, _0x1726a0 = JSON[_0x381707(0x1b3)](localStorage[_0x381707(0x394)]('savedResults') || '[]');
+    _0x1726a0[_0x381707(0x33e)]({
+        'type': _0x35b0d9,
+        'content': _0x381edf,
+        'timestamp': new Date()['toISOString']()
+    }), localStorage[_0x381707(0x3b0)](_0x381707(0x184), JSON[_0x381707(0x4d1)](_0x1726a0)), _0x41706e(_0x381707(0x1ee), 'success');
 }
-
-// Apply theme immediately before DOM is fully loaded to prevent flash
-(function() {
-    const savedTheme = localStorage.getItem('theme') || 'light';
-    document.documentElement.setAttribute('data-theme', savedTheme);
-})();
-
-// DEBUG FUNCTION - Test template preview elements
-window.testTemplatePreview = function() {
-    const nameEl = document.getElementById('previewTemplateName');
-    const descEl = document.getElementById('previewTemplateDescription');
-    const durationEl = document.getElementById('previewVideoDuration');
-    const formatEl = document.getElementById('previewVideoFormat');
-    
-    safeLog('🧪 TEMPLATE PREVIEW TEST:');
-    safeLog('  previewTemplateName:', nameEl ? '✅ FOUND' : '❌ NOT FOUND');
-    safeLog('  previewTemplateDescription:', descEl ? '✅ FOUND' : '❌ NOT FOUND');
-    safeLog('  previewVideoDuration:', durationEl ? '✅ FOUND' : '❌ NOT FOUND');
-    safeLog('  previewVideoFormat:', formatEl ? '✅ FOUND' : '❌ NOT FOUND');
-    
-    if (nameEl) {
-        nameEl.textContent = 'TEST: Ranking Moments';
-        safeLog('  ✅ Updated template name');
-    }
-    if (descEl) {
-        descEl.textContent = 'TEST: This is a test video title';
-        safeLog('  ✅ Updated template description');
-    }
-    if (durationEl) {
-        durationEl.textContent = '~3m 20s';
-        safeLog('  ✅ Updated duration');
-    }
-    if (formatEl) {
-        formatEl.textContent = 'YouTube Shorts';
-        safeLog('  ✅ Updated format');
-    }
-    
-    safeLog('If you see the TEST values in the template preview, the elements work!');
-};
-
-safeLog('✅ testTemplatePreview() is ready - run it in console');
-
-
-document.addEventListener('DOMContentLoaded', () => {
-    // Check if we were in the middle of processing before page refresh
-    const clipProcessingState = sessionStorage.getItem('clipProcessing');
-    if (clipProcessingState) {
+(function () {
+    const _0x4e1e18 = _0x4afe9d, _0x234a5a = localStorage['getItem'](_0x4e1e18(0x1ef)) || _0x4e1e18(0x42f);
+    document['documentElement']['setAttribute'](_0x4e1e18(0x441), _0x234a5a);
+}()), window[_0x4afe9d(0x1fc)] = function () {
+    const _0x5a4d27 = _0x4afe9d, _0x40f388 = document['getElementById'](_0x5a4d27(0x1cc)), _0x5b8514 = document[_0x5a4d27(0x1b9)](_0x5a4d27(0x28d)), _0xf446d2 = document[_0x5a4d27(0x1b9)](_0x5a4d27(0x47e)), _0x18d7c4 = document['getElementById'](_0x5a4d27(0x46a));
+    _0x5e766a(_0x5a4d27(0x1d1)), _0x5e766a(_0x5a4d27(0x3ca), _0x40f388 ? _0x5a4d27(0x42e) : '❌\x20NOT\x20FOUND'), _0x5e766a('\x20\x20previewTemplateDescription:', _0x5b8514 ? '✅\x20FOUND' : _0x5a4d27(0x376)), _0x5e766a('\x20\x20previewVideoDuration:', _0xf446d2 ? '✅\x20FOUND' : _0x5a4d27(0x376)), _0x5e766a(_0x5a4d27(0x421), _0x18d7c4 ? _0x5a4d27(0x42e) : _0x5a4d27(0x376)), _0x40f388 && (_0x40f388[_0x5a4d27(0x345)] = _0x5a4d27(0x1c9), _0x5e766a(_0x5a4d27(0x30e))), _0x5b8514 && (_0x5b8514[_0x5a4d27(0x345)] = _0x5a4d27(0x57a), _0x5e766a(_0x5a4d27(0x417))), _0xf446d2 && (_0xf446d2['textContent'] = _0x5a4d27(0x414), _0x5e766a(_0x5a4d27(0x195))), _0x18d7c4 && (_0x18d7c4[_0x5a4d27(0x345)] = _0x5a4d27(0x576), _0x5e766a(_0x5a4d27(0x48b))), _0x5e766a('If\x20you\x20see\x20the\x20TEST\x20values\x20in\x20the\x20template\x20preview,\x20the\x20elements\x20work!');
+}, _0x5e766a(_0x4afe9d(0x454)), document[_0x4afe9d(0x412)](_0x4afe9d(0x39e), () => {
+    const _0x5d0011 = _0x4afe9d, _0x2d55cf = sessionStorage['getItem'](_0x5d0011(0x46e));
+    if (_0x2d55cf)
         try {
-            const state = JSON.parse(clipProcessingState);
-            // Resume the clip compilation
+            const _0x36f959 = JSON[_0x5d0011(0x1b3)](_0x2d55cf);
             setTimeout(() => {
-                startClipCompilation(state.url);
-            }, 500);
-        } catch (e) {
-            safeLog('Failed to restore clip processing:', e);
-            sessionStorage.removeItem('clipProcessing');
+                const _0x18dac3 = _0x5d0011;
+                _0x2d60f0(_0x36f959[_0x18dac3(0x363)]);
+            }, 0x1f4);
+        } catch (_0x492e10) {
+            _0x5e766a(_0x5d0011(0x36b), _0x492e10), sessionStorage[_0x5d0011(0x24e)](_0x5d0011(0x46e));
         }
-    }
-    
-    // Load available gameplay clips for splitscreen
-    loadAvailableGameplayClips();
-    
-    // Load tier info for portal card
-    loadTierInfo();
-    
-    // Await ClipsStudio.init() if available
-    if (typeof clipsStudio !== 'undefined' && clipsStudio && typeof clipsStudio.init === 'function') {
-        clipsStudio.init();
-        // Setup watermark toggle after init
-        if (typeof clipsStudio.setupWatermarkToggle === 'function') {
-            clipsStudio.setupWatermarkToggle();
-        }
-    } else {
-        init();
-    }
-});
-
-
-window.getWatermarkState = function() {
-    const stored = localStorage.getItem('solisAIWatermarkEnabled');
-    // Default to true if not explicitly set to false
-    return stored !== 'false';
-};
-
-
-window.getWatermarkParams = function() {
-    return {
-        add_watermark: window.getWatermarkState()
-    };
+    _0x132228(), _0x35aceb(), typeof clipsStudio !== _0x5d0011(0x36f) && clipsStudio && typeof clipsStudio[_0x5d0011(0x25d)] === _0x5d0011(0x1f6) ? (clipsStudio['init'](), typeof clipsStudio[_0x5d0011(0x495)] === _0x5d0011(0x1f6) && clipsStudio[_0x5d0011(0x495)]()) : _0x1540ba();
+}), window[_0x4afe9d(0x1a7)] = function () {
+    const _0xf3fc23 = _0x4afe9d, _0x1c2726 = localStorage[_0xf3fc23(0x394)](_0xf3fc23(0x4ed));
+    return _0x1c2726 !== _0xf3fc23(0x340);
+}, window[_0x4afe9d(0x544)] = function () {
+    return { 'add_watermark': window['getWatermarkState']() };
 };

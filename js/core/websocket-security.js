@@ -1,703 +1,561 @@
-/**
- * WebSocket Security Manager v2
- * Enhanced security with proper encryption, token management, and audit logging
- * 
- * SECURITY IMPROVEMENTS:
- * - Session-based token storage (not localStorage)
- * - HMAC message signing and verification
- * - Non-predictable message IDs with crypto
- * - Proper nonce validation and replay attack prevention
- * - Origin validation
- * - In-memory audit logging (never localStorage)
- * - Configurable rate limiting per operation type
- * - Message compression support
- * - Proper cleanup strategies
- */
-
-class WebSocketSecurityManager {
-    constructor(config = {}) {
-        // Token management
-        this.authToken = null;
-        this.refreshToken = null;
-        this.tokenExpiresAt = null;
-        this.userId = null;
-        
-        // Security state
-        this.sessionId = this._generateSecureId();
-        this.nonceCache = new Set(); // Track used nonces to prevent replay attacks
-        this.maxCachedNonces = 1000;
-        
-        // Rate limiting - per operation type
-        this.rateLimitMap = new Map();
-        this.rateLimits = config.rateLimits || {
-            'delete_clip': 10,        // 10 per second
-            'processing_update': 100, // 100 per second
-            'default': 50             // 50 per second
+const _0x1863f5 = _0x27b6;
+(function (_0x52aef7, _0x3b6eb9) {
+    const _0x33fad7 = _0x27b6, _0x21c5b0 = _0x52aef7();
+    while (!![]) {
+        try {
+            const _0x5e8b14 = -parseInt(_0x33fad7(0x235)) / 0x1 + parseInt(_0x33fad7(0x267)) / 0x2 * (parseInt(_0x33fad7(0x20f)) / 0x3) + -parseInt(_0x33fad7(0x26f)) / 0x4 * (-parseInt(_0x33fad7(0x281)) / 0x5) + parseInt(_0x33fad7(0x218)) / 0x6 + -parseInt(_0x33fad7(0x268)) / 0x7 + -parseInt(_0x33fad7(0x1ec)) / 0x8 * (parseInt(_0x33fad7(0x230)) / 0x9) + -parseInt(_0x33fad7(0x226)) / 0xa * (-parseInt(_0x33fad7(0x252)) / 0xb);
+            if (_0x5e8b14 === _0x3b6eb9)
+                break;
+            else
+                _0x21c5b0['push'](_0x21c5b0['shift']());
+        } catch (_0x42fa20) {
+            _0x21c5b0['push'](_0x21c5b0['shift']());
+        }
+    }
+}(_0x5083, 0x8b15c));
+const _0x11021a = (function () {
+        let _0x5a2e55 = !![];
+        return function (_0x71d6f0, _0x1c5dcf) {
+            const _0x3c2352 = _0x5a2e55 ? function () {
+                const _0x59e6a8 = _0x27b6;
+                if (_0x1c5dcf) {
+                    const _0x5582c9 = _0x1c5dcf[_0x59e6a8(0x262)](_0x71d6f0, arguments);
+                    return _0x1c5dcf = null, _0x5582c9;
+                }
+            } : function () {
+            };
+            return _0x5a2e55 = ![], _0x3c2352;
         };
-        
-        // Message validation
-        this.validateIncomingMessages = config.validateIncomingMessages !== false;
-        this.messageValidationQueue = [];
-        this.maxValidationQueueSize = 100;
-        
-        // Security logging - in-memory only
-        this.securityLogs = [];
-        this.maxSecurityLogs = 500; // Configurable, in-memory only
-        this.suspiciousActivityThreshold = config.suspiciousActivityThreshold || 10;
-        this.suspiciousActivityCount = 0;
-        
-        // Configuration - Use constants to avoid magic numbers
-        this.MAX_MESSAGE_SIZE = config.maxMessageSize || 256 * 1024; // 256KB
-        this.TIMESTAMP_VALIDITY_WINDOW = config.timestampWindow || 300000; // 5 minutes
-        this.TOKEN_REFRESH_THRESHOLD = config.tokenRefreshThreshold || 300000;
-        this.NONCE_VALIDITY_DURATION = config.nonceValidity || 3600000; // 1 hour
-        this.CLEANUP_INTERVAL = config.cleanupInterval || 600000; // 10 minutes
-        this.expectedOrigin = config.expectedOrigin || window.location.origin;
-        
-        // Track nonce timestamps
-        this.nonceTimestamps = new Map();
-        this.cleanupTask = null;
-        
-        console.log('🔐 WebSocket Security Manager v2 initialized');
-    }
-
-    /**
-     * Initialize security context with tokens
-     * Tokens should come from secure, httpOnly cookies, not localStorage
-     * @param {string} authToken - JWT auth token (from cookie ideally)
-     * @param {string} userId - User identifier
-     * @param {string} refreshToken - Optional refresh token for token rotation
-     */
-    init(authToken, userId, refreshToken = null) {
-        if (!authToken || !userId) {
-            console.error('❌ Invalid credentials for security init');
-            return false;
-        }
-
-        this.authToken = authToken;
-        this.userId = userId;
-        this.refreshToken = refreshToken;
-        
-        // Parse token and check expiration
-        if (!this._validateToken()) {
-            console.error('❌ Token validation failed');
-            return false;
-        }
-
-        console.log('✅ Security context initialized');
-        this._logSecurityEvent('security_init', { userId });
-        return true;
-    }
-
-    /**
-     * Validate JWT token structure and expiration
-     * @private
-     */
-    _validateToken() {
-        if (!this.authToken) {
-            console.warn('⚠️ No authentication token');
-            return false;
-        }
-
-        try {
-            const parts = this.authToken.split('.');
-            if (parts.length !== 3) {
-                throw new Error('Invalid JWT structure');
-            }
-
-            // Decode payload
-            const payload = JSON.parse(atob(parts[1]));
-            
-            // Validate expiration
-            if (payload.exp) {
-                const expiresAt = payload.exp * 1000;
-                this.tokenExpiresAt = expiresAt;
-                
-                if (expiresAt < Date.now()) {
-                    console.warn('⚠️ Token expired');
-                    return false;
+    }()), _0x12cfb1 = _0x11021a(this, function () {
+        const _0x393344 = _0x27b6, _0x1962a5 = function () {
+                const _0x4fd524 = _0x27b6;
+                let _0x1c11d8;
+                try {
+                    _0x1c11d8 = Function(_0x4fd524(0x216) + '{}.constructor(\x22return\x20this\x22)(\x20)' + ');')();
+                } catch (_0x57bd0b) {
+                    _0x1c11d8 = window;
                 }
-                
-                // Schedule token refresh if refresh token available
-                if (this.refreshToken) {
-                    this._scheduleTokenRefresh();
-                }
+                return _0x1c11d8;
+            }, _0x3ecfb8 = _0x1962a5(), _0x2aad67 = _0x3ecfb8[_0x393344(0x232)] = _0x3ecfb8[_0x393344(0x232)] || {}, _0x496b67 = [
+                _0x393344(0x21a),
+                _0x393344(0x276),
+                _0x393344(0x275),
+                _0x393344(0x22f),
+                _0x393344(0x27a),
+                _0x393344(0x22e),
+                _0x393344(0x24c)
+            ];
+        for (let _0x5462c9 = 0x0; _0x5462c9 < _0x496b67[_0x393344(0x215)]; _0x5462c9++) {
+            const _0x5b6aad = _0x11021a[_0x393344(0x23e)][_0x393344(0x284)]['bind'](_0x11021a), _0x1ba94c = _0x496b67[_0x5462c9], _0x58de45 = _0x2aad67[_0x1ba94c] || _0x5b6aad;
+            _0x5b6aad[_0x393344(0x256)] = _0x11021a[_0x393344(0x248)](_0x11021a), _0x5b6aad[_0x393344(0x285)] = _0x58de45[_0x393344(0x285)][_0x393344(0x248)](_0x58de45), _0x2aad67[_0x1ba94c] = _0x5b6aad;
+        }
+    });
+function _0x5083() {
+    const _0x2788c8 = [
+        'BM9Uy2vuAw1LC3rHBxbZ',
+        'BM9Uy2vFDMfSAwrHDgLVBL9MywLSzwq',
+        'x3zHBgLKyxrLtM9Uy2u',
+        '4PQG77Ipie1LC3nHz2uGzNjVBsb1BMf1DgHVCML6zwqGDxnLCG',
+        'l2fWAs9HDwrPDc9SB2DZ',
+        'ue9tva',
+        '8j+uKcbxzwjtB2nRzxqGu2vJDxjPDhKGtwfUywDLCIb2mIbPBML0AwfSAxPLza',
+        'z2v0u2vJDxjPDhLmB2DZ',
+        'l2fWAs9HDxrOl3jLzNjLC2G',
+        'tK9oq0vFvKfmsurjvfLFrfvsqvrjt04',
+        'Dg9mB3DLCKnHC2u',
+        '4PQG77Ipie1LC3nHz2uGzNjVBsbKAwzMzxjLBNqGC2vZC2LVBG',
+        'CMf0zuXPBwL0CW',
+        'Dg9Rzw5FCMvMCMvZAf9ZDwnJzxnZ',
+        'ANnVBG',
+        'C3vZCgLJAw91C0fJDgL2Axr5q291BNq',
+        'C2v0',
+        'Dw5HDxrOB3jPEMvKx3vZzxi',
+        '4PQG77IpieLUDMfSAwqGB3iGCMvWBgf5zwqGBM9Uy2u',
+        'zxHWzwn0zwrpCMLNAw4',
+        '4P2mifrVA2vUihzHBgLKyxrPB24GzxjYB3i6',
+        'C2fUAxrPEMveyxrH',
+        'zNjVBq',
+        'mZzTsuLNwNi',
+        '4PYfifrVA2vUihjLzNjLC2HLzcbZDwnJzxnZzNvSBhK',
+        'C2L6zq',
+        'C2XPy2u',
+        'CMfUzg9T',
+        'yxbWBgLJyxrPB24VANnVBG',
+        'BgvUz3rO',
+        'CMv0DxjUicHMDw5JDgLVBIGPia',
+        'sw52ywXPzcbkv1qGC3rYDwn0DxjL',
+        'nta0mta4zfrfuxv1',
+        'DMfSAwrHDgvjBMnVBwLUz01LC3nHz2u',
+        'Bg9N',
+        'CMvWBgfJzq',
+        '8j+uKIbtzwn1CML0EsbTyw5Hz2vYigrLC3rYB3LLza',
+        '4P2mievUy3j5ChrPB24GzMfPBgvKoG',
+        'C2vYDMvYuhvIBgLJs2v5',
+        '4PQG77Ipie9IAMvJDcbOyxmGDg9Vig1HBNKGA2v5CW',
+        'x2nVBNrHAw5Zu3vZCgLJAw91C0nVBNrLBNq',
+        'Dg9Rzw5FCMvMCMvZAf9LCNjVCG',
+        '4PQG77Ipie1LC3nHz2uGDgLTzxn0yw1WihrVBYbVBgq',
+        'BM93',
+        'zgvMyxvSDa',
+        '4PQG77Ipie5VihnLCNzLCIbWDwjSAwmGA2v5ignVBMzPz3vYzwqGzM9YigvUy3j5ChrPB24',
+        'mJe0mJy0mZbxExjcwMy',
+        'z2v0',
+        'C2vJDxjPDhLFAw5PDa',
+        'BxmP',
+        'x3nLy3vYAxr5tM90zq',
+        'x2DLBMvYyxrLtM9Uy2u',
+        'Dg9Rzw5fEhbPCMvZqxq',
+        'CgfYC2u',
+        'DgfIBgu',
+        'zxjYB3i',
+        'odK5nti1n0vntuLoqq',
+        'CMf0zv9SAw1PDf9LEgnLzwrLza',
+        'y29UC29Szq',
+        'zgvSzxrL',
+        'x2vUy3j5ChrqyxLSB2fK',
+        'mteZmtu5ovzIr01lua',
+        '4PQG77IpifrVA2vUigv4CgLYzwq',
+        'BM9YBwfS',
+        'ChvZAa',
+        'z2v0uMfUzg9TvMfSDwvZ',
+        '4P2miezHAwXLzcb0BYbMBhvZAcbSB2DZihrVihnLCNzLCJO',
+        'x2DLBMvYyxrLu2vJDxjLswq',
+        'y2XLyw51CeLUDgvYDMfS',
+        'x3nJAgvKDwXLvg9Rzw5szwzYzxnO',
+        'y29UC3rYDwn0B3i',
+        'ywrK',
+        'zMLSDgvY',
+        'y2HLy2TsyxrLtgLTAxq',
+        've9lru5FuKvguKvtsf9usfjfu0Hpteq',
+        'CMvMCMvZAfrVA2vU',
+        'BNvTyMvY',
+        'CMf0zuXPBwL0twfW',
+        'Aw5JBhvKzq',
+        'DxnLCKLK',
+        'yMLUza',
+        'z2v0u2vJDxjPDhLtDgf0Dxm',
+        'BwvZC2fNzvzHBgLKyxrPB25rDwv1zq',
+        'C3rVCenSzwfUDxbuyxnR',
+        'DhjHy2u',
+        'DgLTzxn0yw1Wv2LUzg93',
+        'Dg9ju09tDhjPBMC',
+        'AxnbCNjHEq',
+        'Dg9Rzw5szwzYzxnOvgHYzxnOB2XK',
+        '4PYfifnLy3vYAxr5ignVBNrLEhqGAw5PDgLHBgL6zwq',
+        'mtfyBgXNCgy',
+        'tufyx01fu1nbr0vFu0LArq',
+        'q0Xfqu5vuf9jtLrfuLzbta',
+        'y2XLyxi',
+        'x19WCM90B19F',
+        '4PQG77Ipie5Vigf1DgHLBNrPy2f0Aw9UihrVA2vU',
+        '4PQG77IpieLUDMfSAwqGA2v5ig5HBwu6ia',
+        'C29YDa',
+        'y2XLyw51CfrHC2S',
+        'C2vZC2LVBKLK',
+        'B2jQzwn0',
+        'zgvZDhjVEq',
+        'C3vIC3rYAw5N',
+        'ywjZ',
+        'y3jLyxrLu2vJDxjLrw52zwXVCgu',
+        'A2v5CW',
+        'yxbWBhK',
+        'jImZotS',
+        'C2vJDxjPDhLmB2DZ',
+        'x2vZy2fWzuH0BwW',
+        'BwvZC2fNzq',
+        'mte5otm4yw9dwgHx',
+        'mtKYotC4mvfnD0zAyW',
+        'C3vZCgLJAw91C0fJDgL2Axr5vgHYzxnOB2XK',
+        'x2XVz1nLy3vYAxr5rxzLBNq',
+        '4PQG77Ipifn0CMLUzYb0B28GBg9UzYWGDhj1BMnHDgLUzW',
+        'Bwv0yvTUyw1LpsjJC3jMlxrVA2vUiL0',
+        'x2DLDenZCMzuB2TLBG',
+        'Bwf4q2fJAgvKtM9Uy2vZ',
+        'nZa5nKLAz1fkrq',
+        'x2nSzwfUDxbfEhbPCMvKtM9Uy2vZ',
+        'Aw5PDa',
+        'AxntDxnWAwnPB3vZqwn0AxzPDhLezxrLy3rLza',
+        'C2HPzNq',
+        'BM9Uy2vdywnOzq',
+        'Aw5MBW',
+        'D2fYBG',
+        'C3rHCNrdBgvHBNvWvgfZAW',
+        '4P2mifrVA2vUihjLzNjLC2GGzMfPBgvK',
+        'Bwf4u2vJDxjPDhLmB2DZ',
+        'zxHJzxb0Aw9U',
+        'veLnrvnuqu1qx1zbteLesvrzx1DjtKrpvW',
+        'zM9YrwfJAa',
+        'C3bSAxq',
+        'ChjPB3jPDhK',
+        'DgvZDa',
+        'zNjVBunOyxjdB2rL',
+        'odvOseH0zvm',
+        '4P2mifrVA2vUihzHBgLKyxrPB24GzMfPBgvK',
+        'Dw5KzwzPBMvK',
+        'ChjVDg90ExbL',
+        'Dg9tDhjPBMC',
+        'CgfKu3rHCNq',
+        'zxHW',
+        'C3rHDhvZ',
+        'mI4W',
+        'v2vIu29JA2v0u2vJDxjPDhLnyw5Hz2vY',
+        'yM9VBgvHBG',
+        'ohPcA2vbBG',
+        'C3rYAw5NAwz5',
+        '4PQG77IpieLUy29TCgXLDguGBwvZC2fNzsbZDhj1y3r1CMu',
+        'x3zHBgLKyxrLvg9Rzw4',
+        'jMD0oW',
+        'x3jLzNjLC2HuB2TLBG',
+        'Bg9JyxrPB24',
+        '8j+tIIbtzwn1CML0EtOG',
+        'DMfSAwrHDgvjBMnVBwLUz01LC3nHz2vZ',
+        '4O+X77IpienSzwfUDxaGDgfZAYbZDgfYDgvKicHPBNrLCNzHBdOG',
+        'Bwf4twvZC2fNzvnPEMu',
+        'yxv0AfrVA2vU'
+    ];
+    _0x5083 = function () {
+        return _0x2788c8;
+    };
+    return _0x5083();
+}
+function _0x27b6(_0x3e1432, _0x522fd8) {
+    _0x3e1432 = _0x3e1432 - 0x1eb;
+    const _0xd56e07 = _0x5083();
+    let _0x49703b = _0xd56e07[_0x3e1432];
+    if (_0x27b6['plACxL'] === undefined) {
+        var _0x4e52c2 = function (_0x53f98e) {
+            const _0x5be89d = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789+/=';
+            let _0x2b6983 = '', _0x547403 = '';
+            for (let _0x5509c5 = 0x0, _0x38b174, _0x11021a, _0x12cfb1 = 0x0; _0x11021a = _0x53f98e['charAt'](_0x12cfb1++); ~_0x11021a && (_0x38b174 = _0x5509c5 % 0x4 ? _0x38b174 * 0x40 + _0x11021a : _0x11021a, _0x5509c5++ % 0x4) ? _0x2b6983 += String['fromCharCode'](0xff & _0x38b174 >> (-0x2 * _0x5509c5 & 0x6)) : 0x0) {
+                _0x11021a = _0x5be89d['indexOf'](_0x11021a);
             }
-
-            return true;
-        } catch (error) {
-            console.error('❌ Token validation error:', error);
-            return false;
-        }
+            for (let _0x44270c = 0x0, _0x5a2e55 = _0x2b6983['length']; _0x44270c < _0x5a2e55; _0x44270c++) {
+                _0x547403 += '%' + ('00' + _0x2b6983['charCodeAt'](_0x44270c)['toString'](0x10))['slice'](-0x2);
+            }
+            return decodeURIComponent(_0x547403);
+        };
+        _0x27b6['lKTXff'] = _0x4e52c2, _0x27b6['REQkbF'] = {}, _0x27b6['plACxL'] = !![];
     }
-
-    /**
-     * Schedule automatic token refresh before expiration
-     * @private
-     */
-    _scheduleTokenRefresh() {
-        if (!this.tokenExpiresAt) return;
-        
-        const timeUntilRefresh = this.tokenExpiresAt - Date.now() - this.tokenRefreshThreshold;
-        if (timeUntilRefresh > 0) {
-            setTimeout(() => this._refreshToken(), timeUntilRefresh);
-        }
+    const _0x5c6789 = _0xd56e07[0x0], _0x50832d = _0x3e1432 + _0x5c6789, _0x27b657 = _0x27b6['REQkbF'][_0x50832d];
+    return !_0x27b657 ? (_0x49703b = _0x27b6['lKTXff'](_0x49703b), _0x27b6['REQkbF'][_0x50832d] = _0x49703b) : _0x49703b = _0x27b657, _0x49703b;
+}
+_0x12cfb1();
+class _0x44270c {
+    constructor(_0x3b3d79 = {}) {
+        const _0x430135 = _0x27b6;
+        this['authToken'] = null, this[_0x430135(0x243)] = null, this[_0x430135(0x22c)] = null, this[_0x430135(0x247)] = null, this[_0x430135(0x25b)] = this[_0x430135(0x23b)](), this[_0x430135(0x274)] = new Set(), this[_0x430135(0x26e)] = 0x3e8, this[_0x430135(0x245)] = new Map(), this[_0x430135(0x204)] = _0x3b3d79[_0x430135(0x204)] || {
+            'delete_clip': 0xa,
+            'processing_update': 0x64,
+            'default': 0x32
+        }, this[_0x430135(0x1f4)] = _0x3b3d79[_0x430135(0x1f4)] !== ![], this[_0x430135(0x24a)] = [], this['maxValidationQueueSize'] = 0x64, this[_0x430135(0x264)] = [], this[_0x430135(0x279)] = 0x1f4, this['suspiciousActivityThreshold'] = _0x3b3d79[_0x430135(0x269)] || 0xa, this[_0x430135(0x207)] = 0x0, this['MAX_MESSAGE_SIZE'] = _0x3b3d79[_0x430135(0x1f6)] || 0x100 * 0x400, this[_0x430135(0x27b)] = _0x3b3d79[_0x430135(0x24d)] || 0x493e0, this[_0x430135(0x242)] = _0x3b3d79[_0x430135(0x250)] || 0x493e0, this[_0x430135(0x201)] = _0x3b3d79['nonceValidity'] || 0x36ee80, this[_0x430135(0x254)] = _0x3b3d79[_0x430135(0x23c)] || 0x927c0, this['expectedOrigin'] = _0x3b3d79[_0x430135(0x20b)] || window[_0x430135(0x1f2)]['origin'], this[_0x430135(0x1f8)] = new Map(), this['cleanupTask'] = null, console[_0x430135(0x21a)](_0x430135(0x1fe));
     }
-
-    /**
-     * Refresh authentication token
-     * NOTE: Refresh token should be in httpOnly cookie, NOT in request body
-     * @private
-     */
-    async _refreshToken() {
-        if (!this.userId) return;
-
+    [_0x1863f5(0x271)](_0x38d883, _0x56c651, _0x33a3c4 = null) {
+        const _0x3b88f0 = _0x1863f5;
+        if (!_0x38d883 || !_0x56c651)
+            return console[_0x3b88f0(0x22f)]('❌\x20Invalid\x20credentials\x20for\x20security\x20init'), ![];
+        this[_0x3b88f0(0x1f7)] = _0x38d883, this['userId'] = _0x56c651, this['refreshToken'] = _0x33a3c4;
+        if (!this['_validateToken']())
+            return console['error'](_0x3b88f0(0x282)), ![];
+        return console['log'](_0x3b88f0(0x251)), this[_0x3b88f0(0x26a)](_0x3b88f0(0x228), { 'userId': _0x56c651 }), !![];
+    }
+    [_0x1863f5(0x1ef)]() {
+        const _0x5e2cbd = _0x1863f5;
+        if (!this[_0x5e2cbd(0x1f7)])
+            return console['warn'](_0x5e2cbd(0x257)), ![];
         try {
-            // Refresh token is in httpOnly cookie - never send in body
-            const response = await fetch('/api/auth/refresh', {
-                method: 'POST',
-                credentials: 'include', // Send httpOnly cookies automatically
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-Token': this._getCsrfToken(),
+            const _0x533552 = this['authToken'][_0x5e2cbd(0x27d)]('.');
+            if (_0x533552[_0x5e2cbd(0x215)] !== 0x3)
+                throw new Error(_0x5e2cbd(0x217));
+            const _0x4489e1 = JSON[_0x5e2cbd(0x22d)](atob(_0x533552[0x1]));
+            if (_0x4489e1[_0x5e2cbd(0x287)]) {
+                const _0x2845df = _0x4489e1['exp'] * 0x3e8;
+                this[_0x5e2cbd(0x22c)] = _0x2845df;
+                if (_0x2845df < Date[_0x5e2cbd(0x223)]())
+                    return console[_0x5e2cbd(0x276)](_0x5e2cbd(0x236)), ![];
+                this[_0x5e2cbd(0x243)] && this[_0x5e2cbd(0x23d)]();
+            }
+            return !![];
+        } catch (_0x4e18e3) {
+            return console['error'](_0x5e2cbd(0x20c), _0x4e18e3), ![];
+        }
+    }
+    [_0x1863f5(0x23d)]() {
+        const _0x31d33f = _0x1863f5;
+        if (!this[_0x31d33f(0x22c)])
+            return;
+        const _0x130f32 = this[_0x31d33f(0x22c)] - Date[_0x31d33f(0x223)]() - this[_0x31d33f(0x250)];
+        _0x130f32 > 0x0 && setTimeout(() => this[_0x31d33f(0x1f1)](), _0x130f32);
+    }
+    async [_0x1863f5(0x1f1)]() {
+        const _0x343cc7 = _0x1863f5;
+        if (!this[_0x343cc7(0x247)])
+            return;
+        try {
+            const _0x56219d = await fetch(_0x343cc7(0x200), {
+                'method': _0x343cc7(0x1fd),
+                'credentials': _0x343cc7(0x246),
+                'headers': {
+                    'Content-Type': _0x343cc7(0x214),
+                    'X-CSRF-Token': this[_0x343cc7(0x26d)]()
                 },
-                body: JSON.stringify({
-                    // Do NOT send refresh token here - it's in httpOnly cookie
-                    userId: this.userId,
-                }),
+                'body': JSON[_0x343cc7(0x1ed)]({ 'userId': this[_0x343cc7(0x247)] })
             });
-
-            if (response.ok) {
-                const data = await response.json();
-                this.authToken = data.authToken;
-                // New refresh token comes in httpOnly cookie automatically
-                this._validateToken();
-                this._logSecurityEvent('token_refresh_success', {});
-                console.log('✅ Token refreshed successfully');
-            } else {
-                this._logSecurityEvent('token_refresh_failed', { status: response.status });
-                console.error('❌ Token refresh failed');
-            }
-        } catch (error) {
-            this._logSecurityEvent('token_refresh_error', { error: error.message });
-            console.error('❌ Token refresh error:', error);
+            if (_0x56219d['ok']) {
+                const _0x3cd2ab = await _0x56219d[_0x343cc7(0x206)]();
+                this['authToken'] = _0x3cd2ab['authToken'], this[_0x343cc7(0x1ef)](), this[_0x343cc7(0x26a)](_0x343cc7(0x205), {}), console['log'](_0x343cc7(0x210));
+            } else
+                this[_0x343cc7(0x26a)]('token_refresh_failed', { 'status': _0x56219d[_0x343cc7(0x288)] }), console[_0x343cc7(0x22f)](_0x343cc7(0x278));
+        } catch (_0x37055e) {
+            this['_logSecurityEvent'](_0x343cc7(0x221), { 'error': _0x37055e[_0x343cc7(0x266)] }), console[_0x343cc7(0x22f)]('❌\x20Token\x20refresh\x20error:', _0x37055e);
         }
     }
-
-    /**
-     * Get CSRF token from headers/cookies
-     * NOTE: CSRF tokens should be in SameSite cookies, not readable by JS
-     * Client sends custom header; server validates from httpOnly cookie
-     * @private
-     */
-    _getCsrfToken() {
-        // Don't read from DOM - use custom header approach instead
-        // Server will verify CSRF token from httpOnly cookie automatic with SameSite=Strict
-        return document.querySelector('meta[name="csrf-token"]')?.content || '';
+    ['_getCsrfToken']() {
+        const _0x57648d = _0x1863f5;
+        return document['querySelector'](_0x57648d(0x26c))?.['content'] || '';
     }
-
-    /**
-     * Generate cryptographically secure random ID
-     * @private
-     */
-    _generateSecureId() {
-        if (typeof crypto !== 'undefined' && crypto.getRandomValues) {
-            const array = new Uint8Array(16);
-            crypto.getRandomValues(array);
-            return Array.from(array, byte => byte.toString(16).padStart(2, '0')).join('');
+    [_0x1863f5(0x23b)]() {
+        const _0x12ff9a = _0x1863f5;
+        if (typeof crypto !== _0x12ff9a(0x283) && crypto[_0x12ff9a(0x239)]) {
+            const _0x507048 = new Uint8Array(0x10);
+            return crypto[_0x12ff9a(0x239)](_0x507048), Array[_0x12ff9a(0x20e)](_0x507048, _0x451cee => _0x451cee['toString'](0x10)[_0x12ff9a(0x286)](0x2, '0'))['join']('');
         }
-        // Fallback for older browsers
-        return Math.random().toString(36).substring(2) + Date.now().toString(36);
+        return Math[_0x12ff9a(0x213)]()[_0x12ff9a(0x285)](0x24)[_0x12ff9a(0x25e)](0x2) + Date[_0x12ff9a(0x223)]()[_0x12ff9a(0x285)](0x24);
     }
-
-    /**
-     * Generate cryptographically secure nonce for replay attack prevention
-     * @private
-     */
-    _generateNonce() {
-        const nonce = this._generateSecureId();
-        const timestamp = Date.now();
-        
-        // Track nonce with timestamp for server-side validation
-        this.nonceCache.add(nonce);
-        this.nonceTimestamps.set(nonce, timestamp);
-        
-        // Cleanup old entries (keep most recent)
-        if (this.nonceCache.size > this.maxCachedNonces) {
-            const entries = Array.from(this.nonceTimestamps.entries())
-                .sort((a, b) => a[1] - b[1])
-                .slice(0, this.nonceCache.size - this.maxCachedNonces);
-            
-            entries.forEach(([n, _]) => {
-                this.nonceCache.delete(n);
-                this.nonceTimestamps.delete(n);
+    ['_generateNonce']() {
+        const _0x523d6f = _0x1863f5, _0x42d3ca = this[_0x523d6f(0x23b)](), _0x268efe = Date[_0x523d6f(0x223)]();
+        this[_0x523d6f(0x274)][_0x523d6f(0x23f)](_0x42d3ca), this[_0x523d6f(0x1f8)]['set'](_0x42d3ca, _0x268efe);
+        if (this[_0x523d6f(0x274)][_0x523d6f(0x211)] > this[_0x523d6f(0x26e)]) {
+            const _0x563bc8 = Array['from'](this[_0x523d6f(0x1f8)]['entries']())[_0x523d6f(0x259)]((_0x3ae0d5, _0x910a9d) => _0x3ae0d5[0x1] - _0x910a9d[0x1])['slice'](0x0, this[_0x523d6f(0x274)][_0x523d6f(0x211)] - this['maxCachedNonces']);
+            _0x563bc8['forEach'](([_0xb51b42, _0x1a657d]) => {
+                const _0x47c448 = _0x523d6f;
+                this[_0x47c448(0x274)][_0x47c448(0x233)](_0xb51b42), this[_0x47c448(0x1f8)][_0x47c448(0x233)](_0xb51b42);
             });
         }
-        
-        return nonce;
+        return _0x42d3ca;
     }
-
-    /**
-     * Validate nonce to prevent replay attacks
-     * NOTE: This is CLIENT-SIDE validation. Server MUST also validate nonces!\n     * @private
-     */
-    _validateNonce(nonce) {
-        if (!nonce || !this.nonceCache.has(nonce)) {
-            return false;
-        }
-        
-        // Check nonce age
-        const timestamp = this.nonceTimestamps.get(nonce);
-        if (!timestamp || Date.now() - timestamp > this.NONCE_VALIDITY_DURATION) {
-            this.nonceCache.delete(nonce);
-            this.nonceTimestamps.delete(nonce);
-            return false;
-        }
-        
-        // Don't delete nonce - server needs to validate it too
-        return true;
+    ['_validateNonce'](_0x3f4b1f) {
+        const _0x441eb6 = _0x1863f5;
+        if (!_0x3f4b1f || !this[_0x441eb6(0x274)]['has'](_0x3f4b1f))
+            return ![];
+        const _0xab4eac = this[_0x441eb6(0x1f8)]['get'](_0x3f4b1f);
+        if (!_0xab4eac || Date['now']() - _0xab4eac > this[_0x441eb6(0x201)])
+            return this[_0x441eb6(0x274)][_0x441eb6(0x233)](_0x3f4b1f), this[_0x441eb6(0x1f8)][_0x441eb6(0x233)](_0x3f4b1f), ![];
+        return !![];
     }
-
-    /**
-     * Cleanup expired nonces
-     * @private
-     */
-    _cleanupExpiredNonces() {
-        const now = Date.now();
-        const expired = [];
-        
-        for (const [nonce, timestamp] of this.nonceTimestamps) {
-            if (now - timestamp > this.NONCE_VALIDITY_DURATION) {
-                expired.push(nonce);
-            }
+    [_0x1863f5(0x270)]() {
+        const _0x384b54 = _0x1863f5, _0x16bd2b = Date[_0x384b54(0x223)](), _0x2fc5ae = [];
+        for (const [_0x5c10cf, _0xa5ecea] of this[_0x384b54(0x1f8)]) {
+            _0x16bd2b - _0xa5ecea > this[_0x384b54(0x201)] && _0x2fc5ae[_0x384b54(0x238)](_0x5c10cf);
         }
-        
-        expired.forEach(nonce => {
-            this.nonceCache.delete(nonce);
-            this.nonceTimestamps.delete(nonce);
+        _0x2fc5ae[_0x384b54(0x27c)](_0x4ea254 => {
+            const _0x4466ac = _0x384b54;
+            this[_0x4466ac(0x274)][_0x4466ac(0x233)](_0x4ea254), this[_0x4466ac(0x1f8)][_0x4466ac(0x233)](_0x4ea254);
         });
     }
-
-    /**
-     * Check rate limit for operation type
-     * ⚠️ THIS IS CLIENT-SIDE VALIDATION ONLY - CAN BE BYPASSED
-     * Server MUST enforce stricter rate limiting by IP/user
-     * Rate limiting is PER OPERATION TYPE (e.g., 'delete_clip', 'update_status')
-     * Higher rates for processing updates, lower for destructive operations
-     * @param {string} eventType - Type of operation
-     * @param {number} customLimit - Override default limit if needed
-     * @returns {boolean} True if under limit, false if rate limit exceeded
-     */
-    checkRateLimit(eventType, customLimit = null) {
-        const limit = customLimit || this.rateLimits[eventType] || this.rateLimits.default;
-        
-        if (!this.rateLimitMap.has(eventType)) {
-            this.rateLimitMap.set(eventType, []);
-        }
-
-        const timestamps = this.rateLimitMap.get(eventType);
-        const now = Date.now();
-        const oneSecondAgo = now - 1000;
-
-        // Clean old timestamps
-        const recentTimestamps = timestamps.filter(t => t > oneSecondAgo);
-        recentTimestamps.push(now);
-
-        if (recentTimestamps.length > limit) {
-            this._logSecurityEvent('rate_limit_exceeded', { eventType, limit });
-            this.suspiciousActivityCount++;
-            return false;
-        }
-
-        this.rateLimitMap.set(eventType, recentTimestamps);
-        return true;
+    [_0x1863f5(0x241)](_0x753f1e, _0x445a45 = null) {
+        const _0x40fdfb = _0x1863f5, _0x5e1058 = _0x445a45 || this['rateLimits'][_0x753f1e] || this[_0x40fdfb(0x204)][_0x40fdfb(0x224)];
+        !this[_0x40fdfb(0x245)]['has'](_0x753f1e) && this[_0x40fdfb(0x245)][_0x40fdfb(0x208)](_0x753f1e, []);
+        const _0x363e7f = this[_0x40fdfb(0x245)][_0x40fdfb(0x227)](_0x753f1e), _0x2eda10 = Date['now'](), _0x5aa58a = _0x2eda10 - 0x3e8, _0xeeda4 = _0x363e7f[_0x40fdfb(0x240)](_0x151e8f => _0x151e8f > _0x5aa58a);
+        _0xeeda4[_0x40fdfb(0x238)](_0x2eda10);
+        if (_0xeeda4[_0x40fdfb(0x215)] > _0x5e1058)
+            return this[_0x40fdfb(0x26a)](_0x40fdfb(0x231), {
+                'eventType': _0x753f1e,
+                'limit': _0x5e1058
+            }), this[_0x40fdfb(0x207)]++, ![];
+        return this['rateLimitMap'][_0x40fdfb(0x208)](_0x753f1e, _0xeeda4), !![];
     }
-
-    /**
-     * Deep sanitize data by removing dangerous patterns
-     * Preserves safe content while blocking injection attacks
-     */
-    sanitizeData(data, maxDepth = 10) {
-        if (maxDepth <= 0) {
-            console.warn('⚠️ Max sanitization depth exceeded');
-            return null;
+    [_0x1863f5(0x20d)](_0x5aac2d, _0x24a764 = 0xa) {
+        const _0x5ba28e = _0x1863f5;
+        if (_0x24a764 <= 0x0)
+            return console[_0x5ba28e(0x276)]('⚠️\x20Max\x20sanitization\x20depth\x20exceeded'), null;
+        if (_0x5aac2d === null || _0x5aac2d === undefined)
+            return _0x5aac2d;
+        if (typeof _0x5aac2d === 'string') {
+            if (_0x5aac2d[_0x5ba28e(0x215)] > 0xc350)
+                return console[_0x5ba28e(0x276)](_0x5ba28e(0x26b)), _0x5aac2d[_0x5ba28e(0x25e)](0x0, 0xc350);
+            return this[_0x5ba28e(0x265)](_0x5aac2d);
         }
-
-        if (data === null || data === undefined) {
-            return data;
-        }
-
-        if (typeof data === 'string') {
-            // Keep string but limit length and check for dangerous patterns
-            if (data.length > 50000) {
-                console.warn('⚠️ String too long, truncating');
-                return data.substring(0, 50000);
-            }
-            // Escape dangerous characters but preserve legitimate content
-            return this._escapeHtml(data);
-        }
-
-        if (typeof data === 'number' || typeof data === 'boolean') {
-            return data;
-        }
-
-        if (Array.isArray(data)) {
-            return data.map((item, idx) => {
-                if (idx > 1000) {
-                    console.warn('⚠️ Array too large, truncating');
-                    return null;
-                }
-                return this.sanitizeData(item, maxDepth - 1);
+        if (typeof _0x5aac2d === _0x5ba28e(0x244) || typeof _0x5aac2d === _0x5ba28e(0x1eb))
+            return _0x5aac2d;
+        if (Array[_0x5ba28e(0x24f)](_0x5aac2d))
+            return _0x5aac2d['map']((_0x12058d, _0x246fd9) => {
+                const _0xa69e8d = _0x5ba28e;
+                if (_0x246fd9 > 0x3e8)
+                    return console[_0xa69e8d(0x276)]('⚠️\x20Array\x20too\x20large,\x20truncating'), null;
+                return this[_0xa69e8d(0x20d)](_0x12058d, _0x24a764 - 0x1);
             });
-        }
-
-        if (typeof data === 'object') {
-            const sanitized = {};
-            const keys = Object.keys(data);
-            
-            if (keys.length > 100) {
-                console.warn('⚠️ Object has too many keys');
-                return null;
-            }
-
-            for (const key of keys) {
-                // Validate key name using whitelist approach (allow common separators)
-                // Allow: alphanumeric, underscore, dollar, hyphen, dot (common in JSON keys)
-                if (!/^[a-zA-Z_$][a-zA-Z0-9_$\-\.]*$/.test(key)) {
-                    console.warn(`⚠️ Invalid key name: ${key}`);
+        if (typeof _0x5aac2d === 'object') {
+            const _0x479e2b = {}, _0x4aae36 = Object[_0x5ba28e(0x261)](_0x5aac2d);
+            if (_0x4aae36['length'] > 0x64)
+                return console[_0x5ba28e(0x276)](_0x5ba28e(0x21f)), null;
+            for (const _0x23cd1a of _0x4aae36) {
+                if (!/^[a-zA-Z_$][a-zA-Z0-9_$\-\.]*$/[_0x5ba28e(0x27f)](_0x23cd1a)) {
+                    console['warn'](_0x5ba28e(0x258) + _0x23cd1a);
                     continue;
                 }
-                sanitized[key] = this.sanitizeData(data[key], maxDepth - 1);
+                _0x479e2b[_0x23cd1a] = this[_0x5ba28e(0x20d)](_0x5aac2d[_0x23cd1a], _0x24a764 - 0x1);
             }
-            return sanitized;
+            return _0x479e2b;
         }
-
         return null;
     }
-
-    /**
-     * Optional: Encrypt sensitive payloads using Web Crypto API (RSA-OAEP)
-     * Only use when serverPublicKey is configured
-     * @param {object} data - Data to encrypt
-     * @returns {Promise<string>} Base64-encoded encrypted payload
-     * @private
-     */
-    async _encryptPayload(data) {
-        if (!this.serverPublicKey) {
-            console.warn('⚠️ No server public key configured for encryption');
-            return null;
-        }
-
+    async [_0x1863f5(0x234)](_0x1ade49) {
+        const _0x35d252 = _0x1863f5;
+        if (!this[_0x35d252(0x21e)])
+            return console[_0x35d252(0x276)](_0x35d252(0x225)), null;
         try {
-            const encoder = new TextEncoder();
-            const encoded = encoder.encode(JSON.stringify(data));
-            
-            const encrypted = await crypto.subtle.encrypt(
-                {
-                    name: "RSA-OAEP",
-                    hash: "SHA-256",
-                },
-                this.serverPublicKey,
-                encoded
-            );
-            
-            // Convert to base64 for transport
-            return btoa(String.fromCharCode(...new Uint8Array(encrypted)));
-        } catch (error) {
-            console.error('❌ Encryption failed:', error);
-            this._logSecurityEvent('encryption_error', { error: error.message });
-            return null;
+            const _0x3d734c = new TextEncoder(), _0x38ae3a = _0x3d734c['encode'](JSON[_0x35d252(0x1ed)](_0x1ade49)), _0x4ed83e = await crypto['subtle']['encrypt']({
+                    'name': 'RSA-OAEP',
+                    'hash': 'SHA-256'
+                }, this[_0x35d252(0x21e)], _0x38ae3a);
+            return btoa(String[_0x35d252(0x280)](...new Uint8Array(_0x4ed83e)));
+        } catch (_0x259e9e) {
+            return console[_0x35d252(0x22f)](_0x35d252(0x21d), _0x259e9e), this[_0x35d252(0x26a)]('encryption_error', { 'error': _0x259e9e[_0x35d252(0x266)] }), null;
         }
     }
-
-    /**
-     * HTML escape helper
-     * @private
-     */
-    _escapeHtml(text) {
-        const map = {
-            '&': '&amp;',
-            '<': '&lt;',
-            '>': '&gt;',
-            '"': '&quot;',
-            "'": '&#39;'
-        };
-        return text.replace(/[&<>"']/g, m => map[m]);
+    [_0x1863f5(0x265)](_0x43ebb7) {
+        const _0x48848d = _0x1863f5, _0x211889 = {
+                '&': '&amp;',
+                '<': '&lt;',
+                '>': _0x48848d(0x1f0),
+                '\x22': '&quot;',
+                '\x27': _0x48848d(0x263)
+            };
+        return _0x43ebb7[_0x48848d(0x21b)](/[&<>"']/g, _0x5a743c => _0x211889[_0x5a743c]);
     }
-
-    /**
-     * Check for suspicious content patterns
-     * @private
-     */
-    _containsSuspiciousContent(data) {
-        const str = JSON.stringify(data).toLowerCase();
-        
-        // SQL injection patterns
-        if (/(\bunion\b|\bselect\b|\binsert\b|\bdelete\b|\bdrop\b|\bupdate\b|\bexec\b|\bexecute\b)/i.test(str)) {
-            return true;
-        }
-        
-        // JavaScript injection patterns
-        if (/(<script|javascript:|onerror=|onclick=|onload=|eval\(|function\()/i.test(str)) {
-            return true;
-        }
-        
-        // Other code injection
-        if (/(setTimeout|setInterval|constructorFunction|__proto__|constructor)\s*(\(|=)/i.test(str)) {
-            return true;
-        }
-        
-        return false;
+    [_0x1863f5(0x220)](_0x36b0c5) {
+        const _0x3a3992 = _0x1863f5, _0x37f882 = JSON[_0x3a3992(0x1ed)](_0x36b0c5)[_0x3a3992(0x202)]();
+        if (/(\bunion\b|\bselect\b|\binsert\b|\bdelete\b|\bdrop\b|\bupdate\b|\bexec\b|\bexecute\b)/i['test'](_0x37f882))
+            return !![];
+        if (/(<script|javascript:|onerror=|onclick=|onload=|eval\(|function\()/i['test'](_0x37f882))
+            return !![];
+        if (/(setTimeout|setInterval|constructorFunction|__proto__|constructor)\s*(\(|=)/i[_0x3a3992(0x27f)](_0x37f882))
+            return !![];
+        return ![];
     }
-
-    /**
-     * Validate outgoing message
-     */
-    validateMessage(eventType, data) {
-        // Rate limit check
-        if (!this.checkRateLimit(eventType)) {
-            return false;
-        }
-
-        // Size check
-        const serialized = JSON.stringify(data);
-        if (serialized.length > this.MAX_MESSAGE_SIZE) {
-            console.warn(`⚠️ Message too large: ${serialized.length} bytes (max: ${this.MAX_MESSAGE_SIZE})`);
-            this.suspiciousActivityCount++;
-            return false;
-        }
-
-        // Content check
-        if (this._containsSuspiciousContent(data)) {
-            console.warn('⚠️ Suspicious content detected');
-            this.suspiciousActivityCount++;
-            return false;
-        }
-
-        return true;
+    ['validateMessage'](_0x1cc86b, _0x2ad0a4) {
+        const _0x2877c4 = _0x1863f5;
+        if (!this[_0x2877c4(0x241)](_0x1cc86b))
+            return ![];
+        const _0x2ed1ff = JSON[_0x2877c4(0x1ed)](_0x2ad0a4);
+        if (_0x2ed1ff[_0x2877c4(0x215)] > this[_0x2877c4(0x253)])
+            return console[_0x2877c4(0x276)]('⚠️\x20Message\x20too\x20large:\x20' + _0x2ed1ff[_0x2877c4(0x215)] + '\x20bytes\x20(max:\x20' + this[_0x2877c4(0x253)] + ')'), this[_0x2877c4(0x207)]++, ![];
+        if (this[_0x2877c4(0x220)](_0x2ad0a4))
+            return console[_0x2877c4(0x276)]('⚠️\x20Suspicious\x20content\x20detected'), this['suspiciousActivityCount']++, ![];
+        return !![];
     }
-
-    /**
-     * Validate incoming message authenticity and structure
-     * NOTE: This is CLIENT-SIDE validation only. Server must perform proper verification!
-     */
-    validateIncomingMessage(message) {
-        if (!this.validateIncomingMessages) {
-            return true;
-        }
-
-        // Check structure
-        if (!message || typeof message !== 'object') {
-            return false;
-        }
-
-        const { type, timestamp, nonce, userId, sessionId } = message;
-
-        if (!type || !timestamp || !nonce) {
-            console.warn('⚠️ Incomplete message structure');
-            return false;
-        }
-
-        // Validate timestamp
-        const timeDiff = Math.abs(Date.now() - timestamp);
-        if (timeDiff > this.TIMESTAMP_VALIDITY_WINDOW) {
-            console.warn('⚠️ Message timestamp too old');
-            this._logSecurityEvent('old_timestamp', { timeDiff });
-            return false;
-        }
-
-        // Validate nonce - Server MUST also validate!
-        if (!this._validateNonce(nonce)) {
-            console.warn('⚠️ Invalid or replayed nonce');
-            this._logSecurityEvent('nonce_validation_failed', { nonce });
-            return false;
-        }
-
-        // Validate user ID matches
-        if (userId && userId !== this.userId) {
-            console.warn('⚠️ Message from unauthorized user');
-            this._logSecurityEvent('unauthorized_user', { messageUserId: userId });
-            return false;
-        }
-
-        // Validate session
-        if (sessionId && sessionId !== this.sessionId) {
-            console.warn('⚠️ Message from different session');
-            return false;
-        }
-
-        return true;
+    [_0x1863f5(0x219)](_0x171c9e) {
+        const _0x20869f = _0x1863f5;
+        if (!this[_0x20869f(0x1f4)])
+            return !![];
+        if (!_0x171c9e || typeof _0x171c9e !== _0x20869f(0x25c))
+            return ![];
+        const {
+            type: _0x1d3b51,
+            timestamp: _0x2aaca2,
+            nonce: _0x36a41f,
+            userId: _0x2af725,
+            sessionId: _0x1fa20f
+        } = _0x171c9e;
+        if (!_0x1d3b51 || !_0x2aaca2 || !_0x36a41f)
+            return console[_0x20869f(0x276)](_0x20869f(0x1ee)), ![];
+        const _0x2dd25b = Math[_0x20869f(0x25f)](Date[_0x20869f(0x223)]() - _0x2aaca2);
+        if (_0x2dd25b > this[_0x20869f(0x27b)])
+            return console[_0x20869f(0x276)](_0x20869f(0x222)), this[_0x20869f(0x26a)]('old_timestamp', { 'timeDiff': _0x2dd25b }), ![];
+        if (!this[_0x20869f(0x1fa)](_0x36a41f))
+            return console[_0x20869f(0x276)](_0x20869f(0x20a)), this[_0x20869f(0x26a)](_0x20869f(0x1f9), { 'nonce': _0x36a41f }), ![];
+        if (_0x2af725 && _0x2af725 !== this[_0x20869f(0x247)])
+            return console[_0x20869f(0x276)](_0x20869f(0x1fb)), this[_0x20869f(0x26a)](_0x20869f(0x209), { 'messageUserId': _0x2af725 }), ![];
+        if (_0x1fa20f && _0x1fa20f !== this[_0x20869f(0x25b)])
+            return console[_0x20869f(0x276)](_0x20869f(0x203)), ![];
+        return !![];
     }
-
-    /**
-     * Create secure message envelope
-     * NOTE: Real signing/encryption must happen SERVER-SIDE with private keys
-     */
-    createSecureEnvelope(eventType, data) {
-        const envelope = {
-            type: eventType,
-            payload: this.sanitizeData(data),
-            timestamp: Date.now(),
-            nonce: this._generateNonce(),
-            userId: this.userId,
-            sessionId: this.sessionId,
-            version: '2.0',
-            priority: data.priority || 'normal',
-            // Note: Auth token NOT included - Socket.IO handles auth via socket.auth
-        };
-
-        // Signature must be created by server using private key
-        // Client cannot create cryptographically valid signatures
-        return envelope;
+    [_0x1863f5(0x260)](_0x2d1fbd, _0x13a64f) {
+        const _0x40e4c0 = _0x1863f5, _0x17c405 = {
+                'type': _0x2d1fbd,
+                'payload': this[_0x40e4c0(0x20d)](_0x13a64f),
+                'timestamp': Date['now'](),
+                'nonce': this[_0x40e4c0(0x22b)](),
+                'userId': this[_0x40e4c0(0x247)],
+                'sessionId': this[_0x40e4c0(0x25b)],
+                'version': _0x40e4c0(0x289),
+                'priority': _0x13a64f[_0x40e4c0(0x27e)] || _0x40e4c0(0x237)
+            };
+        return _0x17c405;
     }
-
-    /**
-     * NOTE: HMAC-SHA256 signing MUST be done SERVER-SIDE with private key
-     * Client cannot create cryptographically valid signatures
-     * All messages MUST be verified by server using its private key
-     */
-    _securityNote() {
-        // ❌ Client-side signatures are NOT cryptographically secure
-        // ✅ Server must verify ALL messages using HMAC-SHA256 with private key
-        // ✅ Server must validate: nonce, timestamp, userId, sessionId, rate limits
+    [_0x1863f5(0x22a)]() {
     }
-
-    /**
-     * Check if suspicious activity threshold exceeded
-     */
-    isSuspiciousActivityDetected() {
-        return this.suspiciousActivityCount >= this.suspiciousActivityThreshold;
+    [_0x1863f5(0x272)]() {
+        const _0x22d21c = _0x1863f5;
+        return this['suspiciousActivityCount'] >= this[_0x22d21c(0x269)];
     }
-
-    /**
-     * Reset suspicious activity counter
-     */
-    resetSuspiciousActivityCounter() {
-        this.suspiciousActivityCount = 0;
+    ['resetSuspiciousActivityCounter']() {
+        this['suspiciousActivityCount'] = 0x0;
     }
-
-    /**
-     * Log security event to in-memory log (never localStorage)
-     * @private
-     */
-    _logSecurityEvent(eventType, details) {
-        const logEntry = {
-            timestamp: new Date().toISOString(),
-            eventType,
-            userId: this.userId,
-            sessionId: this.sessionId,
-            details,
-        };
-
-        this.securityLogs.push(logEntry);
-        
-        // Keep only recent logs
-        if (this.securityLogs.length > this.maxSecurityLogs) {
-            this.securityLogs.shift();
-        }
-
-        console.log(`📊 Security: ${eventType}`, details);
+    ['_logSecurityEvent'](_0x55f901, _0x438888) {
+        const _0x4bb959 = _0x1863f5, _0x3e866f = {
+                'timestamp': new Date()[_0x4bb959(0x24e)](),
+                'eventType': _0x55f901,
+                'userId': this[_0x4bb959(0x247)],
+                'sessionId': this[_0x4bb959(0x25b)],
+                'details': _0x438888
+            };
+        this[_0x4bb959(0x264)]['push'](_0x3e866f), this[_0x4bb959(0x264)][_0x4bb959(0x215)] > this[_0x4bb959(0x279)] && this['securityLogs'][_0x4bb959(0x273)](), console[_0x4bb959(0x21a)](_0x4bb959(0x1f3) + _0x55f901, _0x438888);
     }
-
-    /**
-     * Get security audit logs (in-memory only)
-     * NOTE: These logs are cleared on page refresh - for persistent logging, 
-     * send to server endpoint instead
-     */
-    getSecurityLogs(limit = 50) {
-        return this.securityLogs.slice(-limit);
+    [_0x1863f5(0x1ff)](_0x12beed = 0x32) {
+        const _0x4d482e = _0x1863f5;
+        return this[_0x4d482e(0x264)][_0x4d482e(0x212)](-_0x12beed);
     }
-
-    /**
-     * Send security logs to server for persistent audit trail
-     * Call this periodically or on critical events
-     */
-    async flushLogsToServer() {
-        if (this.securityLogs.length === 0) return;
-
+    async ['flushLogsToServer']() {
+        const _0x15d25e = _0x1863f5;
+        if (this['securityLogs']['length'] === 0x0)
+            return;
         try {
-            const logsToSend = this.securityLogs.slice();
-            
-            await fetch('/api/audit/logs', {
-                method: 'POST',
-                credentials: 'include',
-                headers: {
+            const _0x34f812 = this[_0x15d25e(0x264)][_0x15d25e(0x212)]();
+            await fetch(_0x15d25e(0x1fc), {
+                'method': _0x15d25e(0x1fd),
+                'credentials': _0x15d25e(0x246),
+                'headers': {
                     'Content-Type': 'application/json',
-                    'X-CSRF-Token': this._getCsrfToken(),
+                    'X-CSRF-Token': this[_0x15d25e(0x26d)]()
                 },
-                body: JSON.stringify({
-                    logs: logsToSend,
-                    sessionId: this.sessionId,
-                }),
-            });
-
-            // Clear after successful flush
-            this.securityLogs = [];
-        } catch (error) {
-            console.error('❌ Failed to flush logs to server:', error);
+                'body': JSON[_0x15d25e(0x1ed)]({
+                    'logs': _0x34f812,
+                    'sessionId': this[_0x15d25e(0x25b)]
+                })
+            }), this[_0x15d25e(0x264)] = [];
+        } catch (_0xfea81c) {
+            console['error'](_0x15d25e(0x23a), _0xfea81c);
         }
     }
-
-    /**
-     * Start cleanup task for expired nonces
-     */
-    startCleanupTask() {
-        if (this.cleanupTask) clearInterval(this.cleanupTask);
-        this.cleanupTask = setInterval(() => this._cleanupExpiredNonces(), this.CLEANUP_INTERVAL);
-        console.log(`⏱️ Cleanup task started (interval: ${this.CLEANUP_INTERVAL}ms)`);
+    [_0x1863f5(0x277)]() {
+        const _0x3f7ce3 = _0x1863f5;
+        if (this[_0x3f7ce3(0x25a)])
+            clearInterval(this[_0x3f7ce3(0x25a)]);
+        this[_0x3f7ce3(0x25a)] = setInterval(() => this['_cleanupExpiredNonces'](), this[_0x3f7ce3(0x254)]), console['log'](_0x3f7ce3(0x1f5) + this[_0x3f7ce3(0x254)] + _0x3f7ce3(0x229));
     }
-
-    /**
-     * Stop cleanup task
-     */
-    stopCleanupTask() {
-        if (this.cleanupTask) {
-            clearInterval(this.cleanupTask);
-            this.cleanupTask = null;
-            console.log('⏹️ Cleanup task stopped');
-        }
+    [_0x1863f5(0x24b)]() {
+        const _0x5237eb = _0x1863f5;
+        this[_0x5237eb(0x25a)] && (clearInterval(this['cleanupTask']), this['cleanupTask'] = null, console[_0x5237eb(0x21a)]('⏹️\x20Cleanup\x20task\x20stopped'));
     }
-
-    /**
-     * Destroy security manager on logout
-     */
-    destroy() {
-        this.stopCleanupTask();
-        this.authToken = null;
-        this.refreshToken = null;
-        this.userId = null;
-        this.nonceCache.clear();
-        this.nonceTimestamps.clear();
-        this.rateLimitMap.clear();
-        this.securityLogs = [];
-        this.suspiciousActivityCount = 0;
-        console.log('🔒 Security manager destroyed');
+    [_0x1863f5(0x25d)]() {
+        const _0x34aef2 = _0x1863f5;
+        this[_0x34aef2(0x24b)](), this[_0x34aef2(0x1f7)] = null, this[_0x34aef2(0x243)] = null, this[_0x34aef2(0x247)] = null, this[_0x34aef2(0x274)][_0x34aef2(0x255)](), this[_0x34aef2(0x1f8)][_0x34aef2(0x255)](), this[_0x34aef2(0x245)]['clear'](), this[_0x34aef2(0x264)] = [], this[_0x34aef2(0x207)] = 0x0, console[_0x34aef2(0x21a)](_0x34aef2(0x21c));
     }
-
-    /**
-     * Get security status report
-     */
-    getSecurityStatus() {
+    [_0x1863f5(0x249)]() {
+        const _0x428354 = _0x1863f5;
         return {
-            isInitialized: !!this.userId,
-            userId: this.userId,
-            sessionId: this.sessionId,
-            tokenValid: this.tokenExpiresAt > Date.now(),
-            tokenExpiresAt: this.tokenExpiresAt,
-            noncesCached: this.nonceCache.size,
-            rateLimitingActive: this.rateLimitMap.size > 0,
-            suspiciousActivityDetected: this.isSuspiciousActivityDetected(),
-            suspiciousActivityCount: this.suspiciousActivityCount,
+            'isInitialized': !!this[_0x428354(0x247)],
+            'userId': this[_0x428354(0x247)],
+            'sessionId': this[_0x428354(0x25b)],
+            'tokenValid': this[_0x428354(0x22c)] > Date[_0x428354(0x223)](),
+            'tokenExpiresAt': this[_0x428354(0x22c)],
+            'noncesCached': this[_0x428354(0x274)][_0x428354(0x211)],
+            'rateLimitingActive': this[_0x428354(0x245)][_0x428354(0x211)] > 0x0,
+            'suspiciousActivityDetected': this[_0x428354(0x272)](),
+            'suspiciousActivityCount': this['suspiciousActivityCount']
         };
     }
 }
-
-// Create module export
-if (typeof module !== 'undefined' && module.exports) {
-    module.exports = WebSocketSecurityManager;
-}
-
-// Make available globally but warn about namespace pollution
-if (typeof window !== 'undefined') {
-    window.WebSocketSecurityManager = WebSocketSecurityManager;
-}
+typeof module !== _0x1863f5(0x283) && module['exports'] && (module['exports'] = _0x44270c);
+typeof window !== _0x1863f5(0x283) && (window[_0x1863f5(0x28a)] = _0x44270c);
