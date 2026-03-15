@@ -15,20 +15,13 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="theme-color" content="#ff6b3d">
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://cdn.socket.io; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.jsdelivr.net https://cdnjs.cloudflare.com; font-src 'self' https://fonts.gstatic.com https://cdn.jsdelivr.net https://cdnjs.cloudflare.com; connect-src 'self' https://api.solisai.video https://api.solisaivideo.vercel.app https://solisai.video https://solisaivideo.vercel.app https:; img-src 'self' data: https:;">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self' /assets/; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://cdn.socket.io; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.jsdelivr.net https://cdnjs.cloudflare.com; font-src 'self' https://fonts.gstatic.com https://cdn.jsdelivr.net https://cdnjs.cloudflare.com; connect-src 'self' https://api.solisai.video https://api.solisaivideo.vercel.app https://solisai.video https://solisaivideo.vercel.app https:; img-src 'self' data: https: /assets/; media-src 'self' /assets/; object-src 'none';">
     <meta name="csrf-token" content="">
     <link rel="dns-prefetch" href="https://api.solisai.video">
     <link rel="dns-prefetch" href="https://api.solisaivideo.vercel.app">
     <link rel="preconnect" href="https://cdn.jsdelivr.net">
     <link rel="preconnect" href="https://cdnjs.cloudflare.com">
     <script src="/js/core/init.js"></script>
-    <script>
-        // Register service worker for faster page loads and offline support
-        if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('/service-worker.js', { scope: '/' })
-                .catch(() => {});
-        }
-    </script>
     <script>(async function e() {
     const f = (function () {
             let h = !![];
@@ -125,26 +118,26 @@ async function d(a, b = {}) {
     <link rel="stylesheet" href="/style/ss/billing.css?v=1">
     <link rel="icon" href="/assets/favicon.ico" type="image/x-icon">
     <script defer src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.js"></script>
-    <script defer src="/js/ui/navigation.js?v=2"></script>
-    <script defer src="/js/ui/menu.js?v=2"></script>
-    <script defer src="/js/i_dq/profile-notifications.js?v=1"></script>
-    <script defer src="/js/s_new/qwsqa.js?v=1"></script>
-    <script defer src="/js/s_new/qwe.js?v=1"></script>
-    <script defer src="/js/s_new/stg.js?v=1"></script>
-    <script defer src="/js/i_dq/video-generation-hook.js?v=1"></script>
-    <script defer src="/js/ui/progress-ui.js?v=2"></script>
-    <script defer src="/js/ui/generation-progress-spinner.js?v=1"></script>
-    <script defer src="/js/settings/settings-manager.js?v=2"></script>
-    <script defer src="/js/payment/premium-logic.js?v=2"></script>
-    <script defer src="/js/payment/portal-manager.js?v=2"></script>
-    <script defer src="/js/payment/payment-success.js?v=2"></script>
-    <script defer src="/js/payment/platform-connections.js?v=2"></script>
-    <script defer src="/js/ui/billing.js?v=1"></script>
-    <script defer src="/js/analytics/analytics.js?v=2"></script>
-    <script defer src="/js/ui/limit-modal.js?v=1"></script>
-    <script defer src="/js/core/video-preview-system.js?v=2"></script>
-    <script defer src="/js/s.js?v=1"></script>
-    <script defer src="/js/s_new/procc.js?v=1"></script>
+    <script defer src="/js/ui/navigation.js?v=3"></script>
+    <script defer src="/js/ui/menu.js?v=3"></script>
+    <script defer src="/js/i_dq/profile-notifications.js?v=2"></script>
+    <script defer src="/js/s_new/qwsqa.js?v=2"></script>
+    <script defer src="/js/s_new/qwe.js?v=2"></script>
+    <script defer src="/js/s_new/stg.js?v=2"></script>
+    <script defer src="/js/i_dq/video-generation-hook.js?v=2"></script>
+    <script defer src="/js/ui/progress-ui.js?v=3"></script>
+    <script defer src="/js/ui/generation-progress-spinner.js?v=2"></script>
+    <script defer src="/js/settings/settings-manager.js?v=3"></script>
+    <script defer src="/js/payment/premium-logic.js?v=3"></script>
+    <script defer src="/js/payment/portal-manager.js?v=3"></script>
+    <script defer src="/js/payment/payment-success.js?v=3"></script>
+    <script defer src="/js/payment/platform-connections.js?v=3"></script>
+    <script defer src="/js/ui/billing.js?v=2"></script>
+    <script defer src="/js/analytics/analytics.js?v=3"></script>
+    <script defer src="/js/ui/limit-modal.js?v=2"></script>
+    <script defer src="/js/core/video-preview-system.js?v=3"></script>
+    <script defer src="/js/s.js?v=3"></script>
+    <script defer src="/js/s_new/procc.js?v=2"></script>
     <style>
         :root {
             --brand-orange: #ea580c;
