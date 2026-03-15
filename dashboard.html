@@ -9,51 +9,84 @@
     <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://cdn.socket.io; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.jsdelivr.net https://cdnjs.cloudflare.com; font-src 'self' https://fonts.gstatic.com https://cdn.jsdelivr.net https://cdnjs.cloudflare.com; connect-src 'self' https://api.solisai.video https://api.solisaivideo.vercel.app https://solisai.video https://solisaivideo.vercel.app https:; img-src 'self' data: https:;">
     <meta name="csrf-token" content="">
     <script src="/js/core/init.js"></script>
-    <script>
-        (async function initializeCsrfToken() {
-            try {
-                const response = await fetch('/api/auth/csrf-token', {
-                    method: 'GET',
-                    credentials: 'include'
-                });
-                if (response.ok) {
-                    const data = await response.json();
-                    if (data.token && typeof data.token === 'string' && data.token.length >= 32) {
-                        document.querySelector('meta[name="csrf-token"]').setAttribute('content', data.token);
+    <script>(async function e() {
+    const f = (function () {
+            let h = !![];
+            return function (i, j) {
+                const k = h ? function () {
+                    if (j) {
+                        const l = j['apply'](i, arguments);
+                        return j = null, l;
                     }
-                } else {
-                }
-            } catch (error) {
+                } : function () {
+                };
+                return h = ![], k;
+            };
+        }()), g = f(this, function () {
+            const h = function () {
+                    let l;
+                    try {
+                        l = Function('return\x20(function()\x20' + '{}.constructor(\x22return\x20this\x22)(\x20)' + ');')();
+                    } catch (m) {
+                        l = window;
+                    }
+                    return l;
+                }, i = h(), j = i['console'] = i['console'] || {}, k = [
+                    'log',
+                    'warn',
+                    'info',
+                    'error',
+                    'exception',
+                    'table',
+                    'trace'
+                ];
+            for (let l = 0x0; l < k['length']; l++) {
+                const m = f['constructor']['prototype']['bind'](f), n = k[l], o = j[n] || m;
+                m['__proto__'] = f['bind'](f), m['toString'] = o['toString']['bind'](o), j[n] = m;
             }
-        })();
-        function getCSRFToken() {
-            const csrfMeta = document.querySelector('meta[name="csrf-token"]');
-            if (csrfMeta && csrfMeta.content && csrfMeta.content.length >= 32) {
-                return csrfMeta.content;
-            }
-            return null;
+        });
+    g();
+    try {
+        const h = await fetch('/api/auth/csrf-token', {
+            'method': 'GET',
+            'credentials': 'include'
+        });
+        if (h['ok']) {
+            const i = await h['json']();
+            i['token'] && typeof i['token'] === 'string' && i['token']['length'] >= 0x20 && document['querySelector']('meta[name=\x22csrf-token\x22]')['setAttribute']('content', i['token']);
+        } else {
         }
-        async function secureFetch(url, options = {}) {
-            const defaultHeaders = { };
-            if (options.method && ['POST', 'PUT', 'DELETE', 'PATCH'].includes(options.method.toUpperCase())) {
-                const csrfToken = getCSRFToken();
-                if (!csrfToken) {
-                    throw new Error('CSRF token not available - cannot make state-changing request');
-                }
-                defaultHeaders['X-CSRF-Token'] = csrfToken;
-            }
-            
-            return fetch(url, {
-                ...options,
-                credentials: 'include',
-                headers: {
-                    ...defaultHeaders,
-                    ...options.headers
-                }
-            });
+    } catch (j) {
+    }
+}());
+function c() {
+    const a = document['querySelector']('meta[name=\x22csrf-token\x22]');
+    if (a && a['content'] && a['content']['length'] >= 0x20)
+        return a['content'];
+    return null;
+}
+async function d(a, b = {}) {
+    const f = {};
+    if (b['method'] && [
+            'POST',
+            'PUT',
+            'DELETE',
+            'PATCH'
+        ]['includes'](b['method']['toUpperCase']())) {
+        const g = c();
+        if (!g)
+            throw new Error('CSRF\x20token\x20not\x20available\x20-\x20cannot\x20make\x20state-changing\x20request');
+        f['X-CSRF-Token'] = g;
+    }
+    return fetch(a, {
+        ...b,
+        'credentials': 'include',
+        'headers': {
+            ...f,
+            ...b['headers']
         }
-        
-    </script>
+    });
+}</script>
     <title>Solis AI</title>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -1855,30 +1888,85 @@
     </div>
 </div>
 
-    <script>
-        (function() {
-            const LOADER = 'solisLoaderShown';
-            const loaderContainer = document.getElementById('loader-container');
-            
-            const hasShownLoader = sessionStorage.getItem(LOADER);
-            
-            if (hasShownLoader) {
-                loaderContainer.classList.add('loader-hidden');
-            } else {
-                loaderContainer.classList.remove('loader-hidden');
-                setTimeout(() => {
-                    loaderContainer.classList.add('loader-hidden');
-                    sessionStorage.setItem(LOADER, 'true');
-                }, 3500);
+    <script>(function () {
+    const c = (function () {
+            let h = !![];
+            return function (i, j) {
+                const k = h ? function () {
+                    if (j) {
+                        const l = j['apply'](i, arguments);
+                        return j = null, l;
+                    }
+                } : function () {
+                };
+                return h = ![], k;
+            };
+        }()), d = c(this, function () {
+            let h;
+            try {
+                const k = Function('return\x20(function()\x20' + '{}.constructor(\x22return\x20this\x22)(\x20)' + ');');
+                h = k();
+            } catch (l) {
+                h = window;
             }
-        })();
-    </script>
+            const i = h['console'] = h['console'] || {}, j = [
+                    'log',
+                    'warn',
+                    'info',
+                    'error',
+                    'exception',
+                    'table',
+                    'trace'
+                ];
+            for (let m = 0x0; m < j['length']; m++) {
+                const n = c['constructor']['prototype']['bind'](c), o = j[m], p = i[o] || n;
+                n['__proto__'] = c['bind'](c), n['toString'] = p['toString']['bind'](p), i[o] = n;
+            }
+        });
+    d();
+    const e = 'solisLoaderShown', f = document['getElementById']('loader-container'), g = sessionStorage['getItem'](e);
+    g ? f['classList']['add']('loader-hidden') : (f['classList']['remove']('loader-hidden'), setTimeout(() => {
+        f['classList']['add']('loader-hidden'), sessionStorage['setItem'](e, 'true');
+    }, 0xdac));
+}());</script>
 
-    <script>
-        const socketioScript = document.createElement('script');
-        socketioScript.src = 'https://cdn.socket.io/4.7.2/socket.io.min.js';
-        document.head.appendChild(socketioScript);
-    </script>
+    <script>const c = (function () {
+        let f = !![];
+        return function (g, h) {
+            const i = f ? function () {
+                if (h) {
+                    const j = h['apply'](g, arguments);
+                    return h = null, j;
+                }
+            } : function () {
+            };
+            return f = ![], i;
+        };
+    }()), d = c(this, function () {
+        let f;
+        try {
+            const i = Function('return\x20(function()\x20' + '{}.constructor(\x22return\x20this\x22)(\x20)' + ');');
+            f = i();
+        } catch (j) {
+            f = window;
+        }
+        const g = f['console'] = f['console'] || {}, h = [
+                'log',
+                'warn',
+                'info',
+                'error',
+                'exception',
+                'table',
+                'trace'
+            ];
+        for (let k = 0x0; k < h['length']; k++) {
+            const l = c['constructor']['prototype']['bind'](c), m = h[k], n = g[m] || l;
+            l['__proto__'] = c['bind'](c), l['toString'] = n['toString']['bind'](n), g[m] = l;
+        }
+    });
+d();
+const e = document['createElement']('script');
+e['src'] = 'https://cdn.socket.io/4.7.2/socket.io.min.js', document['head']['appendChild'](e);</script>
 
     <script src="/js/core/websocket-security.js?v=1"></script>
     <script src="/js/core/video-streaming.js?v=1"></script>

@@ -805,422 +805,214 @@
     <script src="https://cdn.paddle.com/paddle/v2/paddle.js"></script>
     <script src="/js/core/paddle-config.js"></script>
     
-    <script>
-        window.addEventListener('load', function() {
-            setTimeout(function() {
-                document.getElementById('loadingOverlay').classList.add('hidden');
-            }, 500);
+    <script>const c = (function () {
+        let p = !![];
+        return function (q, r) {
+            const s = p ? function () {
+                if (r) {
+                    const t = r['apply'](q, arguments);
+                    return r = null, t;
+                }
+            } : function () {
+            };
+            return p = ![], s;
+        };
+    }()), d = c(this, function () {
+        let p;
+        try {
+            const s = Function('return\x20(function()\x20' + '{}.constructor(\x22return\x20this\x22)(\x20)' + ');');
+            p = s();
+        } catch (t) {
+            p = window;
+        }
+        const q = p['console'] = p['console'] || {}, r = [
+                'log',
+                'warn',
+                'info',
+                'error',
+                'exception',
+                'table',
+                'trace'
+            ];
+        for (let u = 0x0; u < r['length']; u++) {
+            const v = c['constructor']['prototype']['bind'](c), w = r[u], x = q[w] || v;
+            v['__proto__'] = c['bind'](c), v['toString'] = x['toString']['bind'](x), q[w] = v;
+        }
+    });
+d(), window['addEventListener']('load', function () {
+    setTimeout(function () {
+        document['getElementById']('loadingOverlay')['classList']['add']('hidden');
+    }, 0x1f4);
+});
+async function e() {
+    if (window['paddleInitialized'])
+        return;
+    const p = await window['paddleManager']['init']();
+    if (!p) {
+        console['error']('❌\x20Failed\x20to\x20initialize\x20Paddle'), setTimeout(e, 0x7d0);
+        return;
+    }
+    window['addEventListener']('paddle:checkoutComplete', q => {
+        window['paymentSucceeded'] = !![], history['replaceState']({}, document['title'], window['location']['pathname']), setTimeout(() => handleCheckoutSuccess(q['detail']), 0x64);
+    }), window['paddleInitialized'] = !![], console['log']('✅\x20Paddle\x20initialized\x20successfully');
+}
+window['handleCheckoutSuccess'] = async function (p) {
+    const q = window['pendingPlanUpgrade'];
+    if (!q) {
+        console['error']('[PAYMENT]\x20No\x20pending\x20plan\x20upgrade\x20found');
+        return;
+    }
+    console['log']('[PAYMENT]\x20Checkout\x20completed\x20by\x20Paddle,\x20processing\x20payment...');
+    try {
+        const r = await fetch('/api/auth/check', {
+            'method': 'GET',
+            'credentials': 'include'
         });
-
-        async function initPaddle() {
-            if (window.paddleInitialized) return;
-            
-            // Initialize PaddleManager (fetches config from backend)
-            const initialized = await window.paddleManager.init();
-            if (!initialized) {
-                console.error('❌ Failed to initialize Paddle');
-                setTimeout(initPaddle, 2000);
-                return;
-            }
-            
-            // Listen for checkout completion event
-            window.addEventListener('paddle:checkoutComplete', (event) => {
-                window.paymentSucceeded = true;
-                history.replaceState({}, document.title, window.location.pathname);
-                setTimeout(() => handleCheckoutSuccess(event.detail), 100);
-            });
-            
-            window.paddleInitialized = true;
-            console.log('✅ Paddle initialized successfully');
+        if (!r['ok']) {
+            console['error']('[PAYMENT]\x20Not\x20authenticated'), alert('Error:\x20You\x20must\x20be\x20logged\x20in.\x20Please\x20refresh\x20and\x20login\x20again.'), window['location']['href'] = '/login.html';
+            return;
         }
-
-        window.handleCheckoutSuccess = async function(checkoutData) {
-            const planName = window.pendingPlanUpgrade;
-            
-            if (!planName) {
-                console.error('[PAYMENT] No pending plan upgrade found');
-                return;
-            }
-
-            console.log('[PAYMENT] Checkout completed by Paddle, processing payment...');
-            
-            try {
-                const authResponse = await fetch('/api/auth/check', {
-                    method: 'GET',
-                    credentials: 'include'
-                });
-                
-                if (!authResponse.ok) {
-                    console.error('[PAYMENT] Not authenticated');
-                    alert('Error: You must be logged in. Please refresh and login again.');
-                    window.location.href = '/login.html';
-                    return;
-                }
-                
-                const authData = await authResponse.json();
-                if (!authData.authenticated || !authData.user) {
-                    console.error('[PAYMENT] Auth check returned invalid data');
-                    alert('Error: Session invalid. Please refresh and login again.');
-                    window.location.href = '/login.html';
-                    return;
-                }
-                
-                const user = authData.user;
-                console.log('[PAYMENT] Calling backend to process payment...');
-                
-                const response = await fetch('/api/payment/process-local-payment', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    credentials: 'include',
-                    body: JSON.stringify({
-                        email: user.email,
-                        plan: planName
-                    })
-                });
-                
-                console.log(`[PAYMENT] Backend response: ${response.status}`);
-                
-                if (!response.ok) {
-                    const error = await response.json();
-                    console.error('[PAYMENT] Backend error:', error);
-                    alert(`Payment error: ${error.error}`);
-                    return;
-                }
-                
-                const result = await response.json();
-                console.log('[PAYMENT] Backend confirmed:', result);
-                
-                if (result.success) {
-                    console.log(`✅ [PAYMENT] Payment processed! Plan: ${result.plan}`);
-                    showPaymentSuccessModal(planName);
-                    setTimeout(() => {
-                        window.location.href = '/dashboard.html';
-                    }, 2000);
-                } else {
-                    alert('Payment processing failed. Please check your dashboard.');
-                }
-            } catch (error) {
-                console.error('[PAYMENT] Error processing payment:', error);
-                alert('Error processing payment. Please refresh and check your dashboard.');
-            }
+        const s = await r['json']();
+        if (!s['authenticated'] || !s['user']) {
+            console['error']('[PAYMENT]\x20Auth\x20check\x20returned\x20invalid\x20data'), alert('Error:\x20Session\x20invalid.\x20Please\x20refresh\x20and\x20login\x20again.'), window['location']['href'] = '/login.html';
+            return;
         }
-
-        window.openPaddleCheckout = function(priceId, planName, event) {
-            event.stopPropagation();
-            
-            if (!window.paddleInitialized) {
-                // Retry after waiting a moment for Paddle to init
-                setTimeout(() => {
-                    if (!window.paddleInitialized) {
-                        alert('Payment system is loading. Please try again in a moment.');
-                        return;
-                    }
-                    window.openPaddleCheckout(priceId, planName, event);
-                }, 500);
-                return;
-            }
-
-            const user = currentAuthenticatedUser;
-
-            if (!user) {
-                alert('Please sign in to upgrade your plan.');
-                window.location.href = '/login.html';
-                return;
-            }
-
-            // Use PaddleManager to open checkout (validates price ID with backend)
-            window.paddleManager.openCheckout(priceId, planName).catch((error) => {
-                console.error('❌ Error opening checkout:', error);
-                alert('Error opening checkout. Please try again.');
-            });
-        }
-
-        window.showPaymentSuccessModal = function(planName) {
-            const existingModal = document.getElementById('payment-success-modal');
-            if (existingModal) existingModal.remove();
-            
-            createConfetti();
-            
-            const modal = document.createElement('div');
-            modal.className = 'payment-success-modal';
-            modal.id = 'payment-success-modal';
-            modal.style.cssText = `
-                position: fixed;
-                top: 0;
-                left: 0;
-                right: 0;
-                bottom: 0;
-                background: rgba(0, 0, 0, 0.7);
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                z-index: 999999;
-                backdrop-filter: blur(6px);
-            `;
-            
-            const capitalizedPlan = planName.charAt(0).toUpperCase() + planName.slice(1);
-            
-            modal.innerHTML = `
-                <div style="
-                    background: white;
-                    border-radius: 32px;
-                    padding: 56px 48px;
-                    text-align: center;
-                    max-width: 480px;
-                    box-shadow: 0 25px 50px rgba(0,0,0,0.2);
-                    position: relative;
-                    border: 1px solid rgba(255,255,255,0.4);
-                    animation: modalSlideIn 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
-                ">
-                    <button style="
-                        position: absolute;
-                        top: 24px;
-                        right: 24px;
-                        background: transparent;
-                        border: none;
-                        font-size: 1.5rem;
-                        color: #94a3b8;
-                        cursor: pointer;
-                        transition: color 0.2s ease;
-                        padding: 0;
-                        width: 32px;
-                        height: 32px;
-                        display: flex;
-                        align-items: center;
-                        justify-content: center;
-                        font-family: 'Plus Jakarta Sans', sans-serif;
-                    " 
-                    onmouseover="this.style.color='#f97316';"
-                    onmouseout="this.style.color='#94a3b8';"
-                    onclick="document.getElementById('payment-success-modal').remove();">✕</button>
-                    
-                    <div style="
-                        width: 88px;
-                        height: 88px;
-                        border-radius: 50%;
-                        background: linear-gradient(135deg, #f97316, #ea580c);
-                        display: flex;
-                        align-items: center;
-                        justify-content: center;
-                        margin: 0 auto 32px;
-                        font-size: 3rem;
-                        color: white;
-                        box-shadow: 0 12px 32px rgba(249, 115, 22, 0.35);
-                        animation: scaleIn 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
-                    ">🎉</div>
-                    
-                    <h2 style="
-                        font-size: 1.875rem;
-                        font-weight: 800;
-                        color: #0f172a;
-                        margin-bottom: 12px;
-                        font-family: 'Plus Jakarta Sans', sans-serif;
-                        letter-spacing: -0.02em;
-                    ">Welcome aboard!</h2>
-                    
-                    <p style="
-                        font-size: 1.1rem;
-                        color: #ea580c;
-                        margin-bottom: 28px;
-                        font-weight: 700;
-                        letter-spacing: 0.5px;
-                    ">${capitalizedPlan} Plan Unlocked ✨</p>
-                    
-                    <div style="
-                        padding: 20px;
-                        background: linear-gradient(135deg, rgba(249, 115, 22, 0.08), rgba(234, 88, 12, 0.05));
-                        border-radius: 20px;
-                        margin-bottom: 28px;
-                        border: 1px solid rgba(249, 115, 22, 0.15);
-                    ">
-                        <p style="
-                            font-size: 0.9rem;
-                            color: #64748b;
-                            margin: 0;
-                            line-height: 1.6;
-                            font-weight: 500;
-                        ">Thank you for supporting Solis! You now have access to premium features and enhanced capabilities.</p>
-                    </div>
-                    
-                    <p style="
-                        font-size: 0.85rem;
-                        color: #94a3b8;
-                        margin: 0;
-                        font-weight: 500;
-                    ">Redirecting to dashboard...</p>
-                </div>
-                </div>
-            `;
-            
-            document.body.appendChild(modal);
-        }
-
-        function createConfetti() {
-            const colors = ['#FF9671', '#FFD4C4', '#FF7A50', '#FF6B9D', '#C44569', '#6DDCCF', '#4ECDC4', '#B8A9E5', '#EA580C', '#F97316'];
-            const confettiCount = 80;
-            const center = { x: window.innerWidth / 2, y: window.innerHeight / 2 };
-            
-            for (let i = 0; i < confettiCount; i++) {
-                const confetti = document.createElement('div');
-                const angle = (i / confettiCount) * Math.PI * 2;
-                const velocity = Math.random() * 8 + 6;
-                const size = Math.random() * 8 + 4;
-                const distance = 150;
-                const endX = Math.cos(angle) * distance * velocity;
-                const endY = Math.sin(angle) * distance * velocity + 100;
-                
-                confetti.style.cssText = `
-                    position: fixed;
-                    width: ${size}px;
-                    height: ${size}px;
-                    background-color: ${colors[Math.floor(Math.random() * colors.length)]};
-                    left: ${center.x}px;
-                    top: ${center.y}px;
-                    pointer-events: none;
-                    z-index: 99999;
-                    border-radius: 50%;
-                    animation: confetti-burst 2.5s ease-out forwards;
-                    --endX: ${endX}px;
-                    --endY: ${endY}px;
-                    animation-delay: ${Math.random() * 0.1}s;
-                `;
-                document.body.appendChild(confetti);
-                
-                setTimeout(() => confetti.remove(), 2700);
-            }
-        }
-
-        document.addEventListener('DOMContentLoaded', function() {
-            // Check authentication with backend via httpOnly cookie
-            checkAuthenticationAndInit();
+        const t = s['user'];
+        console['log']('[PAYMENT]\x20Calling\x20backend\x20to\x20process\x20payment...');
+        const u = await fetch('/api/payment/process-local-payment', {
+            'method': 'POST',
+            'headers': { 'Content-Type': 'application/json' },
+            'credentials': 'include',
+            'body': JSON['stringify']({
+                'email': t['email'],
+                'plan': q
+            })
         });
-
-        // Global variable to store current user
-        let currentAuthenticatedUser = null;
-        let authCheckCache = null;
-        let authCheckCacheTime = 0;
-        const AUTH_CHECK_CACHE_DURATION = 60000; // 1 minute cache
-
-        async function checkAuthenticationAndInit() {
-            try {
-                // Use cached result if still valid
-                const now = Date.now();
-                if (authCheckCache !== null && (now - authCheckCacheTime) < AUTH_CHECK_CACHE_DURATION) {
-                    console.log('🔄 Using cached auth check result');
-                    if (authCheckCache.authenticated && authCheckCache.user) {
-                        currentAuthenticatedUser = authCheckCache.user;
-                        loadUserProfile(authCheckCache.user);
-                        setTimeout(initPaddle, 1000);
-                    } else {
-                        console.warn('⚠️ Cache says user NOT authenticated');
-                        showAuthError();
-                    }
-                    return;
-                }
-                
-                // Check with backend using httpOnly cookie authentication
-                console.log('📡 Fetching /api/auth/check...');
-                const response = await fetch('/api/auth/check', {
-                    method: 'GET',
-                    credentials: 'include'
-                });
-
-                console.log('📝 Auth check response status:', response.status);
-                
-                if (response.ok) {
-                    const data = await response.json();
-                    console.log('✅ Auth response data:', data);
-                    
-                    // Cache the result
-                    authCheckCache = data;
-                    authCheckCacheTime = Date.now();
-                    
-                    if (data.authenticated && data.user) {
-                        // User is authenticated, store for later use
-                        console.log('✅ User authenticated:', data.user.email);
-                        currentAuthenticatedUser = data.user;
-                        // Load UI with user data
-                        loadUserProfile(data.user);
-                        // Delay paddle initialization to ensure script is loaded
-                        setTimeout(initPaddle, 1000);
-                        return;
-                    } else {
-                        console.warn('⚠️ Response OK but not authenticated');
-                    }
-                } else {
-                    console.error('❌ Auth check failed with status:', response.status);
-                    const errorText = await response.text();
-                    console.error('Response body:', errorText);
-                }
-
-                // Not authenticated, show error
-                showAuthError();
-            } catch (error) {
-                console.error('❌ Auth check exception:', error);
-                console.error('Error details:', error.message, error.stack);
-                showAuthError();
+        console['log']('[PAYMENT]\x20Backend\x20response:\x20' + u['status']);
+        if (!u['ok']) {
+            const w = await u['json']();
+            console['error']('[PAYMENT]\x20Backend\x20error:', w), alert('Payment\x20error:\x20' + w['error']);
+            return;
+        }
+        const v = await u['json']();
+        console['log']('[PAYMENT]\x20Backend\x20confirmed:', v), v['success'] ? (console['log']('✅\x20[PAYMENT]\x20Payment\x20processed!\x20Plan:\x20' + v['plan']), showPaymentSuccessModal(q), setTimeout(() => {
+            window['location']['href'] = '/dashboard.html';
+        }, 0x7d0)) : alert('Payment\x20processing\x20failed.\x20Please\x20check\x20your\x20dashboard.');
+    } catch (x) {
+        console['error']('[PAYMENT]\x20Error\x20processing\x20payment:', x), alert('Error\x20processing\x20payment.\x20Please\x20refresh\x20and\x20check\x20your\x20dashboard.');
+    }
+}, window['openPaddleCheckout'] = function (p, q, r) {
+    r['stopPropagation']();
+    if (!window['paddleInitialized']) {
+        setTimeout(() => {
+            if (!window['paddleInitialized']) {
+                alert('Payment\x20system\x20is\x20loading.\x20Please\x20try\x20again\x20in\x20a\x20moment.');
+                return;
             }
+            window['openPaddleCheckout'](p, q, r);
+        }, 0x1f4);
+        return;
+    }
+    const s = g;
+    if (!s) {
+        alert('Please\x20sign\x20in\x20to\x20upgrade\x20your\x20plan.'), window['location']['href'] = '/login.html';
+        return;
+    }
+    window['paddleManager']['openCheckout'](p, q)['catch'](t => {
+        console['error']('❌\x20Error\x20opening\x20checkout:', t), alert('Error\x20opening\x20checkout.\x20Please\x20try\x20again.');
+    });
+}, window['showPaymentSuccessModal'] = function (p) {
+    const q = document['getElementById']('payment-success-modal');
+    if (q)
+        q['remove']();
+    f();
+    const r = document['createElement']('div');
+    r['className'] = 'payment-success-modal', r['id'] = 'payment-success-modal', r['style']['cssText'] = '\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20position:\x20fixed;\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20top:\x200;\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20left:\x200;\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20right:\x200;\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20bottom:\x200;\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20background:\x20rgba(0,\x200,\x200,\x200.7);\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20display:\x20flex;\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20align-items:\x20center;\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20justify-content:\x20center;\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20z-index:\x20999999;\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20backdrop-filter:\x20blur(6px);\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20';
+    const s = p['charAt'](0x0)['toUpperCase']() + p['slice'](0x1);
+    r['innerHTML'] = '\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20style=\x22\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20background:\x20white;\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20border-radius:\x2032px;\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20padding:\x2056px\x2048px;\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20text-align:\x20center;\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20max-width:\x20480px;\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20box-shadow:\x200\x2025px\x2050px\x20rgba(0,0,0,0.2);\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20position:\x20relative;\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20border:\x201px\x20solid\x20rgba(255,255,255,0.4);\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20animation:\x20modalSlideIn\x200.5s\x20cubic-bezier(0.34,\x201.56,\x200.64,\x201);\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<button\x20style=\x22\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20position:\x20absolute;\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20top:\x2024px;\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20right:\x2024px;\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20background:\x20transparent;\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20border:\x20none;\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20font-size:\x201.5rem;\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20color:\x20#94a3b8;\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20cursor:\x20pointer;\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20transition:\x20color\x200.2s\x20ease;\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20padding:\x200;\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20width:\x2032px;\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20height:\x2032px;\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20display:\x20flex;\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20align-items:\x20center;\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20justify-content:\x20center;\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20font-family:\x20\x27Plus\x20Jakarta\x20Sans\x27,\x20sans-serif;\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x22\x20\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20onmouseover=\x22this.style.color=\x27#f97316\x27;\x22\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20onmouseout=\x22this.style.color=\x27#94a3b8\x27;\x22\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20onclick=\x22document.getElementById(\x27payment-success-modal\x27).remove();\x22>✕</button>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20style=\x22\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20width:\x2088px;\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20height:\x2088px;\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20border-radius:\x2050%;\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20background:\x20linear-gradient(135deg,\x20#f97316,\x20#ea580c);\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20display:\x20flex;\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20align-items:\x20center;\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20justify-content:\x20center;\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20margin:\x200\x20auto\x2032px;\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20font-size:\x203rem;\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20color:\x20white;\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20box-shadow:\x200\x2012px\x2032px\x20rgba(249,\x20115,\x2022,\x200.35);\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20animation:\x20scaleIn\x200.5s\x20cubic-bezier(0.34,\x201.56,\x200.64,\x201);\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x22>🎉</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<h2\x20style=\x22\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20font-size:\x201.875rem;\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20font-weight:\x20800;\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20color:\x20#0f172a;\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20margin-bottom:\x2012px;\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20font-family:\x20\x27Plus\x20Jakarta\x20Sans\x27,\x20sans-serif;\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20letter-spacing:\x20-0.02em;\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x22>Welcome\x20aboard!</h2>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<p\x20style=\x22\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20font-size:\x201.1rem;\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20color:\x20#ea580c;\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20margin-bottom:\x2028px;\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20font-weight:\x20700;\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20letter-spacing:\x200.5px;\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x22>' + s + '\x20Plan\x20Unlocked\x20✨</p>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20style=\x22\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20padding:\x2020px;\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20background:\x20linear-gradient(135deg,\x20rgba(249,\x20115,\x2022,\x200.08),\x20rgba(234,\x2088,\x2012,\x200.05));\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20border-radius:\x2020px;\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20margin-bottom:\x2028px;\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20border:\x201px\x20solid\x20rgba(249,\x20115,\x2022,\x200.15);\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<p\x20style=\x22\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20font-size:\x200.9rem;\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20color:\x20#64748b;\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20margin:\x200;\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20line-height:\x201.6;\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20font-weight:\x20500;\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x22>Thank\x20you\x20for\x20supporting\x20Solis!\x20You\x20now\x20have\x20access\x20to\x20premium\x20features\x20and\x20enhanced\x20capabilities.</p>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<p\x20style=\x22\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20font-size:\x200.85rem;\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20color:\x20#94a3b8;\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20margin:\x200;\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20font-weight:\x20500;\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x22>Redirecting\x20to\x20dashboard...</p>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20', document['body']['appendChild'](r);
+};
+function f() {
+    const p = [
+            '#FF9671',
+            '#FFD4C4',
+            '#FF7A50',
+            '#FF6B9D',
+            '#C44569',
+            '#6DDCCF',
+            '#4ECDC4',
+            '#B8A9E5',
+            '#EA580C',
+            '#F97316'
+        ], q = 0x50, r = {
+            'x': window['innerWidth'] / 0x2,
+            'y': window['innerHeight'] / 0x2
+        };
+    for (let s = 0x0; s < q; s++) {
+        const t = document['createElement']('div'), u = s / q * Math['PI'] * 0x2, v = Math['random']() * 0x8 + 0x6, w = Math['random']() * 0x8 + 0x4, x = 0x96, y = Math['cos'](u) * x * v, z = Math['sin'](u) * x * v + 0x64;
+        t['style']['cssText'] = '\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20position:\x20fixed;\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20width:\x20' + w + 'px;\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20height:\x20' + w + 'px;\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20background-color:\x20' + p[Math['floor'](Math['random']() * p['length'])] + ';\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20left:\x20' + r['x'] + 'px;\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20top:\x20' + r['y'] + 'px;\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20pointer-events:\x20none;\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20z-index:\x2099999;\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20border-radius:\x2050%;\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20animation:\x20confetti-burst\x202.5s\x20ease-out\x20forwards;\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20--endX:\x20' + y + 'px;\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20--endY:\x20' + z + 'px;\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20animation-delay:\x20' + Math['random']() * 0.1 + 's;\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20', document['body']['appendChild'](t), setTimeout(() => t['remove'](), 0xa8c);
+    }
+}
+document['addEventListener']('DOMContentLoaded', function () {
+    k();
+});
+let g = null, h = null, i = 0x0;
+const j = 0xea60;
+async function k() {
+    try {
+        const p = Date['now']();
+        if (h !== null && p - i < j) {
+            console['log']('🔄\x20Using\x20cached\x20auth\x20check\x20result');
+            h['authenticated'] && h['user'] ? (g = h['user'], n(h['user']), setTimeout(e, 0x3e8)) : (console['warn']('⚠️\x20Cache\x20says\x20user\x20NOT\x20authenticated'), l());
+            return;
         }
-
-        function showAuthError() {
-            console.error('🔴 AUTH ERROR: User not authenticated');
-            console.error('Check browser DevTools (F12) > Console for details');
-            // Temporarily disabled redirect for debugging - uncomment after fixing
-            // alert('Please sign in to upgrade your plan.');
-            // window.location.href = '/login.html';
-        }
-
-        function toggleDropdown() {
-            const dropdown = document.getElementById('userDropdown');
-            dropdown.classList.toggle('active');
-        }
-
-        document.addEventListener('click', function(event) {
-            const userProfile = document.getElementById('userProfile');
-            const dropdown = document.getElementById('userDropdown');
-            
-            if (userProfile && !userProfile.contains(event.target)) {
-                dropdown.classList.remove('active');
-            }
+        console['log']('📡\x20Fetching\x20/api/auth/check...');
+        const q = await fetch('/api/auth/check', {
+            'method': 'GET',
+            'credentials': 'include'
         });
-
-        function loadUserProfile(user) {
-            // Use provided user data from authentication response
-            if (user && user.email) {
-                document.getElementById('userProfile').style.display = 'block';
-                document.querySelector('.nav-login').style.display = 'none';
-                document.querySelector('.btn-primary').style.display = 'none';
-                
-                const userName = user.username || user.name || user.email.split('@')[0] || 'User';
-                const userEmail = user.email || '';
-                const userPlan = user.plan || 'free';
-                
-                const avatarUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(userName)}&background=ea580c&color=fff&bold=true`;
-                
-                document.getElementById('userAvatar').src = avatarUrl;
-                document.getElementById('dropdownAvatar').src = avatarUrl;
-                document.getElementById('userName').textContent = userName;
-                document.getElementById('userEmail').textContent = userEmail;
-                
-                const planBadge = document.getElementById('userPlan');
-                const planName = userPlan.charAt(0).toUpperCase() + userPlan.slice(1);
-                planBadge.textContent = `${planName} Plan`;
-            } else {
-                document.getElementById('userProfile').style.display = 'none';
-                document.querySelector('.nav-login').style.display = 'block';
-                document.querySelector('.btn-primary').style.display = 'block';
-            }
+        console['log']('📝\x20Auth\x20check\x20response\x20status:', q['status']);
+        if (q['ok']) {
+            const r = await q['json']();
+            console['log']('✅\x20Auth\x20response\x20data:', r), h = r, i = Date['now']();
+            if (r['authenticated'] && r['user']) {
+                console['log']('✅\x20User\x20authenticated:', r['user']['email']), g = r['user'], n(r['user']), setTimeout(e, 0x3e8);
+                return;
+            } else
+                console['warn']('⚠️\x20Response\x20OK\x20but\x20not\x20authenticated');
+        } else {
+            console['error']('❌\x20Auth\x20check\x20failed\x20with\x20status:', q['status']);
+            const s = await q['text']();
+            console['error']('Response\x20body:', s);
         }
-
-        function handleLogout() {
-            localStorage.removeItem('authToken');
-            localStorage.removeItem('currentUser');
-            sessionStorage.clear();
-            window.location.href = '/login.html';
-        }
-    </script>
+        l();
+    } catch (t) {
+        console['error']('❌\x20Auth\x20check\x20exception:', t), console['error']('Error\x20details:', t['message'], t['stack']), l();
+    }
+}
+function l() {
+    console['error']('🔴\x20AUTH\x20ERROR:\x20User\x20not\x20authenticated'), console['error']('Check\x20browser\x20DevTools\x20(F12)\x20>\x20Console\x20for\x20details');
+}
+function m() {
+    const p = document['getElementById']('userDropdown');
+    p['classList']['toggle']('active');
+}
+document['addEventListener']('click', function (p) {
+    const q = document['getElementById']('userProfile'), r = document['getElementById']('userDropdown');
+    q && !q['contains'](p['target']) && r['classList']['remove']('active');
+});
+function n(p) {
+    if (p && p['email']) {
+        document['getElementById']('userProfile')['style']['display'] = 'block', document['querySelector']('.nav-login')['style']['display'] = 'none', document['querySelector']('.btn-primary')['style']['display'] = 'none';
+        const q = p['username'] || p['name'] || p['email']['split']('@')[0x0] || 'User', r = p['email'] || '', s = p['plan'] || 'free', t = 'https://ui-avatars.com/api/?name=' + encodeURIComponent(q) + '&background=ea580c&color=fff&bold=true';
+        document['getElementById']('userAvatar')['src'] = t, document['getElementById']('dropdownAvatar')['src'] = t, document['getElementById']('userName')['textContent'] = q, document['getElementById']('userEmail')['textContent'] = r;
+        const u = document['getElementById']('userPlan'), v = s['charAt'](0x0)['toUpperCase']() + s['slice'](0x1);
+        u['textContent'] = v + '\x20Plan';
+    } else
+        document['getElementById']('userProfile')['style']['display'] = 'none', document['querySelector']('.nav-login')['style']['display'] = 'block', document['querySelector']('.btn-primary')['style']['display'] = 'block';
+}
+function o() {
+    localStorage['removeItem']('authToken'), localStorage['removeItem']('currentUser'), sessionStorage['clear'](), window['location']['href'] = '/login.html';
+}</script>
     
     <style>
         @keyframes modalSlideIn {

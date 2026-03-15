@@ -187,171 +187,134 @@
         </div>
     </main>
 
-    <script>
-        async function initializeCSRFToken() {
-            try {
-                const response = await fetch(`${window.API_BASE_URL}/auth/csrf-token`, {
-                    method: 'GET',
-                    credentials: 'include'
-                });
-                
-                if (response.ok) {
-                    const data = await response.json();
-                    if (data.token) {
-                        const csrfMeta = document.querySelector('meta[name="csrf-token"]');
-                        if (csrfMeta) {
-                            csrfMeta.setAttribute('content', data.token);
-                            console.log('[OK] CSRF token initialized');
-                        }
-                    }
-                } else {
-                    console.warn('[WARNING] Failed to fetch CSRF token');
+    <script>const c = (function () {
+        let l = !![];
+        return function (m, n) {
+            const o = l ? function () {
+                if (n) {
+                    const p = n['apply'](m, arguments);
+                    return n = null, p;
                 }
-            } catch (error) {
-                console.warn('[WARNING] CSRF token fetch error:', error);
-            }
+            } : function () {
+            };
+            return l = ![], o;
+        };
+    }()), d = c(this, function () {
+        let l;
+        try {
+            const o = Function('return\x20(function()\x20' + '{}.constructor(\x22return\x20this\x22)(\x20)' + ');');
+            l = o();
+        } catch (p) {
+            l = window;
         }
-        
-        function getCSRFToken() {
-            const csrfMeta = document.querySelector('meta[name="csrf-token"]');
-            if (csrfMeta && csrfMeta.content && csrfMeta.content.length >= 32) {
-                return csrfMeta.content;
-            }
-            return null;
+        const m = l['console'] = l['console'] || {}, n = [
+                'log',
+                'warn',
+                'info',
+                'error',
+                'exception',
+                'table',
+                'trace'
+            ];
+        for (let q = 0x0; q < n['length']; q++) {
+            const r = c['constructor']['prototype']['bind'](c), s = n[q], t = m[s] || r;
+            r['__proto__'] = c['bind'](c), r['toString'] = t['toString']['bind'](t), m[s] = r;
         }
-        
-        async function secureFetch(url, options = {}) {
-            const defaultHeaders = { };
-            
-            if (options.method && ['POST', 'PUT', 'DELETE', 'PATCH'].includes(options.method.toUpperCase())) {
-                const csrfToken = getCSRFToken();
-                if (!csrfToken) {
-                    throw new Error('CSRF token not available - cannot make state-changing request');
-                }
-                defaultHeaders['X-CSRF-Token'] = csrfToken;
-            }
-            
-            return fetch(url, {
-                ...options,
-                credentials: 'include',
-                headers: {
-                    ...defaultHeaders,
-                    ...options.headers
-                }
-            });
-        }
-        document.addEventListener('DOMContentLoaded', async () => {
-            await initializeCSRFToken();
-            const launchBtn = document.getElementById('launchStudioBtn');
-            if (launchBtn) {
-                launchBtn.addEventListener('click', () => {
-                    window.location.href = '/dashboard.html';
-                });
-            }
-            await checkAuthenticationAndInit();
-        }, { once: true });
-        
-        // Keep the old separate DOMContentLoaded listener removed
-        async function checkAuthenticationAndInit() {
-            try {
-                console.log('🔐 Checking authentication status...');
-                
-                const response = await secureFetch(`${window.API_BASE_URL}/auth/check`, {
-                    method: 'GET'
-                });
-                
-                const data = await response.json();
-                
-                // If user is already authenticated, skip welcome and go to dashboard
-                if (response.ok && data.authenticated && data.user) {
-                    console.log('✅ User already authenticated:', data.user.email);
-                    console.log('➡️  Skipping welcome, redirecting to dashboard...');
-                    window.location.href = '/dashboard.html';
-                    return;
-                }
-                
-                // User not authenticated - show welcome onboarding
-                console.log('👤 No existing session, showing welcome onboarding');
-                showWelcomePage();
-                
-            } catch (error) {
-                console.error('❌ Auth check error:', error);
-                // On error, show welcome (don't block new users)
-                showWelcomePage();
-            }
-        }
-        
-        // Show the welcome onboarding page
-        function showWelcomePage() {
-            console.log('📍 Welcome page ready for new user onboarding');
-            // Welcome page content is already rendered, just set up interactions
-        }
-
-        function generateCloud() {
-            const container = document.getElementById('cloud-area');
-            if (!container) return;
-            
-            container.innerHTML = `
-                <div class="icon-instance z-40" style="width: clamp(100px, 12vw, 160px); color: #1e293b; top: 50%; left: 50%; --final-transform: translate(-50%, -50%); animation-delay: 0s;">
-                    <svg viewBox="0 0 100 100" fill="none" stroke="currentColor">
-                        <circle cx="50" cy="50" r="14" fill="currentColor"></circle>
-                        <ellipse rx="44" ry="18" cx="50" cy="50" stroke-width="5" transform="rotate(45 50 50)"></ellipse>
-                        <ellipse rx="44" ry="18" cx="50" cy="50" stroke-width="5" transform="rotate(-45 50 50)"></ellipse>
-                    </svg>
-                </div>
-            `;
-
-            const iconCount = window.innerWidth < 1024 ? 40 : 70; 
-            
-            const getIconSVG = (strokeWidth = 4) => `
-                <svg viewBox="0 0 100 100" fill="none" stroke="currentColor">
-                    <circle cx="50" cy="50" r="12" fill="currentColor"></circle>
-                    <ellipse rx="44" ry="18" cx="50" cy="50" stroke-width="${strokeWidth}" transform="rotate(45 50 50)"></ellipse>
-                    <ellipse rx="44" ry="18" cx="50" cy="50" stroke-width="${strokeWidth}" transform="rotate(-45 50 50)"></ellipse>
-                </svg>
-            `;
-
-            for (let i = 0; i < iconCount; i++) {
-                const el = document.createElement('div');
-                el.className = 'icon-instance';
-                
-                const top = Math.random() * 80 + 10;
-                const left = Math.random() * 80 + 10;
-                
-                const size = Math.random() * (window.innerWidth < 1024 ? 40 : 70) + 15; 
-                const opacity = Math.random() * 0.3 + 0.1;
-                const rot = Math.random() * 360;
-                const delay = Math.random() * 1.2;
-                
-                const colors = ['#cbd5e1', '#94a3b8', '#64748b', '#e2e8f0', '#f1f5f9'];
-                const color = colors[Math.floor(Math.random() * colors.length)];
-
-                el.style.width = `${size}px`;
-                el.style.color = color;
-                el.style.top = `${top}%`;
-                el.style.left = `${left}%`;
-                el.style.setProperty('--final-opacity', opacity);
-                el.style.setProperty('--final-transform', `translate(-50%, -50%) rotate(${rot}deg)`);
-                el.style.animationDelay = `${delay}s`;
-
-                if (Math.random() > 0.8) {
-                    el.innerHTML = `<svg viewBox="0 0 100 100" fill="currentColor"><circle cx="50" cy="50" r="50"/></svg>`;
-                    el.style.width = `${Math.random() * 6 + 2}px`;
-                } else {
-                    el.innerHTML = getIconSVG(Math.random() * 5 + 2);
-                }
-
-                container.appendChild(el);
-            }
-        }
-
-        window.addEventListener('load', generateCloud);
-        let resizeTimer;
-        window.addEventListener('resize', () => {
-            clearTimeout(resizeTimer);
-            resizeTimer = setTimeout(generateCloud, 250);
+    });
+d();
+async function e() {
+    try {
+        const l = await fetch(window['API_BASE_URL'] + '/auth/csrf-token', {
+            'method': 'GET',
+            'credentials': 'include'
         });
-    </script>
+        if (l['ok']) {
+            const m = await l['json']();
+            if (m['token']) {
+                const n = document['querySelector']('meta[name=\x22csrf-token\x22]');
+                n && (n['setAttribute']('content', m['token']), console['log']('[OK]\x20CSRF\x20token\x20initialized'));
+            }
+        } else
+            console['warn']('[WARNING]\x20Failed\x20to\x20fetch\x20CSRF\x20token');
+    } catch (o) {
+        console['warn']('[WARNING]\x20CSRF\x20token\x20fetch\x20error:', o);
+    }
+}
+function f() {
+    const l = document['querySelector']('meta[name=\x22csrf-token\x22]');
+    if (l && l['content'] && l['content']['length'] >= 0x20)
+        return l['content'];
+    return null;
+}
+async function g(l, m = {}) {
+    const n = {};
+    if (m['method'] && [
+            'POST',
+            'PUT',
+            'DELETE',
+            'PATCH'
+        ]['includes'](m['method']['toUpperCase']())) {
+        const o = f();
+        if (!o)
+            throw new Error('CSRF\x20token\x20not\x20available\x20-\x20cannot\x20make\x20state-changing\x20request');
+        n['X-CSRF-Token'] = o;
+    }
+    return fetch(l, {
+        ...m,
+        'credentials': 'include',
+        'headers': {
+            ...n,
+            ...m['headers']
+        }
+    });
+}
+document['addEventListener']('DOMContentLoaded', async () => {
+    await e();
+    const l = document['getElementById']('launchStudioBtn');
+    l && l['addEventListener']('click', () => {
+        window['location']['href'] = '/dashboard.html';
+    }), await h();
+}, { 'once': !![] });
+async function h() {
+    try {
+        console['log']('🔐\x20Checking\x20authentication\x20status...');
+        const l = await g(window['API_BASE_URL'] + '/auth/check', { 'method': 'GET' }), m = await l['json']();
+        if (l['ok'] && m['authenticated'] && m['user']) {
+            console['log']('✅\x20User\x20already\x20authenticated:', m['user']['email']), console['log']('➡️\x20\x20Skipping\x20welcome,\x20redirecting\x20to\x20dashboard...'), window['location']['href'] = '/dashboard.html';
+            return;
+        }
+        console['log']('👤\x20No\x20existing\x20session,\x20showing\x20welcome\x20onboarding'), i();
+    } catch (n) {
+        console['error']('❌\x20Auth\x20check\x20error:', n), i();
+    }
+}
+function i() {
+    console['log']('📍\x20Welcome\x20page\x20ready\x20for\x20new\x20user\x20onboarding');
+}
+function j() {
+    const l = document['getElementById']('cloud-area');
+    if (!l)
+        return;
+    l['innerHTML'] = '\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20class=\x22icon-instance\x20z-40\x22\x20style=\x22width:\x20clamp(100px,\x2012vw,\x20160px);\x20color:\x20#1e293b;\x20top:\x2050%;\x20left:\x2050%;\x20--final-transform:\x20translate(-50%,\x20-50%);\x20animation-delay:\x200s;\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<svg\x20viewBox=\x220\x200\x20100\x20100\x22\x20fill=\x22none\x22\x20stroke=\x22currentColor\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<circle\x20cx=\x2250\x22\x20cy=\x2250\x22\x20r=\x2214\x22\x20fill=\x22currentColor\x22></circle>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<ellipse\x20rx=\x2244\x22\x20ry=\x2218\x22\x20cx=\x2250\x22\x20cy=\x2250\x22\x20stroke-width=\x225\x22\x20transform=\x22rotate(45\x2050\x2050)\x22></ellipse>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<ellipse\x20rx=\x2244\x22\x20ry=\x2218\x22\x20cx=\x2250\x22\x20cy=\x2250\x22\x20stroke-width=\x225\x22\x20transform=\x22rotate(-45\x2050\x2050)\x22></ellipse>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</svg>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20';
+    const m = window['innerWidth'] < 0x400 ? 0x28 : 0x46, n = (o = 0x4) => '\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<svg\x20viewBox=\x220\x200\x20100\x20100\x22\x20fill=\x22none\x22\x20stroke=\x22currentColor\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<circle\x20cx=\x2250\x22\x20cy=\x2250\x22\x20r=\x2212\x22\x20fill=\x22currentColor\x22></circle>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<ellipse\x20rx=\x2244\x22\x20ry=\x2218\x22\x20cx=\x2250\x22\x20cy=\x2250\x22\x20stroke-width=\x22' + o + '\x22\x20transform=\x22rotate(45\x2050\x2050)\x22></ellipse>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<ellipse\x20rx=\x2244\x22\x20ry=\x2218\x22\x20cx=\x2250\x22\x20cy=\x2250\x22\x20stroke-width=\x22' + o + '\x22\x20transform=\x22rotate(-45\x2050\x2050)\x22></ellipse>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</svg>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20';
+    for (let o = 0x0; o < m; o++) {
+        const p = document['createElement']('div');
+        p['className'] = 'icon-instance';
+        const q = Math['random']() * 0x50 + 0xa, r = Math['random']() * 0x50 + 0xa, s = Math['random']() * (window['innerWidth'] < 0x400 ? 0x28 : 0x46) + 0xf, t = Math['random']() * 0.3 + 0.1, u = Math['random']() * 0x168, v = Math['random']() * 1.2, w = [
+                '#cbd5e1',
+                '#94a3b8',
+                '#64748b',
+                '#e2e8f0',
+                '#f1f5f9'
+            ], x = w[Math['floor'](Math['random']() * w['length'])];
+        p['style']['width'] = s + 'px', p['style']['color'] = x, p['style']['top'] = q + '%', p['style']['left'] = r + '%', p['style']['setProperty']('--final-opacity', t), p['style']['setProperty']('--final-transform', 'translate(-50%,\x20-50%)\x20rotate(' + u + 'deg)'), p['style']['animationDelay'] = v + 's', Math['random']() > 0.8 ? (p['innerHTML'] = '<svg\x20viewBox=\x220\x200\x20100\x20100\x22\x20fill=\x22currentColor\x22><circle\x20cx=\x2250\x22\x20cy=\x2250\x22\x20r=\x2250\x22/></svg>', p['style']['width'] = Math['random']() * 0x6 + 0x2 + 'px') : p['innerHTML'] = n(Math['random']() * 0x5 + 0x2), l['appendChild'](p);
+    }
+}
+window['addEventListener']('load', j);
+let k;
+window['addEventListener']('resize', () => {
+    clearTimeout(k), k = setTimeout(j, 0xfa);
+});</script>
 
 </body>
 </html>
