@@ -10,6 +10,13 @@
     <meta http-equiv="X-XSS-Protection" content="1; mode=block">
     <meta http-equiv="Referrer-Policy" content="strict-origin-when-cross-origin">
     <script src="/js/core/init.js"></script>
+    <script>
+        // Disable all console methods for production performance
+        const noop = () => {};
+        ['log', 'debug', 'info', 'warn', 'error', 'assert', 'clear', 'count', 'group', 'groupEnd', 'table', 'time', 'timeEnd', 'trace'].forEach(method => {
+            console[method] = noop;
+        });
+    </script>
     <script src="/js/login.js?v=1"></script>
     <title>Login | Solis AI</title>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,300;1,400&display=swap" rel="stylesheet">

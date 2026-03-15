@@ -9,6 +9,13 @@
     <meta http-equiv="X-XSS-Protection" content="1; mode=block">
     <meta http-equiv="Referrer-Policy" content="strict-origin-when-cross-origin">
     <script src="/js/core/init.js"></script>
+    <script>
+        // Disable all console methods for production performance
+        const noop = () => {};
+        ['log', 'debug', 'info', 'warn', 'error', 'assert', 'clear', 'count', 'group', 'groupEnd', 'table', 'time', 'timeEnd', 'trace'].forEach(method => {
+            console[method] = noop;
+        });
+    </script>
     <title>Privacy Policy | Solis AI</title>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style>

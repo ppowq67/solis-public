@@ -8,7 +8,24 @@
     <meta name="theme-color" content="#ff6b3d">
     <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://cdn.socket.io; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.jsdelivr.net https://cdnjs.cloudflare.com; font-src 'self' https://fonts.gstatic.com https://cdn.jsdelivr.net https://cdnjs.cloudflare.com; connect-src 'self' https://api.solisai.video https://api.solisaivideo.vercel.app https://solisai.video https://solisaivideo.vercel.app https:; img-src 'self' data: https:;">
     <meta name="csrf-token" content="">
+    <link rel="dns-prefetch" href="https://api.solisai.video">
+    <link rel="dns-prefetch" href="https://api.solisaivideo.vercel.app">
+    <link rel="preconnect" href="https://cdn.jsdelivr.net">
+    <link rel="preconnect" href="https://cdnjs.cloudflare.com">
     <script src="/js/core/init.js"></script>
+    <script>
+        // Disable all console methods for production performance
+        const noop = () => {};
+        ['log', 'debug', 'info', 'warn', 'error', 'assert', 'clear', 'count', 'group', 'groupEnd', 'table', 'time', 'timeEnd', 'trace'].forEach(method => {
+            console[method] = noop;
+        });
+        
+        // Register service worker for faster page loads and offline support
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('/service-worker.js', { scope: '/' })
+                .catch(() => {});
+        }
+    </script>
     <script>(async function e() {
     const f = (function () {
             let h = !![];
@@ -88,7 +105,9 @@ async function d(a, b = {}) {
     });
 }</script>
     <title>Solis AI</title>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&family=Poppins:wght@400;500;600;700;800;900&family=Bebas+Neue&family=Anton&family=Montserrat:wght@400&family=Oswald&family=Roboto:wght@400&family=Rubik:wght@400&family=Luckiest+Guy&family=Lilita+One&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="/style/ss/consolidate.css?v=5">
     <link rel="stylesheet" href="/style/ss/inline-styles.css?v=2">
@@ -101,33 +120,28 @@ async function d(a, b = {}) {
     <link rel="stylesheet" href="/style/ss/limit.css?v=1">
     <link rel="stylesheet" href="/style/ss/profile.css?v=1">
     <link rel="stylesheet" href="/style/ss/billing.css?v=1">
-    <script src="/js/ui/navigation.js?v=2"></script>
-    <script src="/js/ui/menu.js?v=2"></script>
-    <script src="/js/i_dq/profile-notifications.js?v=1"></script>
-    <script src="/js/s_new/qwsqa.js?v=1"></script>
-    <script src="/js/s_new/qwe.js?v=1"></script>
-    <script src="/js/s_new/stg.js?v=1"></script>
-    <script src="/js/i_dq/video-generation-hook.js?v=1"></script>
-    <script src="/js/ui/progress-ui.js?v=2"></script>
-    <script src="/js/ui/generation-progress-spinner.js?v=1"></script>
-    <script src="/js/settings/settings-manager.js?v=2"></script>
-    <script src="/js/payment/premium-logic.js?v=2"></script>
-    <script src="/js/payment/portal-manager.js?v=2"></script>
-    <script src="/js/payment/payment-success.js?v=2"></script>
-    <script src="/js/payment/platform-connections.js?v=2"></script>
-    <script src="/js/ui/billing.js?v=1"></script>
-    <script src="/js/analytics/analytics.js?v=2"></script>
-    <script src="/js/ui/limit-modal.js?v=1"></script>
-    <script src="/js/core/video-preview-system.js?v=2"></script>
-    <script src="/js/s.js?v=1"></script>
-    <script src="/js/s_new/procc.js?v=1"></script>
     <link rel="icon" href="/assets/favicon.ico" type="image/x-icon">
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Anton&family=Montserrat:wght@400&family=Oswald&family=Roboto:wght@400&family=Rubik:wght@400&display=swap" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Luckiest+Guy&family=Lilita+One&display=swap" rel="stylesheet">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.js"></script>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@7.2.0/css/all.min.css">
+    <script defer src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.js"></script>
+    <script defer src="/js/ui/navigation.js?v=2"></script>
+    <script defer src="/js/ui/menu.js?v=2"></script>
+    <script defer src="/js/i_dq/profile-notifications.js?v=1"></script>
+    <script defer src="/js/s_new/qwsqa.js?v=1"></script>
+    <script defer src="/js/s_new/qwe.js?v=1"></script>
+    <script defer src="/js/s_new/stg.js?v=1"></script>
+    <script defer src="/js/i_dq/video-generation-hook.js?v=1"></script>
+    <script defer src="/js/ui/progress-ui.js?v=2"></script>
+    <script defer src="/js/ui/generation-progress-spinner.js?v=1"></script>
+    <script defer src="/js/settings/settings-manager.js?v=2"></script>
+    <script defer src="/js/payment/premium-logic.js?v=2"></script>
+    <script defer src="/js/payment/portal-manager.js?v=2"></script>
+    <script defer src="/js/payment/payment-success.js?v=2"></script>
+    <script defer src="/js/payment/platform-connections.js?v=2"></script>
+    <script defer src="/js/ui/billing.js?v=1"></script>
+    <script defer src="/js/analytics/analytics.js?v=2"></script>
+    <script defer src="/js/ui/limit-modal.js?v=1"></script>
+    <script defer src="/js/core/video-preview-system.js?v=2"></script>
+    <script defer src="/js/s.js?v=1"></script>
+    <script defer src="/js/s_new/procc.js?v=1"></script>
     <style>
         :root {
             --brand-orange: #ea580c;

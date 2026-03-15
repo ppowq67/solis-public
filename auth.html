@@ -10,7 +10,13 @@
     <meta http-equiv="X-XSS-Protection" content="1; mode=block">
     <meta http-equiv="Referrer-Policy" content="strict-origin-when-cross-origin">
     <script src="/js/core/init.js"></script>
-    <title>Redirecting..</title>
+    <script>
+        // Disable all console methods for production performance
+        const noop = () => {};
+        ['log', 'debug', 'info', 'warn', 'error', 'assert', 'clear', 'count', 'group', 'groupEnd', 'table', 'time', 'timeEnd', 'trace'].forEach(method => {
+            console[method] = noop;
+        });
+    </script>
     <link rel="icon" href="/assets/solis.png" type="image/png">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
