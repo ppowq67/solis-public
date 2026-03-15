@@ -29,7 +29,7 @@
         } else {
             // Production: use primary domain with fallback to vercel
             window.API_BASE_URL = 'https://api.solisai.video/api';
-            window.API_FALLBACK_URL = 'https://api.solisaivideo.vercel.app/api';
+            window.API_FALLBACK_URL = 'https://api.solisai.video/api';
         }
         
         console.log('✅ API_BASE_URL configured:', window.API_BASE_URL);

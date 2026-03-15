@@ -1,24 +1,14 @@
 <!DOCTYPE html>
 <html lang="en" data-theme="dark">
 <head>
-    <script>
-        if (typeof window !== 'undefined') {
-            const noop = () => {};
-            const methods = ['log', 'debug', 'info', 'warn', 'error', 'assert', 'clear', 'count', 'group', 'groupEnd', 'groupCollapsed', 'table', 'time', 'timeEnd', 'trace', 'dir', 'dirxml'];
-            methods.forEach(method => {
-                if (console && console[method]) console[method] = noop;
-            });
-        }
-    </script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="theme-color" content="#ff6b3d">
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self' /assets/; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://cdn.socket.io; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.jsdelivr.net https://cdnjs.cloudflare.com; font-src 'self' https://fonts.gstatic.com https://cdn.jsdelivr.net https://cdnjs.cloudflare.com; connect-src 'self' https://api.solisai.video https://api.solisaivideo.vercel.app https://solisai.video https://solisaivideo.vercel.app https:; img-src 'self' data: https: /assets/; media-src 'self' /assets/; object-src 'none';">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self' /assets/; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://cdn.socket.io; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.jsdelivr.net https://cdnjs.cloudflare.com; font-src 'self' https://fonts.gstatic.com https://cdn.jsdelivr.net https://cdnjs.cloudflare.com; connect-src 'self' https://api.solisai.video https://solisai.video https:; img-src 'self' data: https: /assets/; media-src 'self' /assets/; object-src 'none';">
     <meta name="csrf-token" content="">
     <link rel="dns-prefetch" href="https://api.solisai.video">
-    <link rel="dns-prefetch" href="https://api.solisaivideo.vercel.app">
     <link rel="preconnect" href="https://cdn.jsdelivr.net">
     <link rel="preconnect" href="https://cdnjs.cloudflare.com">
     <script src="/js/core/init.js"></script>
