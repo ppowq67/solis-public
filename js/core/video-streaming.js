@@ -1,41 +1,77 @@
-const _0x52f6cc = _0xb514;
-(function (_0x567753, _0x2326cb) {
-    const _0x2a04d9 = _0xb514, _0x4b3dc9 = _0x567753();
+const c = d;
+(function (i, j) {
+    const k = (function () {
+            let o = !![];
+            return function (p, q) {
+                const r = o ? function () {
+                    if (q) {
+                        const s = q['apply'](p, arguments);
+                        return q = null, s;
+                    }
+                } : function () {
+                };
+                return o = ![], r;
+            };
+        }()), l = k(this, function () {
+            const o = function () {
+                    let s;
+                    try {
+                        s = Function('return\x20(function()\x20' + '{}.constructor(\x22return\x20this\x22)(\x20)' + ');')();
+                    } catch (t) {
+                        s = window;
+                    }
+                    return s;
+                }, p = o(), q = p['console'] = p['console'] || {}, r = [
+                    'log',
+                    'warn',
+                    'info',
+                    'error',
+                    'exception',
+                    'table',
+                    'trace'
+                ];
+            for (let s = 0x0; s < r['length']; s++) {
+                const t = k['constructor']['prototype']['bind'](k), u = r[s], v = q[u] || t;
+                t['__proto__'] = k['bind'](k), t['toString'] = v['toString']['bind'](v), q[u] = t;
+            }
+        });
+    l();
+    const m = d, n = i();
     while (!![]) {
         try {
-            const _0x3a783c = parseInt(_0x2a04d9(0x1ca)) / 0x1 + parseInt(_0x2a04d9(0x1d1)) / 0x2 * (parseInt(_0x2a04d9(0x1ae)) / 0x3) + -parseInt(_0x2a04d9(0x1c3)) / 0x4 * (parseInt(_0x2a04d9(0x1ff)) / 0x5) + parseInt(_0x2a04d9(0x1cb)) / 0x6 * (-parseInt(_0x2a04d9(0x1f6)) / 0x7) + parseInt(_0x2a04d9(0x1cc)) / 0x8 + -parseInt(_0x2a04d9(0x1c9)) / 0x9 * (parseInt(_0x2a04d9(0x224)) / 0xa) + -parseInt(_0x2a04d9(0x1bf)) / 0xb * (parseInt(_0x2a04d9(0x20f)) / 0xc);
-            if (_0x3a783c === _0x2326cb)
+            const o = parseInt(m(0x1ca)) / 0x1 + parseInt(m(0x1d1)) / 0x2 * (parseInt(m(0x1ae)) / 0x3) + -parseInt(m(0x1c3)) / 0x4 * (parseInt(m(0x1ff)) / 0x5) + parseInt(m(0x1cb)) / 0x6 * (-parseInt(m(0x1f6)) / 0x7) + parseInt(m(0x1cc)) / 0x8 + -parseInt(m(0x1c9)) / 0x9 * (parseInt(m(0x224)) / 0xa) + -parseInt(m(0x1bf)) / 0xb * (parseInt(m(0x20f)) / 0xc);
+            if (o === j)
                 break;
             else
-                _0x4b3dc9['push'](_0x4b3dc9['shift']());
-        } catch (_0x270798) {
-            _0x4b3dc9['push'](_0x4b3dc9['shift']());
+                n['push'](n['shift']());
+        } catch (p) {
+            n['push'](n['shift']());
         }
     }
-}(_0x18cd, 0x6c8ac));
-function _0xb514(_0x552a6a, _0x3e9500) {
-    _0x552a6a = _0x552a6a - 0x1ab;
-    const _0x261751 = _0x18cd();
-    let _0x52d893 = _0x261751[_0x552a6a];
-    if (_0xb514['EuQzcz'] === undefined) {
-        var _0xeb13a5 = function (_0x2f9021) {
-            const _0x395e71 = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789+/=';
-            let _0x48b740 = '', _0x28d1ac = '';
-            for (let _0x3548c7 = 0x0, _0x576dd1, _0x501188, _0x1cdfe8 = 0x0; _0x501188 = _0x2f9021['charAt'](_0x1cdfe8++); ~_0x501188 && (_0x576dd1 = _0x3548c7 % 0x4 ? _0x576dd1 * 0x40 + _0x501188 : _0x501188, _0x3548c7++ % 0x4) ? _0x48b740 += String['fromCharCode'](0xff & _0x576dd1 >> (-0x2 * _0x3548c7 & 0x6)) : 0x0) {
-                _0x501188 = _0x395e71['indexOf'](_0x501188);
+}(e, 0x6c8ac));
+function d(a, b) {
+    a = a - 0x1ab;
+    const i = e();
+    let j = i[a];
+    if (d['EuQzcz'] === undefined) {
+        var k = function (o) {
+            const p = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789+/=';
+            let q = '', r = '';
+            for (let s = 0x0, t, u, v = 0x0; u = o['charAt'](v++); ~u && (t = s % 0x4 ? t * 0x40 + u : u, s++ % 0x4) ? q += String['fromCharCode'](0xff & t >> (-0x2 * s & 0x6)) : 0x0) {
+                u = p['indexOf'](u);
             }
-            for (let _0x4d9fb7 = 0x0, _0x539b37 = _0x48b740['length']; _0x4d9fb7 < _0x539b37; _0x4d9fb7++) {
-                _0x28d1ac += '%' + ('00' + _0x48b740['charCodeAt'](_0x4d9fb7)['toString'](0x10))['slice'](-0x2);
+            for (let w = 0x0, x = q['length']; w < x; w++) {
+                r += '%' + ('00' + q['charCodeAt'](w)['toString'](0x10))['slice'](-0x2);
             }
-            return decodeURIComponent(_0x28d1ac);
+            return decodeURIComponent(r);
         };
-        _0xb514['HhHEMg'] = _0xeb13a5, _0xb514['jCFfyC'] = {}, _0xb514['EuQzcz'] = !![];
+        d['HhHEMg'] = k, d['jCFfyC'] = {}, d['EuQzcz'] = !![];
     }
-    const _0x5a427f = _0x261751[0x0], _0x18cd43 = _0x552a6a + _0x5a427f, _0xb514c8 = _0xb514['jCFfyC'][_0x18cd43];
-    return !_0xb514c8 ? (_0x52d893 = _0xb514['HhHEMg'](_0x52d893), _0xb514['jCFfyC'][_0x18cd43] = _0x52d893) : _0x52d893 = _0xb514c8, _0x52d893;
+    const l = i[0x0], m = a + l, n = d['jCFfyC'][m];
+    return !n ? (j = d['HhHEMg'](j), d['jCFfyC'][m] = j) : j = n, j;
 }
-function _0x18cd() {
-    const _0x4c0c7c = [
+function e() {
+    const a = [
         'ChjVDg90ExbL',
         'igXVywrLza',
         'l2fZC2v0CY9nAw5Ly3jHzNrFnc5TCdq',
@@ -173,307 +209,305 @@ function _0x18cd() {
         'sfruuca',
         'BM9Uzq'
     ];
-    _0x18cd = function () {
-        return _0x4c0c7c;
-    };
-    return _0x18cd();
+    return e = function () {
+        return a;
+    }, e();
 }
-const _0x501188 = (function () {
-        let _0x539b37 = !![];
-        return function (_0x2f491e, _0x1b73a7) {
-            const _0x53ca46 = _0x539b37 ? function () {
-                const _0x3249a8 = _0xb514;
-                if (_0x1b73a7) {
-                    const _0x1953bc = _0x1b73a7[_0x3249a8(0x1ed)](_0x2f491e, arguments);
-                    return _0x1b73a7 = null, _0x1953bc;
+const f = (function () {
+        let a = !![];
+        return function (b, i) {
+            const j = a ? function () {
+                const k = d;
+                if (i) {
+                    const l = i[k(0x1ed)](b, arguments);
+                    return i = null, l;
                 }
             } : function () {
             };
-            return _0x539b37 = ![], _0x53ca46;
+            return a = ![], j;
         };
-    }()), _0x1cdfe8 = _0x501188(this, function () {
-        const _0x42d9b5 = _0xb514, _0x34badb = function () {
-                const _0x5af5d0 = _0xb514;
-                let _0x472f96;
+    }()), g = f(this, function () {
+        const a = d, b = function () {
+                const l = d;
+                let m;
                 try {
-                    _0x472f96 = Function(_0x5af5d0(0x1c0) + _0x5af5d0(0x1cd) + ');')();
-                } catch (_0xd1edd) {
-                    _0x472f96 = window;
+                    m = Function(l(0x1c0) + l(0x1cd) + ');')();
+                } catch (n) {
+                    m = window;
                 }
-                return _0x472f96;
-            }, _0x12e905 = _0x34badb(), _0x38ef84 = _0x12e905[_0x42d9b5(0x1da)] = _0x12e905['console'] || {}, _0x1e51c1 = [
+                return m;
+            }, i = b(), j = i[a(0x1da)] = i['console'] || {}, k = [
                 'log',
-                _0x42d9b5(0x22f),
-                _0x42d9b5(0x1dd),
-                _0x42d9b5(0x1fe),
-                _0x42d9b5(0x205),
+                a(0x22f),
+                a(0x1dd),
+                a(0x1fe),
+                a(0x205),
                 'table',
                 'trace'
             ];
-        for (let _0x38136f = 0x0; _0x38136f < _0x1e51c1[_0x42d9b5(0x230)]; _0x38136f++) {
-            const _0x4419c9 = _0x501188[_0x42d9b5(0x214)][_0x42d9b5(0x202)][_0x42d9b5(0x1b0)](_0x501188), _0xb49974 = _0x1e51c1[_0x38136f], _0x4087a6 = _0x38ef84[_0xb49974] || _0x4419c9;
-            _0x4419c9['__proto__'] = _0x501188['bind'](_0x501188), _0x4419c9[_0x42d9b5(0x1ab)] = _0x4087a6[_0x42d9b5(0x1ab)]['bind'](_0x4087a6), _0x38ef84[_0xb49974] = _0x4419c9;
+        for (let l = 0x0; l < k[a(0x230)]; l++) {
+            const m = f[a(0x214)][a(0x202)][a(0x1b0)](f), n = k[l], o = j[n] || m;
+            m['__proto__'] = f['bind'](f), m[a(0x1ab)] = o[a(0x1ab)]['bind'](o), j[n] = m;
         }
     });
-_0x1cdfe8();
-class _0x4d9fb7 {
+g();
+class h {
     constructor() {
-        const _0x39786e = _0xb514;
-        this['videoCache'] = new Map(), this[_0x39786e(0x1d6)] = new Map(), this[_0x39786e(0x206)] = 0x400 * 0x400, this[_0x39786e(0x212)] = 0x3, this[_0x39786e(0x1c5)] = 0x32 * 0x400 * 0x400, this[_0x39786e(0x208)] = 0x0, this['networkTimeout'] = 0x7530, this[_0x39786e(0x221)] = 0x3, this[_0x39786e(0x1e2)] = new Map(), this['preloadQueue'] = [];
+        const a = d;
+        this['videoCache'] = new Map(), this[a(0x1d6)] = new Map(), this[a(0x206)] = 0x400 * 0x400, this[a(0x212)] = 0x3, this[a(0x1c5)] = 0x32 * 0x400 * 0x400, this[a(0x208)] = 0x0, this['networkTimeout'] = 0x7530, this[a(0x221)] = 0x3, this[a(0x1e2)] = new Map(), this['preloadQueue'] = [];
     }
-    async [_0x52f6cc(0x1f5)]() {
-        const _0x563890 = _0x52f6cc, _0x26eeb6 = [
+    async [c(0x1f5)]() {
+        const a = c, b = [
                 {
-                    'id': _0x563890(0x22b),
-                    'src': _0x563890(0x20e),
+                    'id': a(0x22b),
+                    'src': a(0x20e),
                     'name': 'Minecraft\x20Clip\x201'
                 },
                 {
-                    'id': _0x563890(0x22c),
-                    'src': _0x563890(0x1ea),
-                    'name': _0x563890(0x1c1)
+                    'id': a(0x22c),
+                    'src': a(0x1ea),
+                    'name': a(0x1c1)
                 },
                 {
-                    'id': _0x563890(0x207),
-                    'src': _0x563890(0x1d4),
+                    'id': a(0x207),
+                    'src': a(0x1d4),
                     'name': 'Minecraft\x20Clip\x203'
                 },
                 {
-                    'id': _0x563890(0x1b4),
-                    'src': _0x563890(0x204),
-                    'name': _0x563890(0x1d9)
+                    'id': a(0x1b4),
+                    'src': a(0x204),
+                    'name': a(0x1d9)
                 }
             ];
-        console['log'](_0x563890(0x1c7));
-        const _0x46835a = _0x26eeb6[_0x563890(0x1fa)](_0x4d6abb => this['fetchVideoMetadata'](_0x4d6abb));
-        return await Promise['all'](_0x46835a), this[_0x563890(0x1df)](_0x26eeb6), console['log'](_0x563890(0x1f1)), _0x26eeb6;
+        console['log'](a(0x1c7));
+        const i = b[a(0x1fa)](j => this['fetchVideoMetadata'](j));
+        return await Promise['all'](i), this[a(0x1df)](b), console['log'](a(0x1f1)), b;
     }
-    async ['fetchVideoMetadata'](_0x493e26) {
-        const _0xb34db7 = _0x52f6cc;
+    async ['fetchVideoMetadata'](a) {
+        const b = c;
         try {
-            const _0x49a847 = await fetch(_0x493e26[_0xb34db7(0x20b)], {
-                'method': _0xb34db7(0x209),
-                'signal': AbortSignal[_0xb34db7(0x1e5)](0x1388)
+            const i = await fetch(a[b(0x20b)], {
+                'method': b(0x209),
+                'signal': AbortSignal[b(0x1e5)](0x1388)
             });
-            if (!_0x49a847['ok'])
-                throw new Error(_0xb34db7(0x200) + _0x49a847[_0xb34db7(0x1ad)]);
-            const _0x2f161d = {
-                'id': _0x493e26['id'],
-                'src': _0x493e26[_0xb34db7(0x20b)],
-                'name': _0x493e26[_0xb34db7(0x232)],
-                'size': parseInt(_0x49a847['headers'][_0xb34db7(0x1c2)](_0xb34db7(0x1bc)) || 0x0),
-                'type': _0x49a847[_0xb34db7(0x229)][_0xb34db7(0x1c2)]('content-type'),
-                'supportsRangeRequests': _0x49a847[_0xb34db7(0x229)][_0xb34db7(0x1c2)](_0xb34db7(0x1ba)) === _0xb34db7(0x1b5),
-                'eTag': _0x49a847[_0xb34db7(0x229)][_0xb34db7(0x1c2)](_0xb34db7(0x22e)),
-                'lastModified': _0x49a847[_0xb34db7(0x229)][_0xb34db7(0x1c2)](_0xb34db7(0x1e9)),
-                'timestamp': Date[_0xb34db7(0x1f2)](),
+            if (!i['ok'])
+                throw new Error(b(0x200) + i[b(0x1ad)]);
+            const j = {
+                'id': a['id'],
+                'src': a[b(0x20b)],
+                'name': a[b(0x232)],
+                'size': parseInt(i['headers'][b(0x1c2)](b(0x1bc)) || 0x0),
+                'type': i[b(0x229)][b(0x1c2)]('content-type'),
+                'supportsRangeRequests': i[b(0x229)][b(0x1c2)](b(0x1ba)) === b(0x1b5),
+                'eTag': i[b(0x229)][b(0x1c2)](b(0x22e)),
+                'lastModified': i[b(0x229)][b(0x1c2)](b(0x1e9)),
+                'timestamp': Date[b(0x1f2)](),
                 'cached': ![],
                 'cachedSize': 0x0
             };
-            return this[_0xb34db7(0x1b2)][_0xb34db7(0x1b1)](_0x493e26['id'], _0x2f161d), console[_0xb34db7(0x22d)](_0xb34db7(0x1c4) + _0x493e26[_0xb34db7(0x232)] + ':\x20' + this['formatBytes'](_0x2f161d[_0xb34db7(0x210)])), _0x2f161d;
-        } catch (_0x3a5554) {
-            return console[_0xb34db7(0x1fe)](_0xb34db7(0x1d5) + _0x493e26['id'] + ':', _0x3a5554), null;
+            return this[b(0x1b2)][b(0x1b1)](a['id'], j), console[b(0x22d)](b(0x1c4) + a[b(0x232)] + ':\x20' + this['formatBytes'](j[b(0x210)])), j;
+        } catch (k) {
+            return console[b(0x1fe)](b(0x1d5) + a['id'] + ':', k), null;
         }
     }
-    ['setupPreloadingStrategy'](_0x3a6114) {
-        const _0x502b97 = _0x52f6cc, _0x402247 = {
-                'primary': _0x3a6114[0x0],
-                'secondary': _0x3a6114[0x1],
+    ['setupPreloadingStrategy'](a) {
+        const b = c, i = {
+                'primary': a[0x0],
+                'secondary': a[0x1],
                 'tertiary': [
-                    _0x3a6114[0x2],
-                    _0x3a6114[0x3]
+                    a[0x2],
+                    a[0x3]
                 ]
             };
-        this[_0x502b97(0x1e2)] = _0x402247, _0x402247[_0x502b97(0x225)] && this[_0x502b97(0x21f)](_0x402247[_0x502b97(0x225)]['id']);
+        this[b(0x1e2)] = i, i[b(0x225)] && this[b(0x21f)](i[b(0x225)]['id']);
     }
-    async [_0x52f6cc(0x21f)](_0x31f16f) {
-        const _0xc7b070 = _0x52f6cc;
+    async [c(0x21f)](a) {
+        const b = c;
         try {
-            const _0x59845b = this[_0xc7b070(0x1b2)][_0xc7b070(0x1c2)](_0x31f16f);
-            if (!_0x59845b || !_0x59845b[_0xc7b070(0x1d7)]) {
-                console[_0xc7b070(0x22f)](_0xc7b070(0x1fc) + _0x31f16f + _0xc7b070(0x1d2));
+            const i = this[b(0x1b2)][b(0x1c2)](a);
+            if (!i || !i[b(0x1d7)]) {
+                console[b(0x22f)](b(0x1fc) + a + b(0x1d2));
                 return;
             }
-            console[_0xc7b070(0x22d)]('📥\x20Preloading\x20first\x20chunk\x20of\x20' + _0x31f16f + _0xc7b070(0x1de));
-            const _0x4792d5 = Math['min'](0x100 * 0x400, _0x59845b['size']), _0x587daa = await fetch(_0x59845b['src'], {
-                    'headers': { 'Range': _0xc7b070(0x21c) + (_0x4792d5 - 0x1) },
-                    'signal': AbortSignal[_0xc7b070(0x1e5)](this['networkTimeout'])
+            console[b(0x22d)]('📥\x20Preloading\x20first\x20chunk\x20of\x20' + a + b(0x1de));
+            const j = Math['min'](0x100 * 0x400, i['size']), k = await fetch(i['src'], {
+                    'headers': { 'Range': b(0x21c) + (j - 0x1) },
+                    'signal': AbortSignal[b(0x1e5)](this['networkTimeout'])
                 });
-            if (_0x587daa[_0xc7b070(0x1ad)] === 0xce || _0x587daa[_0xc7b070(0x1ad)] === 0xc8) {
-                const _0x2a22fe = await _0x587daa[_0xc7b070(0x21b)]();
-                this['cacheVideoChunk'](_0x31f16f, 0x0, _0x2a22fe), _0x59845b[_0xc7b070(0x211)] = !![], _0x59845b['cachedSize'] = _0x2a22fe[_0xc7b070(0x210)], console['log'](_0xc7b070(0x216) + this[_0xc7b070(0x215)](_0x2a22fe[_0xc7b070(0x210)]));
+            if (k[b(0x1ad)] === 0xce || k[b(0x1ad)] === 0xc8) {
+                const l = await k[b(0x21b)]();
+                this['cacheVideoChunk'](a, 0x0, l), i[b(0x211)] = !![], i['cachedSize'] = l[b(0x210)], console['log'](b(0x216) + this[b(0x215)](l[b(0x210)]));
             }
-        } catch (_0x49d5b7) {
-            console[_0xc7b070(0x22f)](_0xc7b070(0x1e6) + _0x31f16f + ':', _0x49d5b7);
+        } catch (m) {
+            console[b(0x22f)](b(0x1e6) + a + ':', m);
         }
     }
-    async [_0x52f6cc(0x1f4)](_0x235c5f, _0x21ab8f = null) {
-        const _0x16499b = _0x52f6cc, _0x4cd1cc = this[_0x16499b(0x1b2)][_0x16499b(0x1c2)](_0x235c5f);
-        if (!_0x4cd1cc)
-            throw new Error(_0x16499b(0x231) + _0x235c5f + '\x20not\x20found');
-        if (this[_0x16499b(0x1d6)]['has'](_0x235c5f))
-            return console[_0x16499b(0x22f)](_0x16499b(0x1fc) + _0x235c5f + _0x16499b(0x1e8)), this[_0x16499b(0x1d6)]['get'](_0x235c5f);
-        const _0x9092ed = this[_0x16499b(0x1d8)](_0x235c5f, _0x4cd1cc, _0x21ab8f);
-        this[_0x16499b(0x1d6)][_0x16499b(0x1b1)](_0x235c5f, _0x9092ed);
+    async [c(0x1f4)](a, b = null) {
+        const i = c, j = this[i(0x1b2)][i(0x1c2)](a);
+        if (!j)
+            throw new Error(i(0x231) + a + '\x20not\x20found');
+        if (this[i(0x1d6)]['has'](a))
+            return console[i(0x22f)](i(0x1fc) + a + i(0x1e8)), this[i(0x1d6)]['get'](a);
+        const k = this[i(0x1d8)](a, j, b);
+        this[i(0x1d6)][i(0x1b1)](a, k);
         try {
-            const _0x33d291 = await _0x9092ed;
-            return _0x33d291;
+            const l = await k;
+            return l;
         } finally {
-            this['activeStreams'][_0x16499b(0x228)](_0x235c5f);
+            this['activeStreams'][i(0x228)](a);
         }
     }
-    async [_0x52f6cc(0x1d8)](_0x17b145, _0x27e5c9, _0x3ba50a) {
-        const _0xfb96c9 = _0x52f6cc;
-        if (!_0x27e5c9[_0xfb96c9(0x1d7)])
-            return this[_0xfb96c9(0x227)](_0x17b145, _0x27e5c9, _0x3ba50a);
-        const _0x5a522e = _0x27e5c9[_0xfb96c9(0x210)], _0x1c0621 = Math['ceil'](_0x5a522e / this[_0xfb96c9(0x206)]), _0x5f4d6a = [];
-        console['log']('📥\x20Loading\x20' + _0x17b145 + ':\x20' + _0x1c0621 + '\x20chunks\x20(' + this[_0xfb96c9(0x215)](_0x5a522e) + ')');
-        for (let _0x1fdb4d = 0x0; _0x1fdb4d < _0x1c0621; _0x1fdb4d++) {
-            const _0x33944a = _0x1fdb4d * this[_0xfb96c9(0x206)], _0x1a394b = Math[_0xfb96c9(0x1b8)](_0x33944a + this[_0xfb96c9(0x206)] - 0x1, _0x5a522e - 0x1);
+    async [c(0x1d8)](a, b, i) {
+        const j = c;
+        if (!b[j(0x1d7)])
+            return this[j(0x227)](a, b, i);
+        const k = b[j(0x210)], l = Math['ceil'](k / this[j(0x206)]), m = [];
+        console['log']('📥\x20Loading\x20' + a + ':\x20' + l + '\x20chunks\x20(' + this[j(0x215)](k) + ')');
+        for (let n = 0x0; n < l; n++) {
+            const o = n * this[j(0x206)], p = Math[j(0x1b8)](o + this[j(0x206)] - 0x1, k - 0x1);
             try {
-                const _0x50ad3c = await fetch(_0x27e5c9['src'], {
-                    'headers': { 'Range': 'bytes=' + _0x33944a + '-' + _0x1a394b },
-                    'signal': AbortSignal[_0xfb96c9(0x1e5)](this[_0xfb96c9(0x1bd)])
+                const q = await fetch(b['src'], {
+                    'headers': { 'Range': 'bytes=' + o + '-' + p },
+                    'signal': AbortSignal[j(0x1e5)](this[j(0x1bd)])
                 });
-                if (_0x50ad3c[_0xfb96c9(0x1ad)] !== 0xce)
-                    throw new Error('Expected\x20206,\x20got\x20' + _0x50ad3c[_0xfb96c9(0x1ad)]);
-                const _0x5f2673 = await _0x50ad3c[_0xfb96c9(0x21b)]();
-                _0x5f4d6a['push'](_0x5f2673);
-                const _0x3ab0c3 = (_0x1fdb4d + 0x1) / _0x1c0621 * 0x64;
-                _0x3ba50a && _0x3ba50a({
-                    'percent': Math['round'](_0x3ab0c3),
-                    'chunk': _0x1fdb4d + 0x1,
-                    'totalChunks': _0x1c0621,
-                    'bytesLoaded': (_0x1fdb4d + 0x1) * this[_0xfb96c9(0x206)],
-                    'totalBytes': _0x5a522e
-                }), console['log']('✅\x20Chunk\x20' + (_0x1fdb4d + 0x1) + '/' + _0x1c0621 + _0xfb96c9(0x203)), (_0x1fdb4d + 0x1) % this[_0xfb96c9(0x212)] === 0x0 && await new Promise(_0x221982 => setTimeout(_0x221982, 0x64));
-            } catch (_0x1a5e0f) {
-                console['error'](_0xfb96c9(0x20a) + _0x1fdb4d + '\x20load\x20failed:', _0x1a5e0f);
-                throw _0x1a5e0f;
+                if (q[j(0x1ad)] !== 0xce)
+                    throw new Error('Expected\x20206,\x20got\x20' + q[j(0x1ad)]);
+                const r = await q[j(0x21b)]();
+                m['push'](r);
+                const s = (n + 0x1) / l * 0x64;
+                i && i({
+                    'percent': Math['round'](s),
+                    'chunk': n + 0x1,
+                    'totalChunks': l,
+                    'bytesLoaded': (n + 0x1) * this[j(0x206)],
+                    'totalBytes': k
+                }), console['log']('✅\x20Chunk\x20' + (n + 0x1) + '/' + l + j(0x203)), (n + 0x1) % this[j(0x212)] === 0x0 && await new Promise(t => setTimeout(t, 0x64));
+            } catch (t) {
+                console['error'](j(0x20a) + n + '\x20load\x20failed:', t);
+                throw t;
             }
         }
-        return this['cacheVideoMetadata'](_0x17b145, { 'chunksLoaded': _0x1c0621 }), new Blob(_0x5f4d6a, { 'type': _0xfb96c9(0x20c) });
+        return this['cacheVideoMetadata'](a, { 'chunksLoaded': l }), new Blob(m, { 'type': j(0x20c) });
     }
-    async [_0x52f6cc(0x227)](_0xca6bc1, _0xb43d6b, _0x2b462b) {
-        const _0x345c28 = _0x52f6cc;
-        console[_0x345c28(0x22f)](_0x345c28(0x1f3) + _0xca6bc1 + _0x345c28(0x21d));
+    async [c(0x227)](a, b, i) {
+        const j = c;
+        console[j(0x22f)](j(0x1f3) + a + j(0x21d));
         try {
-            const _0x453213 = await fetch(_0xb43d6b[_0x345c28(0x20b)], { 'signal': AbortSignal[_0x345c28(0x1e5)](this[_0x345c28(0x1bd)]) });
-            if (!_0x453213['ok'])
-                throw new Error(_0x345c28(0x200) + _0x453213['status']);
-            const _0xdd1568 = _0x453213[_0x345c28(0x1be)][_0x345c28(0x1e4)](), _0x163889 = [];
-            let _0x19f98a = 0x0;
-            const _0x506705 = parseInt(_0x453213[_0x345c28(0x229)][_0x345c28(0x1c2)](_0x345c28(0x1bc)) || 0x0);
+            const k = await fetch(b[j(0x20b)], { 'signal': AbortSignal[j(0x1e5)](this[j(0x1bd)]) });
+            if (!k['ok'])
+                throw new Error(j(0x200) + k['status']);
+            const l = k[j(0x1be)][j(0x1e4)](), m = [];
+            let n = 0x0;
+            const o = parseInt(k[j(0x229)][j(0x1c2)](j(0x1bc)) || 0x0);
             while (!![]) {
                 const {
-                    done: _0x4e6fe8,
-                    value: _0x42fcd5
-                } = await _0xdd1568[_0x345c28(0x218)]();
-                if (_0x4e6fe8)
+                    done: p,
+                    value: q
+                } = await l[j(0x218)]();
+                if (p)
                     break;
-                _0x163889[_0x345c28(0x217)](_0x42fcd5), _0x19f98a += _0x42fcd5[_0x345c28(0x230)], _0x2b462b && _0x506705 > 0x0 && _0x2b462b({
-                    'percent': Math[_0x345c28(0x1cf)](_0x19f98a / _0x506705 * 0x64),
-                    'bytesLoaded': _0x19f98a,
-                    'totalBytes': _0x506705
+                m[j(0x217)](q), n += q[j(0x230)], i && o > 0x0 && i({
+                    'percent': Math[j(0x1cf)](n / o * 0x64),
+                    'bytesLoaded': n,
+                    'totalBytes': o
                 });
             }
-            return new Blob(_0x163889, { 'type': _0x345c28(0x20c) });
-        } catch (_0x58f131) {
-            console[_0x345c28(0x1fe)](_0x345c28(0x1ef) + _0xca6bc1 + ':', _0x58f131);
-            throw _0x58f131;
+            return new Blob(m, { 'type': j(0x20c) });
+        } catch (r) {
+            console[j(0x1fe)](j(0x1ef) + a + ':', r);
+            throw r;
         }
     }
-    [_0x52f6cc(0x1eb)](_0x584196, _0x3b69d2 = {}) {
-        const _0x26f1bd = _0x52f6cc, _0x49ef6f = document[_0x26f1bd(0x1db)](_0x26f1bd(0x219));
-        return _0x49ef6f['id'] = _0x584196, _0x49ef6f[_0x26f1bd(0x1dc)] = !![], _0x49ef6f[_0x26f1bd(0x1f7)] = _0x26f1bd(0x201), Object['assign'](_0x49ef6f, {
+    [c(0x1eb)](a, b = {}) {
+        const i = c, j = document[i(0x1db)](i(0x219));
+        return j['id'] = a, j[i(0x1dc)] = !![], j[i(0x1f7)] = i(0x201), Object['assign'](j, {
             'controlsList': 'nodownload',
-            'crossOrigin': _0x26f1bd(0x1d3),
+            'crossOrigin': i(0x1d3),
             'playsinline': !![]
-        }), Object[_0x26f1bd(0x1ac)](_0x49ef6f, _0x3b69d2), _0x49ef6f;
+        }), Object[i(0x1ac)](j, b), j;
     }
-    async [_0x52f6cc(0x21e)](_0x4112b8, _0x32917e, _0x38b2b7) {
-        const _0x25d0bf = _0x52f6cc;
+    async [c(0x21e)](a, b, i) {
+        const j = c;
         try {
-            const _0x1e52a8 = this[_0x25d0bf(0x1b2)][_0x25d0bf(0x1c2)](_0x32917e);
-            if (!_0x1e52a8)
-                throw new Error(_0x25d0bf(0x231) + _0x32917e + _0x25d0bf(0x21a));
-            console[_0x25d0bf(0x22d)](_0x25d0bf(0x213) + _0x4112b8 + _0x25d0bf(0x1e0) + _0x32917e);
-            _0x38b2b7[_0x25d0bf(0x20b)] && (_0x38b2b7[_0x25d0bf(0x1e7)](), _0x38b2b7[_0x25d0bf(0x20b)] = '');
-            const _0x221ae3 = await this[_0x25d0bf(0x1f4)](_0x32917e, _0x48f266 => {
-                    const _0x561f75 = _0x25d0bf;
-                    this[_0x561f75(0x1c6)](_0x32917e, _0x48f266);
-                }), _0x3f73de = URL[_0x25d0bf(0x1b6)](_0x221ae3);
-            return _0x38b2b7[_0x25d0bf(0x20b)] = _0x3f73de, setTimeout(() => {
-                const _0x2a9192 = _0x25d0bf;
-                _0x38b2b7[_0x2a9192(0x20b)] === _0x3f73de && URL[_0x2a9192(0x1ec)](_0x3f73de);
-            }, 0x1388), console[_0x25d0bf(0x22d)](_0x25d0bf(0x1ee) + _0x32917e), _0x38b2b7;
-        } catch (_0x4bb963) {
-            console[_0x25d0bf(0x1fe)](_0x25d0bf(0x1e1), _0x4bb963);
-            throw _0x4bb963;
+            const k = this[j(0x1b2)][j(0x1c2)](b);
+            if (!k)
+                throw new Error(j(0x231) + b + j(0x21a));
+            console[j(0x22d)](j(0x213) + a + j(0x1e0) + b), i[j(0x20b)] && (i[j(0x1e7)](), i[j(0x20b)] = '');
+            const l = await this[j(0x1f4)](b, n => {
+                    const o = j;
+                    this[o(0x1c6)](b, n);
+                }), m = URL[j(0x1b6)](l);
+            return i[j(0x20b)] = m, setTimeout(() => {
+                const n = j;
+                i[n(0x20b)] === m && URL[n(0x1ec)](m);
+            }, 0x1388), console[j(0x22d)](j(0x1ee) + b), i;
+        } catch (n) {
+            console[j(0x1fe)](j(0x1e1), n);
+            throw n;
         }
     }
-    ['cacheVideoChunk'](_0xd1cd94, _0x5bac88, _0x3c372e) {
-        const _0x13a465 = _0x52f6cc, _0x1caad9 = _0xd1cd94 + _0x13a465(0x1bb) + _0x5bac88, _0xff056a = _0x3c372e[_0x13a465(0x210)];
-        this[_0x13a465(0x208)] + _0xff056a > this[_0x13a465(0x1c5)] && this['_evictLRUCacheEntries'](_0xff056a), this[_0x13a465(0x1b2)][_0x13a465(0x1b1)](_0x1caad9, {
-            'type': _0x13a465(0x20d),
-            'blob': _0x3c372e,
-            'timestamp': Date[_0x13a465(0x1f2)]()
-        }), this[_0x13a465(0x208)] += _0xff056a;
+    ['cacheVideoChunk'](a, b, i) {
+        const j = c, k = a + j(0x1bb) + b, l = i[j(0x210)];
+        this[j(0x208)] + l > this[j(0x1c5)] && this['_evictLRUCacheEntries'](l), this[j(0x1b2)][j(0x1b1)](k, {
+            'type': j(0x20d),
+            'blob': i,
+            'timestamp': Date[j(0x1f2)]()
+        }), this[j(0x208)] += l;
     }
-    [_0x52f6cc(0x1b9)](_0x2eaf0e, _0x2d4bb9) {
-        const _0x1ec5a5 = _0x52f6cc, _0xbcd78c = this[_0x1ec5a5(0x1b2)][_0x1ec5a5(0x1c2)](_0x2eaf0e) || {};
-        this['videoCache'][_0x1ec5a5(0x1b1)](_0x2eaf0e, {
-            ..._0xbcd78c,
-            ..._0x2d4bb9
+    [c(0x1b9)](a, b) {
+        const i = c, j = this[i(0x1b2)][i(0x1c2)](a) || {};
+        this['videoCache'][i(0x1b1)](a, {
+            ...j,
+            ...b
         });
     }
-    ['_evictLRUCacheEntries'](_0xff28f8) {
-        const _0x2a92f9 = _0x52f6cc, _0x1ae315 = Array['from'](this[_0x2a92f9(0x1b2)][_0x2a92f9(0x222)]())[_0x2a92f9(0x223)](([_0x39c1a5]) => _0x39c1a5[_0x2a92f9(0x1f8)](_0x2a92f9(0x20d)))[_0x2a92f9(0x1fa)](([_0x36b9af, _0x2853dd]) => ({
-                'key': _0x36b9af,
-                'timestamp': _0x2853dd[_0x2a92f9(0x1af)] || 0x0
-            }))[_0x2a92f9(0x1b7)]((_0x111433, _0x228253) => _0x111433[_0x2a92f9(0x1af)] - _0x228253['timestamp']);
-        let _0x86bbce = 0x0;
-        for (const {key: _0x12f331} of _0x1ae315) {
-            if (_0x86bbce >= _0xff28f8)
+    ['_evictLRUCacheEntries'](a) {
+        const b = c, i = Array['from'](this[b(0x1b2)][b(0x222)]())[b(0x223)](([k]) => k[b(0x1f8)](b(0x20d)))[b(0x1fa)](([k, l]) => ({
+                'key': k,
+                'timestamp': l[b(0x1af)] || 0x0
+            }))[b(0x1b7)]((k, l) => k[b(0x1af)] - l['timestamp']);
+        let j = 0x0;
+        for (const {key: k} of i) {
+            if (j >= a)
                 break;
-            const _0xd551bc = this[_0x2a92f9(0x1b2)]['get'](_0x12f331);
-            _0xd551bc?.['blob'] && (_0x86bbce += _0xd551bc[_0x2a92f9(0x21b)][_0x2a92f9(0x210)]), this[_0x2a92f9(0x1b2)][_0x2a92f9(0x228)](_0x12f331);
+            const l = this[b(0x1b2)]['get'](k);
+            l?.['blob'] && (j += l[b(0x21b)][b(0x210)]), this[b(0x1b2)][b(0x228)](k);
         }
-        console['log']('🗑️\x20Cache\x20evicted:\x20' + this[_0x2a92f9(0x215)](_0x86bbce));
+        console['log']('🗑️\x20Cache\x20evicted:\x20' + this[b(0x215)](j));
     }
-    [_0x52f6cc(0x1f0)](_0x322e85 = null) {
-        const _0x56f29c = _0x52f6cc;
-        if (_0x322e85) {
-            const _0x5a0ccc = Array[_0x56f29c(0x1e3)](this[_0x56f29c(0x1b2)][_0x56f29c(0x22a)]())[_0x56f29c(0x223)](_0x1485f1 => _0x1485f1['startsWith'](_0x322e85));
-            _0x5a0ccc['forEach'](_0x2be951 => this[_0x56f29c(0x1b2)]['delete'](_0x2be951)), console[_0x56f29c(0x22d)](_0x56f29c(0x220) + _0x322e85);
+    [c(0x1f0)](a = null) {
+        const b = c;
+        if (a) {
+            const i = Array[b(0x1e3)](this[b(0x1b2)][b(0x22a)]())[b(0x223)](j => j['startsWith'](a));
+            i['forEach'](j => this[b(0x1b2)]['delete'](j)), console[b(0x22d)](b(0x220) + a);
         } else
-            this[_0x56f29c(0x1b2)][_0x56f29c(0x226)](), this[_0x56f29c(0x208)] = 0x0, console['log'](_0x56f29c(0x1d0));
+            this[b(0x1b2)][b(0x226)](), this[b(0x208)] = 0x0, console['log'](b(0x1d0));
     }
-    ['_updateLoadingUI'](_0x5926cc, _0x168f41) {
-        const _0x4569ec = _0x52f6cc, _0x5c18a2 = document[_0x4569ec(0x1ce)](_0x5926cc + '-loading');
-        _0x5c18a2 && (_0x5c18a2[_0x4569ec(0x1fd)] = 'Loading:\x20' + _0x168f41['percent'] + '%');
+    ['_updateLoadingUI'](a, b) {
+        const i = c, j = document[i(0x1ce)](a + '-loading');
+        j && (j[i(0x1fd)] = 'Loading:\x20' + b['percent'] + '%');
     }
-    [_0x52f6cc(0x215)](_0x5269cc) {
-        const _0x1aa997 = _0x52f6cc;
-        if (_0x5269cc === 0x0)
-            return _0x1aa997(0x1c8);
-        const _0x202650 = 0x400, _0x57caae = [
+    [c(0x215)](a) {
+        const b = c;
+        if (a === 0x0)
+            return b(0x1c8);
+        const i = 0x400, j = [
                 'Bytes',
                 'KB',
                 'MB',
                 'GB'
-            ], _0x175a19 = Math[_0x1aa997(0x1fb)](Math['log'](_0x5269cc) / Math[_0x1aa997(0x22d)](_0x202650));
-        return Math[_0x1aa997(0x1cf)](_0x5269cc / Math[_0x1aa997(0x1f9)](_0x202650, _0x175a19) * 0x64) / 0x64 + '\x20' + _0x57caae[_0x175a19];
+            ], k = Math[b(0x1fb)](Math['log'](a) / Math[b(0x22d)](i));
+        return Math[b(0x1cf)](a / Math[b(0x1f9)](i, k) * 0x64) / 0x64 + '\x20' + j[k];
     }
-    [_0x52f6cc(0x1b3)]() {
-        const _0x3f1837 = _0x52f6cc;
+    [c(0x1b3)]() {
+        const a = c;
         return {
-            'cachedVideos': Array[_0x3f1837(0x1e3)](this[_0x3f1837(0x1b2)][_0x3f1837(0x22a)]())[_0x3f1837(0x223)](_0x341472 => !_0x341472['includes'](_0x3f1837(0x20d))),
-            'cachedChunks': Array[_0x3f1837(0x1e3)](this[_0x3f1837(0x1b2)]['keys']())[_0x3f1837(0x223)](_0x4d2cdc => _0x4d2cdc[_0x3f1837(0x1f8)](_0x3f1837(0x20d)))[_0x3f1837(0x230)],
-            'cacheSize': this[_0x3f1837(0x215)](this[_0x3f1837(0x208)]),
-            'maxCacheSize': this[_0x3f1837(0x215)](this['maxCacheSize']),
-            'utilizationPercent': Math[_0x3f1837(0x1cf)](this['currentCacheSize'] / this[_0x3f1837(0x1c5)] * 0x64)
+            'cachedVideos': Array[a(0x1e3)](this[a(0x1b2)][a(0x22a)]())[a(0x223)](b => !b['includes'](a(0x20d))),
+            'cachedChunks': Array[a(0x1e3)](this[a(0x1b2)]['keys']())[a(0x223)](b => b[a(0x1f8)](a(0x20d)))[a(0x230)],
+            'cacheSize': this[a(0x215)](this[a(0x208)]),
+            'maxCacheSize': this[a(0x215)](this['maxCacheSize']),
+            'utilizationPercent': Math[a(0x1cf)](this['currentCacheSize'] / this[a(0x1c5)] * 0x64)
         };
     }
 }
-window['OptimizedVideoStreamingManager'] = _0x4d9fb7, window['videoStreamingManager'] = null;
+window['OptimizedVideoStreamingManager'] = h, window['videoStreamingManager'] = null;

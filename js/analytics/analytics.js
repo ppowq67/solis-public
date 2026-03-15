@@ -1,57 +1,92 @@
-const _0xfd2887 = _0x5590;
-(function (_0x291916, _0x173969) {
-    const _0x95cbd0 = _0x5590, _0x49bd0b = _0x291916();
+const c = h;
+(function (a, b) {
+    const i = h, j = a();
     while (!![]) {
         try {
-            const _0x5845ff = parseInt(_0x95cbd0(0x15c)) / 0x1 + parseInt(_0x95cbd0(0x20d)) / 0x2 + -parseInt(_0x95cbd0(0x223)) / 0x3 * (-parseInt(_0x95cbd0(0x21a)) / 0x4) + -parseInt(_0x95cbd0(0x203)) / 0x5 * (-parseInt(_0x95cbd0(0x153)) / 0x6) + -parseInt(_0x95cbd0(0x193)) / 0x7 * (-parseInt(_0x95cbd0(0x1ba)) / 0x8) + parseInt(_0x95cbd0(0x1b0)) / 0x9 * (-parseInt(_0x95cbd0(0x1a9)) / 0xa) + -parseInt(_0x95cbd0(0x17b)) / 0xb * (parseInt(_0x95cbd0(0x1d9)) / 0xc);
-            if (_0x5845ff === _0x173969)
+            const k = parseInt(i(0x15c)) / 0x1 + parseInt(i(0x20d)) / 0x2 + -parseInt(i(0x223)) / 0x3 * (-parseInt(i(0x21a)) / 0x4) + -parseInt(i(0x203)) / 0x5 * (-parseInt(i(0x153)) / 0x6) + -parseInt(i(0x193)) / 0x7 * (-parseInt(i(0x1ba)) / 0x8) + parseInt(i(0x1b0)) / 0x9 * (-parseInt(i(0x1a9)) / 0xa) + -parseInt(i(0x17b)) / 0xb * (parseInt(i(0x1d9)) / 0xc);
+            if (k === b)
                 break;
             else
-                _0x49bd0b['push'](_0x49bd0b['shift']());
-        } catch (_0x288520) {
-            _0x49bd0b['push'](_0x49bd0b['shift']());
+                j['push'](j['shift']());
+        } catch (l) {
+            j['push'](j['shift']());
         }
     }
-}(_0xf291, 0xbeae9));
-const _0x491d9c = (function () {
-        let _0x405eec = !![];
-        return function (_0x2da626, _0x173dca) {
-            const _0x7bfdd8 = _0x405eec ? function () {
-                const _0x390be4 = _0x5590;
-                if (_0x173dca) {
-                    const _0x18cf6c = _0x173dca[_0x390be4(0x22a)](_0x2da626, arguments);
-                    return _0x173dca = null, _0x18cf6c;
+}(f, 0xbeae9));
+const d = (function () {
+        const i = (function () {
+                let l = !![];
+                return function (m, n) {
+                    const o = l ? function () {
+                        if (n) {
+                            const p = n['apply'](m, arguments);
+                            return n = null, p;
+                        }
+                    } : function () {
+                    };
+                    return l = ![], o;
+                };
+            }()), j = i(this, function () {
+                let l;
+                try {
+                    const o = Function('return\x20(function()\x20' + '{}.constructor(\x22return\x20this\x22)(\x20)' + ');');
+                    l = o();
+                } catch (p) {
+                    l = window;
+                }
+                const m = l['console'] = l['console'] || {}, n = [
+                        'log',
+                        'warn',
+                        'info',
+                        'error',
+                        'exception',
+                        'table',
+                        'trace'
+                    ];
+                for (let q = 0x0; q < n['length']; q++) {
+                    const r = i['constructor']['prototype']['bind'](i), s = n[q], t = m[s] || r;
+                    r['__proto__'] = i['bind'](i), r['toString'] = t['toString']['bind'](t), m[s] = r;
+                }
+            });
+        j();
+        let k = !![];
+        return function (l, m) {
+            const n = k ? function () {
+                const o = h;
+                if (m) {
+                    const p = m[o(0x22a)](l, arguments);
+                    return m = null, p;
                 }
             } : function () {
             };
-            return _0x405eec = ![], _0x7bfdd8;
+            return k = ![], n;
         };
-    }()), _0x412522 = _0x491d9c(this, function () {
-        const _0x170ad2 = _0x5590;
-        let _0x39e6a9;
+    }()), e = d(this, function () {
+        const a = h;
+        let b;
         try {
-            const _0x71f0d8 = Function(_0x170ad2(0x23a) + _0x170ad2(0x15f) + ');');
-            _0x39e6a9 = _0x71f0d8();
-        } catch (_0x527fa6) {
-            _0x39e6a9 = window;
+            const k = Function(a(0x23a) + a(0x15f) + ');');
+            b = k();
+        } catch (l) {
+            b = window;
         }
-        const _0x15804d = _0x39e6a9[_0x170ad2(0x186)] = _0x39e6a9['console'] || {}, _0x372b67 = [
+        const i = b[a(0x186)] = b['console'] || {}, j = [
                 'log',
-                _0x170ad2(0x19d),
-                _0x170ad2(0x1be),
-                _0x170ad2(0x170),
+                a(0x19d),
+                a(0x1be),
+                a(0x170),
                 'exception',
-                _0x170ad2(0x1c1),
-                _0x170ad2(0x138)
+                a(0x1c1),
+                a(0x138)
             ];
-        for (let _0x1b4cd6 = 0x0; _0x1b4cd6 < _0x372b67[_0x170ad2(0x23b)]; _0x1b4cd6++) {
-            const _0x5e3f14 = _0x491d9c[_0x170ad2(0x1d1)][_0x170ad2(0x222)][_0x170ad2(0x185)](_0x491d9c), _0x489a10 = _0x372b67[_0x1b4cd6], _0x502088 = _0x15804d[_0x489a10] || _0x5e3f14;
-            _0x5e3f14[_0x170ad2(0x216)] = _0x491d9c[_0x170ad2(0x185)](_0x491d9c), _0x5e3f14['toString'] = _0x502088[_0x170ad2(0x180)][_0x170ad2(0x185)](_0x502088), _0x15804d[_0x489a10] = _0x5e3f14;
+        for (let m = 0x0; m < j[a(0x23b)]; m++) {
+            const n = d[a(0x1d1)][a(0x222)][a(0x185)](d), o = j[m], p = i[o] || n;
+            n[a(0x216)] = d[a(0x185)](d), n['toString'] = p[a(0x180)][a(0x185)](p), i[o] = n;
         }
     });
-_0x412522();
-function _0xf291() {
-    const _0x4f5529 = [
+e();
+function f() {
+    const a = [
         'AxndB25Uzwn0zwq',
         'ywrKrxzLBNrmAxn0zw5LCG',
         'w2rHDgeTy2fYzd0I',
@@ -334,42 +369,41 @@ function _0xf291() {
         'zMv0y2HbBMfSExrPy3ngCM9Tu2vYDMvY',
         'ug9WCgLUCYWGC2fUCY1ZzxjPzG'
     ];
-    _0xf291 = function () {
-        return _0x4f5529;
-    };
-    return _0xf291();
+    return f = function () {
+        return a;
+    }, f();
 }
-class _0x143197 {
+class g {
     constructor() {
-        const _0x42b0ed = _0x5590;
-        this[_0x42b0ed(0x1fd)] = window[_0x42b0ed(0x1e6)] || _0x42b0ed(0x218), this[_0x42b0ed(0x13b)] = null, this[_0x42b0ed(0x1c9)] = null, this[_0x42b0ed(0x22b)] = {
+        const a = h;
+        this[a(0x1fd)] = window[a(0x1e6)] || a(0x218), this[a(0x13b)] = null, this[a(0x1c9)] = null, this[a(0x22b)] = {
             'MAX_RESPONSE_SIZE': 0xa * 0x400 * 0x400,
             'MAX_ARRAY_LENGTH': 0x2710,
             'MAX_STRING_LENGTH': 0x1388,
             'REQUIRE_CSRF_TOKEN': !![],
-            'CSRF_HEADER': _0x42b0ed(0x206),
+            'CSRF_HEADER': a(0x206),
             'ENABLE_CONTENT_VALIDATION': !![],
             'SECURITY_LOG_ENABLED': !![],
             'MAX_LOG_ENTRIES': 0x64,
             'REQUEST_TIMEOUT': 0x7530,
-            'SAFE_DOMAINS': [window[_0x42b0ed(0x1a4)][_0x42b0ed(0x142)]],
+            'SAFE_DOMAINS': [window[a(0x1a4)][a(0x142)]],
             'CHART_INSTANCE_LIMIT': 0x5,
             'AUTO_REFRESH_INTERVAL': 0x493e0,
             'ENABLE_SRI_VALIDATION': !![],
-            'CHART_JS_INTEGRITY': _0x42b0ed(0x1d2),
+            'CHART_JS_INTEGRITY': a(0x1d2),
             'SRI_ALGORITHMS': [
-                _0x42b0ed(0x1c7),
-                _0x42b0ed(0x1ce),
-                _0x42b0ed(0x1f2)
+                a(0x1c7),
+                a(0x1ce),
+                a(0x1f2)
             ],
             'ENABLE_REQUEST_SIGNING': !![],
-            'SIGNATURE_ALGORITHM': _0x42b0ed(0x1ec),
+            'SIGNATURE_ALGORITHM': a(0x1ec),
             'SIGNATURE_HEADER': 'X-Request-Signature',
-            'TIMESTAMP_HEADER': _0x42b0ed(0x233),
-            'NONCE_HEADER': _0x42b0ed(0x198),
+            'TIMESTAMP_HEADER': a(0x233),
+            'NONCE_HEADER': a(0x198),
             'REQUEST_TTL': 0x493e0,
             'REQUIRE_CRYPTO_API': !![]
-        }, this[_0x42b0ed(0x241)] = {
+        }, this[a(0x241)] = {
             'monetization': 0x0,
             'subscribers': 0x0,
             'views': 0x0,
@@ -377,185 +411,185 @@ class _0x143197 {
             'dailyViews': [],
             'weeklyViews': [],
             'monthlyViews': [],
-            'currentPeriod': _0x42b0ed(0x207),
+            'currentPeriod': a(0x207),
             'platformViews': {
                 'youtube': 0x0,
                 'tiktok': 0x0,
                 'all': 0x0
             },
-            'currentPlatform': _0x42b0ed(0x22f)
+            'currentPlatform': a(0x22f)
         }, this['previousMetrics'] = {
             'views': 0x0,
             'subscribers': 0x0
-        }, this[_0x42b0ed(0x19b)] = {
+        }, this[a(0x19b)] = {
             'csrfToken': this['_getCSRFToken'](),
             'chartInstances': 0x0,
             'securityLog': []
-        }, this[_0x42b0ed(0x1ad)](), this[_0x42b0ed(0x1a7)](), this[_0x42b0ed(0x243)](), this[_0x42b0ed(0x168)]();
+        }, this[a(0x1ad)](), this[a(0x1a7)](), this[a(0x243)](), this[a(0x168)]();
     }
-    [_0xfd2887(0x1fa)]() {
-        const _0x3ecfbd = _0xfd2887, _0x3102f0 = document[_0x3ecfbd(0x1f5)](_0x3ecfbd(0x184));
-        return _0x3102f0 ? _0x3102f0['getAttribute'](_0x3ecfbd(0x1d6)) : null;
+    [c(0x1fa)]() {
+        const a = c, b = document[a(0x1f5)](a(0x184));
+        return b ? b['getAttribute'](a(0x1d6)) : null;
     }
-    ['_constantTimeCompare'](_0x160556, _0x4e759c) {
-        const _0x5c8327 = _0xfd2887;
-        if (_0x160556[_0x5c8327(0x23b)] !== _0x4e759c[_0x5c8327(0x23b)])
+    ['_constantTimeCompare'](a, b) {
+        const i = c;
+        if (a[i(0x23b)] !== b[i(0x23b)])
             return ![];
-        let _0xb1298e = 0x0;
-        for (let _0x4b44ca = 0x0; _0x4b44ca < _0x160556[_0x5c8327(0x23b)]; _0x4b44ca++) {
-            _0xb1298e |= _0x160556['charCodeAt'](_0x4b44ca) ^ _0x4e759c[_0x5c8327(0x1d0)](_0x4b44ca);
+        let j = 0x0;
+        for (let k = 0x0; k < a[i(0x23b)]; k++) {
+            j |= a['charCodeAt'](k) ^ b[i(0x1d0)](k);
         }
-        return _0xb1298e === 0x0;
+        return j === 0x0;
     }
-    [_0xfd2887(0x13c)](_0x132c68, _0x39fe68 = this[_0xfd2887(0x22b)][_0xfd2887(0x204)]) {
-        const _0x4b17ac = _0xfd2887;
-        if (typeof _0x132c68 !== 'string')
+    [c(0x13c)](a, b = this[c(0x22b)][c(0x204)]) {
+        const i = c;
+        if (typeof a !== 'string')
             return '';
-        let _0x593ee5 = _0x132c68[_0x4b17ac(0x23f)](/[\x00-\x1F\x7F]/g, '');
-        const _0x385b88 = {
-            '&': _0x4b17ac(0x1b3),
+        let j = a[i(0x23f)](/[\x00-\x1F\x7F]/g, '');
+        const k = {
+            '&': i(0x1b3),
             '<': '&lt;',
-            '>': _0x4b17ac(0x140),
-            '\x22': _0x4b17ac(0x1a1),
-            '\x27': _0x4b17ac(0x187)
+            '>': i(0x140),
+            '\x22': i(0x1a1),
+            '\x27': i(0x187)
         };
-        return _0x593ee5 = _0x593ee5['replace'](/[&<>"']/g, _0x159320 => _0x385b88[_0x159320]), _0x593ee5[_0x4b17ac(0x191)](0x0, _0x39fe68);
+        return j = j['replace'](/[&<>"']/g, l => k[l]), j[i(0x191)](0x0, b);
     }
-    ['_validateNumber'](_0x4f5ed4, _0xe10964 = 0x0, _0x10c1b3 = Number['MAX_SAFE_INTEGER']) {
-        const _0x4a8cc9 = _0xfd2887, _0x2ba6c3 = Number(_0x4f5ed4);
-        if (!Number[_0x4a8cc9(0x160)](_0x2ba6c3))
+    ['_validateNumber'](a, b = 0x0, i = Number['MAX_SAFE_INTEGER']) {
+        const j = c, k = Number(a);
+        if (!Number[j(0x160)](k))
             return 0x0;
-        return Math['max'](_0xe10964, Math[_0x4a8cc9(0x20a)](_0x10c1b3, _0x2ba6c3));
+        return Math['max'](b, Math[j(0x20a)](i, k));
     }
-    [_0xfd2887(0x148)](_0x2f1dbe, _0x3ec765 = this[_0xfd2887(0x22b)][_0xfd2887(0x188)]) {
-        if (!Array['isArray'](_0x2f1dbe))
+    [c(0x148)](a, b = this[c(0x22b)][c(0x188)]) {
+        if (!Array['isArray'](a))
             return [];
-        return _0x2f1dbe['slice'](0x0, _0x3ec765);
+        return a['slice'](0x0, b);
     }
-    [_0xfd2887(0x1c0)](_0x277b48) {
-        const _0x1889d5 = _0xfd2887, _0x251fa0 = _0x277b48['headers']['get'](_0x1889d5(0x1c2));
-        if (_0x251fa0 && parseInt(_0x251fa0) > this[_0x1889d5(0x22b)][_0x1889d5(0x232)])
-            return this[_0x1889d5(0x14f)]('RESPONSE_SIZE_EXCEEDED', {
-                'size': _0x251fa0,
-                'max': this[_0x1889d5(0x22b)]['MAX_RESPONSE_SIZE']
+    [c(0x1c0)](a) {
+        const b = c, i = a['headers']['get'](b(0x1c2));
+        if (i && parseInt(i) > this[b(0x22b)][b(0x232)])
+            return this[b(0x14f)]('RESPONSE_SIZE_EXCEEDED', {
+                'size': i,
+                'max': this[b(0x22b)]['MAX_RESPONSE_SIZE']
             }), ![];
         return !![];
     }
-    [_0xfd2887(0x1b5)](_0x37109f) {
-        const _0x4ccaa0 = _0xfd2887;
-        if (!_0x37109f || typeof _0x37109f !== _0x4ccaa0(0x1ed))
-            return this[_0x4ccaa0(0x14f)]('INVALID_RESPONSE_TYPE', { 'received': typeof _0x37109f }), null;
-        const _0x5cb99c = {
-            'monetization': this['_validateNumber'](_0x37109f[_0x4ccaa0(0x1e5)], 0x0, 0x3b9ac9ff),
-            'subscribers': this['_validateNumber'](_0x37109f['subscribers'], 0x0, 0x3b9ac9ff),
-            'views': this['_validateNumber'](_0x37109f['views'], 0x0, 0x3b9ac9ff),
-            'dailyViews': this[_0x4ccaa0(0x148)](_0x37109f[_0x4ccaa0(0x225)]),
-            'weeklyViews': this[_0x4ccaa0(0x148)](_0x37109f[_0x4ccaa0(0x20b)]),
-            'monthlyViews': this['_validateArray'](_0x37109f[_0x4ccaa0(0x13e)]),
-            'platformViews': this['_validatePlatformViews'](_0x37109f[_0x4ccaa0(0x15b)]),
-            'connected': typeof _0x37109f[_0x4ccaa0(0x1c3)] === _0x4ccaa0(0x24d) ? _0x37109f[_0x4ccaa0(0x1c3)] : ![],
-            'connections': this[_0x4ccaa0(0x210)](_0x37109f[_0x4ccaa0(0x174)])
+    [c(0x1b5)](a) {
+        const b = c;
+        if (!a || typeof a !== b(0x1ed))
+            return this[b(0x14f)]('INVALID_RESPONSE_TYPE', { 'received': typeof a }), null;
+        const i = {
+            'monetization': this['_validateNumber'](a[b(0x1e5)], 0x0, 0x3b9ac9ff),
+            'subscribers': this['_validateNumber'](a['subscribers'], 0x0, 0x3b9ac9ff),
+            'views': this['_validateNumber'](a['views'], 0x0, 0x3b9ac9ff),
+            'dailyViews': this[b(0x148)](a[b(0x225)]),
+            'weeklyViews': this[b(0x148)](a[b(0x20b)]),
+            'monthlyViews': this['_validateArray'](a[b(0x13e)]),
+            'platformViews': this['_validatePlatformViews'](a[b(0x15b)]),
+            'connected': typeof a[b(0x1c3)] === b(0x24d) ? a[b(0x1c3)] : ![],
+            'connections': this[b(0x210)](a[b(0x174)])
         };
-        return _0x5cb99c['dailyViews'] = _0x5cb99c['dailyViews'][_0x4ccaa0(0x1d7)](_0x1ce2f5 => this['_validateMetricItem'](_0x1ce2f5)), _0x5cb99c['weeklyViews'] = _0x5cb99c[_0x4ccaa0(0x20b)]['map'](_0x3af336 => this[_0x4ccaa0(0x177)](_0x3af336)), _0x5cb99c[_0x4ccaa0(0x13e)] = _0x5cb99c[_0x4ccaa0(0x13e)]['map'](_0x269faa => this[_0x4ccaa0(0x177)](_0x269faa)), _0x5cb99c;
+        return i['dailyViews'] = i['dailyViews'][b(0x1d7)](j => this['_validateMetricItem'](j)), i['weeklyViews'] = i[b(0x20b)]['map'](j => this[b(0x177)](j)), i[b(0x13e)] = i[b(0x13e)]['map'](j => this[b(0x177)](j)), i;
     }
-    [_0xfd2887(0x177)](_0x35f670) {
-        const _0x4e3ee4 = _0xfd2887;
+    [c(0x177)](a) {
+        const b = c;
         return {
-            'views': this[_0x4e3ee4(0x147)](_0x35f670[_0x4e3ee4(0x1bf)], 0x0),
-            'revenue': this[_0x4e3ee4(0x147)](_0x35f670[_0x4e3ee4(0x242)] || _0x35f670[_0x4e3ee4(0x139)], 0x0),
-            'estimatedRevenue': this[_0x4e3ee4(0x147)](_0x35f670[_0x4e3ee4(0x139)], 0x0),
-            'subscribers': this[_0x4e3ee4(0x147)](_0x35f670[_0x4e3ee4(0x17c)], 0x0),
-            'day': this[_0x4e3ee4(0x13c)](_0x35f670[_0x4e3ee4(0x226)] || '', 0x32),
-            'week': this[_0x4e3ee4(0x13c)](_0x35f670[_0x4e3ee4(0x207)] || '', 0x32),
-            'month': this['_sanitizeString'](_0x35f670[_0x4e3ee4(0x159)] || '', 0x32)
+            'views': this[b(0x147)](a[b(0x1bf)], 0x0),
+            'revenue': this[b(0x147)](a[b(0x242)] || a[b(0x139)], 0x0),
+            'estimatedRevenue': this[b(0x147)](a[b(0x139)], 0x0),
+            'subscribers': this[b(0x147)](a[b(0x17c)], 0x0),
+            'day': this[b(0x13c)](a[b(0x226)] || '', 0x32),
+            'week': this[b(0x13c)](a[b(0x207)] || '', 0x32),
+            'month': this['_sanitizeString'](a[b(0x159)] || '', 0x32)
         };
     }
-    [_0xfd2887(0x190)](_0x4be476) {
-        const _0x21d142 = _0xfd2887;
+    [c(0x190)](a) {
+        const b = c;
         return {
-            'youtube': this[_0x21d142(0x147)]((_0x4be476 || {})[_0x21d142(0x18c)], 0x0),
-            'tiktok': this['_validateNumber']((_0x4be476 || {})[_0x21d142(0x20f)], 0x0),
-            'all': this['_validateNumber']((_0x4be476 || {})['all'], 0x0)
+            'youtube': this[b(0x147)]((a || {})[b(0x18c)], 0x0),
+            'tiktok': this['_validateNumber']((a || {})[b(0x20f)], 0x0),
+            'all': this['_validateNumber']((a || {})['all'], 0x0)
         };
     }
-    ['_validateConnections'](_0x11f983) {
-        const _0x507b12 = _0xfd2887;
-        if (!_0x11f983 || typeof _0x11f983 !== _0x507b12(0x1ed))
+    ['_validateConnections'](a) {
+        const b = c;
+        if (!a || typeof a !== b(0x1ed))
             return {};
         return {
-            'youtube': _0x11f983[_0x507b12(0x18c)] ? {
-                'connected': typeof _0x11f983[_0x507b12(0x18c)][_0x507b12(0x1c3)] === 'boolean' ? _0x11f983[_0x507b12(0x18c)]['connected'] : ![],
-                'username': this[_0x507b12(0x13c)](_0x11f983[_0x507b12(0x18c)][_0x507b12(0x1a6)] || '', 0x64)
+            'youtube': a[b(0x18c)] ? {
+                'connected': typeof a[b(0x18c)][b(0x1c3)] === 'boolean' ? a[b(0x18c)]['connected'] : ![],
+                'username': this[b(0x13c)](a[b(0x18c)][b(0x1a6)] || '', 0x64)
             } : null
         };
     }
-    [_0xfd2887(0x14f)](_0x5582e1, _0x49c884 = {}) {
-        const _0xfdc271 = _0xfd2887;
-        if (!this[_0xfdc271(0x22b)][_0xfdc271(0x1aa)])
+    [c(0x14f)](a, b = {}) {
+        const i = c;
+        if (!this[i(0x22b)][i(0x1aa)])
             return;
-        const _0x2724f3 = {
-            'timestamp': new Date()[_0xfdc271(0x1d5)](),
-            'type': _0x5582e1,
-            'details': _0x49c884,
-            'url': window[_0xfdc271(0x1a4)][_0xfdc271(0x154)]
+        const j = {
+            'timestamp': new Date()[i(0x1d5)](),
+            'type': a,
+            'details': b,
+            'url': window[i(0x1a4)][i(0x154)]
         };
-        this[_0xfdc271(0x19b)]['securityLog'][_0xfdc271(0x1b9)](_0x2724f3), this[_0xfdc271(0x19b)]['securityLog'][_0xfdc271(0x23b)] > this[_0xfdc271(0x22b)][_0xfdc271(0x151)] && this[_0xfdc271(0x19b)][_0xfdc271(0x237)]['shift'](), (window[_0xfdc271(0x1a4)][_0xfdc271(0x1f6)] === _0xfdc271(0x143) || window[_0xfdc271(0x1a4)][_0xfdc271(0x1f6)] === _0xfdc271(0x22c)) && ((_0x5582e1[_0xfdc271(0x1c6)](_0xfdc271(0x181)) || _0x5582e1[_0xfdc271(0x1c6)](_0xfdc271(0x1ef)) || _0x5582e1['includes']('EXCEEDED')) && console['warn']('[Analytics\x20Security]\x20' + _0x5582e1, _0x49c884));
+        this[i(0x19b)]['securityLog'][i(0x1b9)](j), this[i(0x19b)]['securityLog'][i(0x23b)] > this[i(0x22b)][i(0x151)] && this[i(0x19b)][i(0x237)]['shift'](), (window[i(0x1a4)][i(0x1f6)] === i(0x143) || window[i(0x1a4)][i(0x1f6)] === i(0x22c)) && ((a[i(0x1c6)](i(0x181)) || a[i(0x1c6)](i(0x1ef)) || a['includes']('EXCEEDED')) && console['warn']('[Analytics\x20Security]\x20' + a, b));
     }
-    ['_safeSetTextContent'](_0x580ece, _0x259e96) {
-        const _0x41ae6a = _0xfd2887;
-        if (!_0x580ece)
+    ['_safeSetTextContent'](a, b) {
+        const i = c;
+        if (!a)
             return;
         try {
-            _0x580ece[_0x41ae6a(0x20e)] = this[_0x41ae6a(0x13c)](String(_0x259e96));
-        } catch (_0x5a5c94) {
-            this['_logSecurityEvent']('DOM_UPDATE_ERROR', { 'error': _0x5a5c94[_0x41ae6a(0x1ac)] });
+            a[i(0x20e)] = this[i(0x13c)](String(b));
+        } catch (j) {
+            this['_logSecurityEvent']('DOM_UPDATE_ERROR', { 'error': j[i(0x1ac)] });
         }
     }
-    [_0xfd2887(0x19e)](_0xee5375, _0x35bba1) {
-        const _0x559dd1 = _0xfd2887;
-        if (!this[_0x559dd1(0x22b)][_0x559dd1(0x1a8)])
+    [c(0x19e)](a, b) {
+        const i = c;
+        if (!this[i(0x22b)][i(0x1a8)])
             return !![];
         try {
-            const _0x544042 = document[_0x559dd1(0x212)](_0x559dd1(0x16f));
-            let _0x395c49 = null;
-            for (const _0x4ed673 of _0x544042) {
-                if (_0x4ed673[_0x559dd1(0x1b2)] === _0xee5375) {
-                    _0x395c49 = _0x4ed673;
+            const j = document[i(0x212)](i(0x16f));
+            let k = null;
+            for (const n of j) {
+                if (n[i(0x1b2)] === a) {
+                    k = n;
                     break;
                 }
             }
-            if (!_0x395c49)
-                return this['_logSecurityEvent'](_0x559dd1(0x211), { 'url': _0xee5375 }), ![];
-            const _0x4bbc80 = _0x395c49['getAttribute'](_0x559dd1(0x231));
-            if (!_0x4bbc80 && _0x35bba1)
-                return this[_0x559dd1(0x14f)](_0x559dd1(0x238), { 'url': _0xee5375 }), ![];
-            const _0x51177f = this[_0x559dd1(0x22b)]['SRI_ALGORITHMS'][_0x559dd1(0x229)](_0x3574cc => _0x4bbc80[_0x559dd1(0x220)](_0x3574cc + '-'));
-            if (!_0x51177f)
+            if (!k)
+                return this['_logSecurityEvent'](i(0x211), { 'url': a }), ![];
+            const l = k['getAttribute'](i(0x231));
+            if (!l && b)
+                return this[i(0x14f)](i(0x238), { 'url': a }), ![];
+            const m = this[i(0x22b)]['SRI_ALGORITHMS'][i(0x229)](o => l[i(0x220)](o + '-'));
+            if (!m)
                 return this['_logSecurityEvent']('SRI_INVALID_ALGORITHM', {
-                    'url': _0xee5375,
-                    'integrity': _0x4bbc80
+                    'url': a,
+                    'integrity': l
                 }), ![];
-            return this['_logSecurityEvent'](_0x559dd1(0x15e), { 'url': _0xee5375 }), !![];
-        } catch (_0x617b66) {
-            return this['_logSecurityEvent'](_0x559dd1(0x1b4), { 'error': _0x617b66 instanceof Error ? _0x617b66[_0x559dd1(0x1ac)] : 'Unknown\x20error' }), ![];
+            return this['_logSecurityEvent'](i(0x15e), { 'url': a }), !![];
+        } catch (o) {
+            return this['_logSecurityEvent'](i(0x1b4), { 'error': o instanceof Error ? o[i(0x1ac)] : 'Unknown\x20error' }), ![];
         }
     }
-    [_0xfd2887(0x1d8)]() {
-        const _0xfa85 = _0xfd2887, _0x218485 = new Uint8Array(0x10);
-        return crypto[_0xfa85(0x219)](_0x218485), Array[_0xfa85(0x18d)](_0x218485, _0x31d812 => _0x31d812[_0xfa85(0x180)](0x10)[_0xfa85(0x1bc)](0x2, '0'))[_0xfa85(0x16c)]('');
+    [c(0x1d8)]() {
+        const a = c, b = new Uint8Array(0x10);
+        return crypto[a(0x219)](b), Array[a(0x18d)](b, i => i[a(0x180)](0x10)[a(0x1bc)](0x2, '0'))[a(0x16c)]('');
     }
-    async ['_signRequest'](_0x4e00ab, _0x242e53, _0x19823e = null) {
-        const _0x338688 = _0xfd2887;
-        if (!this[_0x338688(0x22b)]['ENABLE_REQUEST_SIGNING'])
+    async ['_signRequest'](a, b, i = null) {
+        const j = c;
+        if (!this[j(0x22b)]['ENABLE_REQUEST_SIGNING'])
             return {
                 'signature': null,
                 'timestamp': Date['now'](),
                 'nonce': this['_generateNonce']()
             };
         try {
-            if (!window['crypto'] || !window[_0x338688(0x201)][_0x338688(0x1e7)]) {
-                this[_0x338688(0x14f)]('CRYPTO_API_UNAVAILABLE', {});
-                if (this[_0x338688(0x22b)][_0x338688(0x21e)])
+            if (!window['crypto'] || !window[j(0x201)][j(0x1e7)]) {
+                this[j(0x14f)]('CRYPTO_API_UNAVAILABLE', {});
+                if (this[j(0x22b)][j(0x21e)])
                     return null;
                 return {
                     'signature': null,
@@ -563,357 +597,357 @@ class _0x143197 {
                     'nonce': this['_generateNonce']()
                 };
             }
-            const _0x577681 = Date[_0x338688(0x1a3)]()[_0x338688(0x180)](), _0x9c129b = this[_0x338688(0x1d8)](), _0x499608 = await this[_0x338688(0x163)](_0x19823e || ''), _0x2e1d0a = _0x4e00ab + '|' + _0x242e53 + '|' + _0x577681 + '|' + _0x9c129b + '|' + _0x499608, _0x4d18c0 = await this[_0x338688(0x1f1)](), _0x505a04 = new TextEncoder(), _0x1a17ac = _0x505a04[_0x338688(0x1b8)](_0x2e1d0a), _0x1969db = await window['crypto'][_0x338688(0x1e7)][_0x338688(0x172)](_0x338688(0x162), _0x4d18c0, _0x1a17ac), _0x23734e = Array['from'](new Uint8Array(_0x1969db))['map'](_0x7ed4e2 => _0x7ed4e2[_0x338688(0x180)](0x10)[_0x338688(0x1bc)](0x2, '0'))[_0x338688(0x16c)]('');
-            return this['_logSecurityEvent'](_0x338688(0x17f), {
-                'endpoint': _0x242e53,
-                'timestamp': _0x577681
+            const k = Date[j(0x1a3)]()[j(0x180)](), l = this[j(0x1d8)](), m = await this[j(0x163)](i || ''), n = a + '|' + b + '|' + k + '|' + l + '|' + m, o = await this[j(0x1f1)](), p = new TextEncoder(), q = p[j(0x1b8)](n), r = await window['crypto'][j(0x1e7)][j(0x172)](j(0x162), o, q), s = Array['from'](new Uint8Array(r))['map'](t => t[j(0x180)](0x10)[j(0x1bc)](0x2, '0'))[j(0x16c)]('');
+            return this['_logSecurityEvent'](j(0x17f), {
+                'endpoint': b,
+                'timestamp': k
             }), {
-                'signature': _0x23734e,
-                'timestamp': _0x577681,
-                'nonce': _0x9c129b
+                'signature': s,
+                'timestamp': k,
+                'nonce': l
             };
-        } catch (_0x37798f) {
-            return this[_0x338688(0x14f)]('REQUEST_SIGNING_ERROR', { 'error': _0x37798f instanceof Error ? _0x37798f[_0x338688(0x1ac)] : _0x338688(0x247) }), null;
+        } catch (t) {
+            return this[j(0x14f)]('REQUEST_SIGNING_ERROR', { 'error': t instanceof Error ? t[j(0x1ac)] : j(0x247) }), null;
         }
     }
-    async [_0xfd2887(0x163)](_0x477f38) {
-        const _0x245d6f = _0xfd2887;
+    async [c(0x163)](a) {
+        const b = c;
         try {
-            if (!window[_0x245d6f(0x201)] || !window[_0x245d6f(0x201)][_0x245d6f(0x1e7)])
-                return _0x245d6f(0x1b1);
-            const _0x4b8ec7 = new TextEncoder(), _0x28a8a6 = _0x4b8ec7[_0x245d6f(0x1b8)](String(_0x477f38)), _0x420d4f = await window[_0x245d6f(0x201)][_0x245d6f(0x1e7)][_0x245d6f(0x137)](_0x245d6f(0x1e2), _0x28a8a6), _0x559110 = Array[_0x245d6f(0x18d)](new Uint8Array(_0x420d4f));
-            return _0x559110[_0x245d6f(0x1d7)](_0x10deca => _0x10deca[_0x245d6f(0x180)](0x10)[_0x245d6f(0x1bc)](0x2, '0'))['join']('');
-        } catch (_0x11161e) {
-            return this[_0x245d6f(0x14f)]('HASH_ERROR', { 'error': _0x11161e instanceof Error ? _0x11161e[_0x245d6f(0x1ac)] : 'Unknown\x20error' }), _0x245d6f(0x228);
+            if (!window[b(0x201)] || !window[b(0x201)][b(0x1e7)])
+                return b(0x1b1);
+            const i = new TextEncoder(), j = i[b(0x1b8)](String(a)), k = await window[b(0x201)][b(0x1e7)][b(0x137)](b(0x1e2), j), l = Array[b(0x18d)](new Uint8Array(k));
+            return l[b(0x1d7)](m => m[b(0x180)](0x10)[b(0x1bc)](0x2, '0'))['join']('');
+        } catch (m) {
+            return this[b(0x14f)]('HASH_ERROR', { 'error': m instanceof Error ? m[b(0x1ac)] : 'Unknown\x20error' }), b(0x228);
         }
     }
-    async [_0xfd2887(0x1f1)]() {
-        const _0x3e03ca = _0xfd2887;
+    async [c(0x1f1)]() {
+        const a = c;
         try {
-            if (!window['crypto'] || !window[_0x3e03ca(0x201)]['subtle'])
-                throw new Error(_0x3e03ca(0x199));
-            const _0x539c33 = this['securityState'][_0x3e03ca(0x1ca)] || _0x3e03ca(0x1cb), _0x17f6c3 = new TextEncoder(), _0x417179 = await window[_0x3e03ca(0x201)][_0x3e03ca(0x1e7)][_0x3e03ca(0x150)](_0x3e03ca(0x248), _0x17f6c3['encode'](_0x539c33), {
-                    'name': _0x3e03ca(0x162),
-                    'hash': _0x3e03ca(0x1e2)
+            if (!window['crypto'] || !window[a(0x201)]['subtle'])
+                throw new Error(a(0x199));
+            const b = this['securityState'][a(0x1ca)] || a(0x1cb), i = new TextEncoder(), j = await window[a(0x201)][a(0x1e7)][a(0x150)](a(0x248), i['encode'](b), {
+                    'name': a(0x162),
+                    'hash': a(0x1e2)
                 }, ![], [
-                    _0x3e03ca(0x172),
+                    a(0x172),
                     'verify'
                 ]);
-            return _0x417179;
-        } catch (_0x2ca1e9) {
-            return this[_0x3e03ca(0x14f)](_0x3e03ca(0x1cd), { 'error': _0x2ca1e9 instanceof Error ? _0x2ca1e9[_0x3e03ca(0x1ac)] : 'Unknown\x20error' }), null;
+            return j;
+        } catch (k) {
+            return this[a(0x14f)](a(0x1cd), { 'error': k instanceof Error ? k[a(0x1ac)] : 'Unknown\x20error' }), null;
         }
     }
-    [_0xfd2887(0x243)]() {
+    [c(0x243)]() {
         setInterval(() => {
-            const _0x36832b = _0x5590;
-            if (window[_0x36832b(0x1f7)] && Array['isArray'](window[_0x36832b(0x1f7)][_0x36832b(0x1cc)])) {
-                const _0x5a01fd = this[_0x36832b(0x147)](window['clipsStudio'][_0x36832b(0x1cc)][_0x36832b(0x23b)], 0x0, 0xf423f);
-                _0x5a01fd !== this[_0x36832b(0x241)][_0x36832b(0x245)] && (this[_0x36832b(0x241)][_0x36832b(0x245)] = _0x5a01fd, this[_0x36832b(0x16b)]());
+            const a = h;
+            if (window[a(0x1f7)] && Array['isArray'](window[a(0x1f7)][a(0x1cc)])) {
+                const b = this[a(0x147)](window['clipsStudio'][a(0x1cc)][a(0x23b)], 0x0, 0xf423f);
+                b !== this[a(0x241)][a(0x245)] && (this[a(0x241)][a(0x245)] = b, this[a(0x16b)]());
             }
         }, 0x1388);
     }
-    [_0xfd2887(0x1a7)]() {
-        const _0x4d6d8a = _0xfd2887;
-        document['querySelectorAll']('.period-btn')[_0x4d6d8a(0x24a)](_0x4a5d24 => {
-            const _0x4a0ffd = _0x4d6d8a;
-            _0x4a5d24[_0x4a0ffd(0x1de)](_0x4a0ffd(0x1a0), () => {
-                const _0x40a037 = _0x4a0ffd, _0x907082 = _0x4a5d24[_0x40a037(0x1c8)]['period'];
-                this[_0x40a037(0x221)](_0x907082);
+    [c(0x1a7)]() {
+        const a = c;
+        document['querySelectorAll']('.period-btn')[a(0x24a)](b => {
+            const i = a;
+            b[i(0x1de)](i(0x1a0), () => {
+                const j = i, k = b[j(0x1c8)]['period'];
+                this[j(0x221)](k);
             });
-        }), document[_0x4d6d8a(0x212)](_0x4d6d8a(0x234))[_0x4d6d8a(0x24a)](_0x3a620d => {
-            const _0x529791 = _0x4d6d8a;
-            _0x3a620d['addEventListener'](_0x529791(0x1a0), () => {
-                const _0x1828ce = _0x529791, _0x4b3876 = _0x3a620d[_0x1828ce(0x1c8)][_0x1828ce(0x249)];
-                this[_0x1828ce(0x215)](_0x4b3876);
+        }), document[a(0x212)](a(0x234))[a(0x24a)](b => {
+            const i = a;
+            b['addEventListener'](i(0x1a0), () => {
+                const j = i, k = b[j(0x1c8)][j(0x249)];
+                this[j(0x215)](k);
             });
         });
     }
-    [_0xfd2887(0x221)](_0x47797b) {
-        const _0x116f95 = _0xfd2887;
-        this[_0x116f95(0x241)][_0x116f95(0x141)] = _0x47797b, document['querySelectorAll'](_0x116f95(0x1cf))[_0x116f95(0x24a)](_0x1d806a => {
-            const _0x10af89 = _0x116f95;
-            _0x1d806a['classList'][_0x10af89(0x1d4)](_0x10af89(0x167)), _0x1d806a[_0x10af89(0x1c8)][_0x10af89(0x1ae)] === _0x47797b && _0x1d806a[_0x10af89(0x1f4)][_0x10af89(0x1ee)](_0x10af89(0x167));
+    [c(0x221)](a) {
+        const b = c;
+        this[b(0x241)][b(0x141)] = a, document['querySelectorAll'](b(0x1cf))[b(0x24a)](i => {
+            const j = b;
+            i['classList'][j(0x1d4)](j(0x167)), i[j(0x1c8)][j(0x1ae)] === a && i[j(0x1f4)][j(0x1ee)](j(0x167));
         }), this['updateDashboard']();
     }
-    ['setPlatformFilter'](_0x47b2ef) {
-        const _0x129436 = _0xfd2887;
-        this[_0x129436(0x241)][_0x129436(0x240)] = _0x47b2ef, document['querySelectorAll'](_0x129436(0x234))[_0x129436(0x24a)](_0x3f604f => {
-            const _0x3b435d = _0x129436;
-            _0x3f604f[_0x3b435d(0x1f4)][_0x3b435d(0x1d4)]('active'), _0x3f604f['dataset'][_0x3b435d(0x249)] === _0x47b2ef && _0x3f604f[_0x3b435d(0x1f4)][_0x3b435d(0x1ee)](_0x3b435d(0x167));
-        }), this[_0x129436(0x21b)]();
+    ['setPlatformFilter'](a) {
+        const b = c;
+        this[b(0x241)][b(0x240)] = a, document['querySelectorAll'](b(0x234))[b(0x24a)](i => {
+            const j = b;
+            i[j(0x1f4)][j(0x1d4)]('active'), i['dataset'][j(0x249)] === a && i[j(0x1f4)][j(0x1ee)](j(0x167));
+        }), this[b(0x21b)]();
     }
-    [_0xfd2887(0x168)]() {
-        const _0x535e19 = _0xfd2887;
+    [c(0x168)]() {
+        const a = c;
         setInterval(() => {
-            const _0xd5fdad = _0x5590;
-            this[_0xd5fdad(0x1dd)] && this[_0xd5fdad(0x1db)]()[_0xd5fdad(0x19f)](_0x65ddd6 => {
-                const _0x2e604e = _0xd5fdad;
-                this[_0x2e604e(0x14f)](_0x2e604e(0x14d), { 'error': _0x65ddd6 instanceof Error ? _0x65ddd6[_0x2e604e(0x1ac)] : 'Unknown\x20error' });
+            const b = h;
+            this[b(0x1dd)] && this[b(0x1db)]()[b(0x19f)](i => {
+                const j = b;
+                this[j(0x14f)](j(0x14d), { 'error': i instanceof Error ? i[j(0x1ac)] : 'Unknown\x20error' });
             });
-        }, this[_0x535e19(0x22b)]['AUTO_REFRESH_INTERVAL']);
+        }, this[a(0x22b)]['AUTO_REFRESH_INTERVAL']);
     }
-    [_0xfd2887(0x23d)](_0xb0b9c8, _0x424825, _0x1cf2be = 0x3e8, _0x2b9c33 = '', _0x5b3bc7 = '') {
-        const _0x59f10d = _0xfd2887;
-        if (!_0xb0b9c8)
+    [c(0x23d)](a, b, i = 0x3e8, j = '', k = '') {
+        const l = c;
+        if (!a)
             return;
         try {
-            const _0x5b908c = 0x0, _0x232f0a = Date[_0x59f10d(0x1a3)](), _0x134e9c = () => {
-                    const _0x85118f = _0x59f10d, _0xa4a41c = Date[_0x85118f(0x1a3)]() - _0x232f0a, _0x3d1dd9 = Math['min'](_0xa4a41c / _0x1cf2be, 0x1), _0x5942ee = _0x211765 => 0x1 - (0x1 - _0x211765) * (0x1 - _0x211765), _0x4f0b25 = _0x5942ee(_0x3d1dd9), _0x24ebec = Math[_0x85118f(0x1e4)](_0x5b908c + (_0x424825 - _0x5b908c) * _0x4f0b25), _0x385e1b = _0x2b9c33 + this[_0x85118f(0x1f0)](_0x24ebec) + _0x5b3bc7;
-                    this[_0x85118f(0x1fb)](_0xb0b9c8, _0x385e1b);
-                    if (_0x3d1dd9 < 0x1)
-                        requestAnimationFrame(_0x134e9c);
+            const m = 0x0, n = Date[l(0x1a3)](), o = () => {
+                    const p = l, q = Date[p(0x1a3)]() - n, r = Math['min'](q / i, 0x1), s = w => 0x1 - (0x1 - w) * (0x1 - w), t = s(r), u = Math[p(0x1e4)](m + (b - m) * t), v = j + this[p(0x1f0)](u) + k;
+                    this[p(0x1fb)](a, v);
+                    if (r < 0x1)
+                        requestAnimationFrame(o);
                     else {
-                        const _0x781c4a = _0x2b9c33 + this['formatNumber'](_0x424825) + _0x5b3bc7;
-                        this[_0x85118f(0x1fb)](_0xb0b9c8, _0x781c4a);
+                        const w = j + this['formatNumber'](b) + k;
+                        this[p(0x1fb)](a, w);
                     }
                 };
-            requestAnimationFrame(_0x134e9c);
-        } catch (_0x806922) {
-            this[_0x59f10d(0x14f)](_0x59f10d(0x197), { 'error': _0x806922 instanceof Error ? _0x806922[_0x59f10d(0x1ac)] : _0x59f10d(0x247) });
-            const _0x2c2d3d = _0x2b9c33 + this[_0x59f10d(0x1f0)](_0x424825) + _0x5b3bc7;
-            this['_safeSetTextContent'](_0xb0b9c8, _0x2c2d3d);
+            requestAnimationFrame(o);
+        } catch (p) {
+            this[l(0x14f)](l(0x197), { 'error': p instanceof Error ? p[l(0x1ac)] : l(0x247) });
+            const q = j + this[l(0x1f0)](b) + k;
+            this['_safeSetTextContent'](a, q);
         }
     }
     async ['fetchAnalyticsFromServer']() {
-        const _0x327c3f = _0xfd2887;
+        const a = c;
         try {
-            const _0x1e0683 = { 'Content-Type': _0x327c3f(0x1b6) };
-            this[_0x327c3f(0x19b)]['csrfToken'] && this[_0x327c3f(0x22b)][_0x327c3f(0x196)] && (_0x1e0683[this[_0x327c3f(0x22b)][_0x327c3f(0x24c)]] = this['securityState'][_0x327c3f(0x1ca)]);
-            const _0x1b2137 = this[_0x327c3f(0x1fd)] + '/analytics/dashboard';
-            if (this[_0x327c3f(0x22b)][_0x327c3f(0x1a5)]) {
-                const _0x734be3 = await this[_0x327c3f(0x158)](_0x327c3f(0x14b), _0x1b2137);
-                _0x734be3 && (_0x734be3[_0x327c3f(0x192)] && (_0x1e0683[this[_0x327c3f(0x22b)][_0x327c3f(0x169)]] = _0x734be3[_0x327c3f(0x192)]), _0x1e0683[this[_0x327c3f(0x22b)][_0x327c3f(0x230)]] = _0x734be3['timestamp'], _0x1e0683[this['securityConfig'][_0x327c3f(0x14c)]] = _0x734be3[_0x327c3f(0x236)]);
+            const b = { 'Content-Type': a(0x1b6) };
+            this[a(0x19b)]['csrfToken'] && this[a(0x22b)][a(0x196)] && (b[this[a(0x22b)][a(0x24c)]] = this['securityState'][a(0x1ca)]);
+            const i = this[a(0x1fd)] + '/analytics/dashboard';
+            if (this[a(0x22b)][a(0x1a5)]) {
+                const p = await this[a(0x158)](a(0x14b), i);
+                p && (p[a(0x192)] && (b[this[a(0x22b)][a(0x169)]] = p[a(0x192)]), b[this[a(0x22b)][a(0x230)]] = p['timestamp'], b[this['securityConfig'][a(0x14c)]] = p[a(0x236)]);
             }
-            const _0x18d89c = new AbortController(), _0x308c7a = setTimeout(() => _0x18d89c[_0x327c3f(0x1d3)](), this[_0x327c3f(0x22b)][_0x327c3f(0x195)]), _0x550c97 = await fetch(_0x1b2137, {
-                    'method': _0x327c3f(0x14b),
-                    'headers': _0x1e0683,
-                    'credentials': _0x327c3f(0x1eb),
-                    'signal': _0x18d89c['signal']
+            const j = new AbortController(), k = setTimeout(() => j[a(0x1d3)](), this[a(0x22b)][a(0x195)]), l = await fetch(i, {
+                    'method': a(0x14b),
+                    'headers': b,
+                    'credentials': a(0x1eb),
+                    'signal': j['signal']
                 });
-            clearTimeout(_0x308c7a);
-            if (!this[_0x327c3f(0x1c0)](_0x550c97)) {
-                this[_0x327c3f(0x1dd)] = ![], this['updateDashboard']();
+            clearTimeout(k);
+            if (!this[a(0x1c0)](l)) {
+                this[a(0x1dd)] = ![], this['updateDashboard']();
                 return;
             }
-            if (!_0x550c97['ok']) {
-                this[_0x327c3f(0x14f)](_0x327c3f(0x1e1), {
-                    'status': _0x550c97['status'],
-                    'statusText': _0x550c97[_0x327c3f(0x23e)]
-                }), this[_0x327c3f(0x1dd)] = ![], this[_0x327c3f(0x16b)]();
+            if (!l['ok']) {
+                this[a(0x14f)](a(0x1e1), {
+                    'status': l['status'],
+                    'statusText': l[a(0x23e)]
+                }), this[a(0x1dd)] = ![], this[a(0x16b)]();
                 return;
             }
-            const _0x373134 = await _0x550c97[_0x327c3f(0x1af)](), _0x515609 = this[_0x327c3f(0x1b5)](_0x373134);
-            if (!_0x515609) {
-                this[_0x327c3f(0x14f)](_0x327c3f(0x213), {}), this[_0x327c3f(0x1dd)] = ![], this[_0x327c3f(0x16b)]();
+            const m = await l[a(0x1af)](), n = this[a(0x1b5)](m);
+            if (!n) {
+                this[a(0x14f)](a(0x213), {}), this[a(0x1dd)] = ![], this[a(0x16b)]();
                 return;
             }
-            const _0x4caa21 = _0x515609[_0x327c3f(0x1c3)] || _0x515609[_0x327c3f(0x174)]?.[_0x327c3f(0x18c)]?.['connected'] === !![];
-            _0x4caa21 || _0x515609[_0x327c3f(0x225)]?.[_0x327c3f(0x23b)] > 0x0 ? (this[_0x327c3f(0x1dd)] = !![], this[_0x327c3f(0x241)][_0x327c3f(0x1e5)] = _0x515609[_0x327c3f(0x1e5)], this[_0x327c3f(0x241)][_0x327c3f(0x17c)] = _0x515609[_0x327c3f(0x17c)], this['analyticsData'][_0x327c3f(0x1bf)] = _0x515609[_0x327c3f(0x1bf)], this[_0x327c3f(0x241)][_0x327c3f(0x225)] = _0x515609['dailyViews'], this[_0x327c3f(0x241)][_0x327c3f(0x20b)] = _0x515609[_0x327c3f(0x20b)], this['analyticsData'][_0x327c3f(0x13e)] = _0x515609[_0x327c3f(0x13e)], this[_0x327c3f(0x241)][_0x327c3f(0x15b)] = _0x515609[_0x327c3f(0x15b)], _0x515609[_0x327c3f(0x174)] && Object[_0x327c3f(0x164)](window, _0x327c3f(0x1c5), {
-                'value': Object['freeze'](_0x515609[_0x327c3f(0x174)]),
+            const o = n[a(0x1c3)] || n[a(0x174)]?.[a(0x18c)]?.['connected'] === !![];
+            o || n[a(0x225)]?.[a(0x23b)] > 0x0 ? (this[a(0x1dd)] = !![], this[a(0x241)][a(0x1e5)] = n[a(0x1e5)], this[a(0x241)][a(0x17c)] = n[a(0x17c)], this['analyticsData'][a(0x1bf)] = n[a(0x1bf)], this[a(0x241)][a(0x225)] = n['dailyViews'], this[a(0x241)][a(0x20b)] = n[a(0x20b)], this['analyticsData'][a(0x13e)] = n[a(0x13e)], this[a(0x241)][a(0x15b)] = n[a(0x15b)], n[a(0x174)] && Object[a(0x164)](window, a(0x1c5), {
+                'value': Object['freeze'](n[a(0x174)]),
                 'writable': ![],
                 'configurable': ![]
-            }), this[_0x327c3f(0x14f)](_0x327c3f(0x1fe), {}), this['updateDashboard']()) : (this[_0x327c3f(0x1dd)] = ![], this['updateDashboard']());
-        } catch (_0x2d4378) {
-            _0x2d4378[_0x327c3f(0x136)] === _0x327c3f(0x1a2) ? this['_logSecurityEvent']('REQUEST_TIMEOUT', {}) : this[_0x327c3f(0x14f)](_0x327c3f(0x1e8), { 'error': _0x2d4378 instanceof Error ? _0x2d4378[_0x327c3f(0x1ac)] : _0x327c3f(0x247) }), this[_0x327c3f(0x1dd)] = ![], this[_0x327c3f(0x16b)]();
+            }), this[a(0x14f)](a(0x1fe), {}), this['updateDashboard']()) : (this[a(0x1dd)] = ![], this['updateDashboard']());
+        } catch (q) {
+            q[a(0x136)] === a(0x1a2) ? this['_logSecurityEvent']('REQUEST_TIMEOUT', {}) : this[a(0x14f)](a(0x1e8), { 'error': q instanceof Error ? q[a(0x1ac)] : a(0x247) }), this[a(0x1dd)] = ![], this[a(0x16b)]();
         }
     }
-    async [_0xfd2887(0x1ad)]() {
-        const _0x35fd20 = _0xfd2887;
+    async [c(0x1ad)]() {
+        const a = c;
         try {
-            const _0x46a555 = { 'Content-Type': _0x35fd20(0x1b6) };
-            this[_0x35fd20(0x19b)][_0x35fd20(0x1ca)] && this[_0x35fd20(0x22b)][_0x35fd20(0x196)] && (_0x46a555[this[_0x35fd20(0x22b)][_0x35fd20(0x24c)]] = this[_0x35fd20(0x19b)]['csrfToken']);
-            const _0x3b4449 = this[_0x35fd20(0x1fd)] + _0x35fd20(0x13d);
-            if (this[_0x35fd20(0x22b)][_0x35fd20(0x1a5)]) {
-                const _0x12667a = await this[_0x35fd20(0x158)](_0x35fd20(0x14b), _0x3b4449);
-                _0x12667a && (_0x12667a[_0x35fd20(0x192)] && (_0x46a555[this[_0x35fd20(0x22b)][_0x35fd20(0x169)]] = _0x12667a[_0x35fd20(0x192)]), _0x46a555[this[_0x35fd20(0x22b)][_0x35fd20(0x230)]] = _0x12667a[_0x35fd20(0x224)], _0x46a555[this[_0x35fd20(0x22b)][_0x35fd20(0x14c)]] = _0x12667a['nonce']);
+            const b = { 'Content-Type': a(0x1b6) };
+            this[a(0x19b)][a(0x1ca)] && this[a(0x22b)][a(0x196)] && (b[this[a(0x22b)][a(0x24c)]] = this[a(0x19b)]['csrfToken']);
+            const i = this[a(0x1fd)] + a(0x13d);
+            if (this[a(0x22b)][a(0x1a5)]) {
+                const l = await this[a(0x158)](a(0x14b), i);
+                l && (l[a(0x192)] && (b[this[a(0x22b)][a(0x169)]] = l[a(0x192)]), b[this[a(0x22b)][a(0x230)]] = l[a(0x224)], b[this[a(0x22b)][a(0x14c)]] = l['nonce']);
             }
-            const _0xc20c73 = new AbortController(), _0x3fdd7b = setTimeout(() => _0xc20c73['abort'](), this[_0x35fd20(0x22b)][_0x35fd20(0x195)]);
+            const j = new AbortController(), k = setTimeout(() => j['abort'](), this[a(0x22b)][a(0x195)]);
             try {
-                const _0x570b73 = await fetch(_0x3b4449, {
-                    'method': _0x35fd20(0x14b),
-                    'headers': _0x46a555,
-                    'credentials': _0x35fd20(0x1eb),
-                    'signal': _0xc20c73[_0x35fd20(0x1f3)]
+                const m = await fetch(i, {
+                    'method': a(0x14b),
+                    'headers': b,
+                    'credentials': a(0x1eb),
+                    'signal': j[a(0x1f3)]
                 });
-                clearTimeout(_0x3fdd7b);
-                if (_0x570b73['ok']) {
-                    if (!this[_0x35fd20(0x1c0)](_0x570b73)) {
-                        this['isConnected'] = ![], this[_0x35fd20(0x16b)]();
+                clearTimeout(k);
+                if (m['ok']) {
+                    if (!this[a(0x1c0)](m)) {
+                        this['isConnected'] = ![], this[a(0x16b)]();
                         return;
                     }
-                    const _0xf40c24 = await _0x570b73[_0x35fd20(0x1af)](), _0x33057c = this['_validateAnalyticsResponse'](_0xf40c24);
-                    if (!_0x33057c) {
-                        this[_0x35fd20(0x14f)](_0x35fd20(0x1ff), {}), this['isConnected'] = ![], this[_0x35fd20(0x16b)]();
+                    const n = await m[a(0x1af)](), o = this['_validateAnalyticsResponse'](n);
+                    if (!o) {
+                        this[a(0x14f)](a(0x1ff), {}), this['isConnected'] = ![], this[a(0x16b)]();
                         return;
                     }
-                    const _0x39df9e = _0x33057c[_0x35fd20(0x1c3)] || _0x33057c[_0x35fd20(0x174)]?.['youtube']?.[_0x35fd20(0x1c3)] === !![];
-                    this[_0x35fd20(0x1dd)] = _0x39df9e, _0x33057c && (this['analyticsData'][_0x35fd20(0x1e5)] = _0x33057c[_0x35fd20(0x1e5)], this['analyticsData'][_0x35fd20(0x17c)] = _0x33057c[_0x35fd20(0x17c)], this[_0x35fd20(0x241)][_0x35fd20(0x1bf)] = _0x33057c[_0x35fd20(0x1bf)], this[_0x35fd20(0x241)][_0x35fd20(0x225)] = _0x33057c[_0x35fd20(0x225)], this[_0x35fd20(0x241)][_0x35fd20(0x20b)] = _0x33057c[_0x35fd20(0x20b)], this[_0x35fd20(0x241)]['monthlyViews'] = _0x33057c[_0x35fd20(0x13e)], this[_0x35fd20(0x241)]['platformViews'] = _0x33057c[_0x35fd20(0x15b)]), this[_0x35fd20(0x14f)](_0x35fd20(0x135), {}), this[_0x35fd20(0x16b)]();
+                    const p = o[a(0x1c3)] || o[a(0x174)]?.['youtube']?.[a(0x1c3)] === !![];
+                    this[a(0x1dd)] = p, o && (this['analyticsData'][a(0x1e5)] = o[a(0x1e5)], this['analyticsData'][a(0x17c)] = o[a(0x17c)], this[a(0x241)][a(0x1bf)] = o[a(0x1bf)], this[a(0x241)][a(0x225)] = o[a(0x225)], this[a(0x241)][a(0x20b)] = o[a(0x20b)], this[a(0x241)]['monthlyViews'] = o[a(0x13e)], this[a(0x241)]['platformViews'] = o[a(0x15b)]), this[a(0x14f)](a(0x135), {}), this[a(0x16b)]();
                 } else
-                    _0x570b73[_0x35fd20(0x1bb)] === 0x191 ? (this[_0x35fd20(0x14f)](_0x35fd20(0x16d), { 'status': 0x191 }), this['isConnected'] = ![], this['updateDashboard']()) : (this[_0x35fd20(0x14f)](_0x35fd20(0x17a), {
-                        'status': _0x570b73['status'],
-                        'statusText': _0x570b73[_0x35fd20(0x23e)]
-                    }), this['isConnected'] = ![], this[_0x35fd20(0x16b)]());
-            } catch (_0x2ebc93) {
-                _0x2ebc93[_0x35fd20(0x136)] === _0x35fd20(0x1a2) ? this['_logSecurityEvent']('INITIAL_LOAD_TIMEOUT', {}) : this[_0x35fd20(0x14f)](_0x35fd20(0x18e), { 'error': _0x2ebc93 instanceof Error ? _0x2ebc93[_0x35fd20(0x1ac)] : _0x35fd20(0x247) }), this[_0x35fd20(0x1dd)] = ![], this[_0x35fd20(0x16b)]();
+                    m[a(0x1bb)] === 0x191 ? (this[a(0x14f)](a(0x16d), { 'status': 0x191 }), this['isConnected'] = ![], this['updateDashboard']()) : (this[a(0x14f)](a(0x17a), {
+                        'status': m['status'],
+                        'statusText': m[a(0x23e)]
+                    }), this['isConnected'] = ![], this[a(0x16b)]());
+            } catch (q) {
+                q[a(0x136)] === a(0x1a2) ? this['_logSecurityEvent']('INITIAL_LOAD_TIMEOUT', {}) : this[a(0x14f)](a(0x18e), { 'error': q instanceof Error ? q[a(0x1ac)] : a(0x247) }), this[a(0x1dd)] = ![], this[a(0x16b)]();
             }
-        } catch (_0xaf804c) {
-            this[_0x35fd20(0x14f)](_0x35fd20(0x13f), { 'error': _0xaf804c instanceof Error ? _0xaf804c[_0x35fd20(0x1ac)] : 'Unknown\x20error' }), this[_0x35fd20(0x1dd)] = ![], this[_0x35fd20(0x16b)]();
+        } catch (r) {
+            this[a(0x14f)](a(0x13f), { 'error': r instanceof Error ? r[a(0x1ac)] : 'Unknown\x20error' }), this[a(0x1dd)] = ![], this[a(0x16b)]();
         }
         setTimeout(() => {
-            const _0x4aef8a = _0x35fd20;
-            this[_0x4aef8a(0x21b)]();
+            const s = a;
+            this[s(0x21b)]();
         }, 0x64);
     }
     ['updateDashboard']() {
-        const _0x8c9aee = _0xfd2887;
-        if (!this[_0x8c9aee(0x1dd)]) {
-            const _0x3e62da = document[_0x8c9aee(0x1f5)]('[data-card=\x22monetization\x22]\x20.card-value');
-            if (_0x3e62da)
-                this[_0x8c9aee(0x1fb)](_0x3e62da, '€0');
-            const _0x210285 = document['querySelector']('[data-card=\x22subscribers\x22]\x20.card-value');
-            if (_0x210285)
-                this[_0x8c9aee(0x1fb)](_0x210285, '0');
-            const _0x2dc66d = document['querySelector'](_0x8c9aee(0x20c));
-            if (_0x2dc66d)
-                this[_0x8c9aee(0x1fb)](_0x2dc66d, '0');
-            document[_0x8c9aee(0x212)](_0x8c9aee(0x165))['forEach'](_0x7c7f30 => {
-                const _0x120ed9 = _0x8c9aee;
-                this[_0x120ed9(0x1fb)](_0x7c7f30, '0%'), _0x7c7f30['parentElement'][_0x120ed9(0x1b7)] = _0x120ed9(0x179);
-                const _0x28bcb5 = _0x7c7f30['parentElement'][_0x120ed9(0x1f5)]('i');
-                if (_0x28bcb5)
-                    _0x28bcb5[_0x120ed9(0x1b7)] = _0x120ed9(0x183);
+        const a = c;
+        if (!this[a(0x1dd)]) {
+            const l = document[a(0x1f5)]('[data-card=\x22monetization\x22]\x20.card-value');
+            if (l)
+                this[a(0x1fb)](l, '€0');
+            const m = document['querySelector']('[data-card=\x22subscribers\x22]\x20.card-value');
+            if (m)
+                this[a(0x1fb)](m, '0');
+            const n = document['querySelector'](a(0x20c));
+            if (n)
+                this[a(0x1fb)](n, '0');
+            document[a(0x212)](a(0x165))['forEach'](p => {
+                const q = a;
+                this[q(0x1fb)](p, '0%'), p['parentElement'][q(0x1b7)] = q(0x179);
+                const r = p['parentElement'][q(0x1f5)]('i');
+                if (r)
+                    r[q(0x1b7)] = q(0x183);
             });
-            const _0x38bf72 = document[_0x8c9aee(0x1f5)](_0x8c9aee(0x149));
-            if (_0x38bf72) {
-                const _0x55f169 = window[_0x8c9aee(0x1f7)]?.[_0x8c9aee(0x1cc)]?.[_0x8c9aee(0x23b)] || 0x0;
-                this[_0x8c9aee(0x1fb)](_0x38bf72, this[_0x8c9aee(0x147)](_0x55f169, 0x0));
+            const o = document[a(0x1f5)](a(0x149));
+            if (o) {
+                const p = window[a(0x1f7)]?.[a(0x1cc)]?.[a(0x23b)] || 0x0;
+                this[a(0x1fb)](o, this[a(0x147)](p, 0x0));
             }
             return;
         }
-        const _0x3e404f = document[_0x8c9aee(0x1f5)]('[data-card=\x22monetization\x22]\x20.card-value');
-        _0x3e404f && this[_0x8c9aee(0x23d)](_0x3e404f, this['analyticsData']['monetization'], 0x320, '€', '');
-        const _0x11d8ae = document['querySelector'](_0x8c9aee(0x205));
-        _0x11d8ae && this[_0x8c9aee(0x23d)](_0x11d8ae, this[_0x8c9aee(0x241)][_0x8c9aee(0x17c)], 0x320, '', '');
-        const _0x55c1ca = document[_0x8c9aee(0x1f5)](_0x8c9aee(0x20c));
-        _0x55c1ca && this[_0x8c9aee(0x23d)](_0x55c1ca, this['analyticsData'][_0x8c9aee(0x1bf)], 0x320, '', '');
-        const _0x367f23 = document[_0x8c9aee(0x1f5)](_0x8c9aee(0x149));
-        if (_0x367f23) {
-            const _0x7c1f86 = window['clipsStudio']?.['libraryItems']?.[_0x8c9aee(0x23b)] || this[_0x8c9aee(0x241)]['clipsCreated'] || 0x0;
-            this[_0x8c9aee(0x1fb)](_0x367f23, this[_0x8c9aee(0x147)](_0x7c1f86, 0x0));
+        const b = document[a(0x1f5)]('[data-card=\x22monetization\x22]\x20.card-value');
+        b && this[a(0x23d)](b, this['analyticsData']['monetization'], 0x320, '€', '');
+        const i = document['querySelector'](a(0x205));
+        i && this[a(0x23d)](i, this[a(0x241)][a(0x17c)], 0x320, '', '');
+        const j = document[a(0x1f5)](a(0x20c));
+        j && this[a(0x23d)](j, this['analyticsData'][a(0x1bf)], 0x320, '', '');
+        const k = document[a(0x1f5)](a(0x149));
+        if (k) {
+            const q = window['clipsStudio']?.['libraryItems']?.[a(0x23b)] || this[a(0x241)]['clipsCreated'] || 0x0;
+            this[a(0x1fb)](k, this[a(0x147)](q, 0x0));
         }
-        this[_0x8c9aee(0x246)](), this[_0x8c9aee(0x21b)]();
+        this[a(0x246)](), this[a(0x21b)]();
     }
-    [_0xfd2887(0x246)]() {
-        const _0x319f14 = _0xfd2887;
+    [c(0x246)]() {
+        const a = c;
         if (!this['isConnected']) {
-            document[_0x319f14(0x212)](_0x319f14(0x1da))['forEach'](_0x49aa73 => {
-                const _0x5158e6 = _0x319f14;
-                _0x49aa73[_0x5158e6(0x1b7)] = _0x5158e6(0x179);
-                const _0x52cda8 = _0x49aa73[_0x5158e6(0x1f5)](_0x5158e6(0x235));
-                if (_0x52cda8)
-                    _0x52cda8[_0x5158e6(0x20e)] = '0%';
-                const _0xb413f7 = _0x49aa73[_0x5158e6(0x1f5)]('i');
-                if (_0xb413f7)
-                    _0xb413f7[_0x5158e6(0x1b7)] = _0x5158e6(0x183);
+            document[a(0x212)](a(0x1da))['forEach'](k => {
+                const l = a;
+                k[l(0x1b7)] = l(0x179);
+                const m = k[l(0x1f5)](l(0x235));
+                if (m)
+                    m[l(0x20e)] = '0%';
+                const n = k[l(0x1f5)]('i');
+                if (n)
+                    n[l(0x1b7)] = l(0x183);
             });
             return;
         }
-        let _0x5a25ec = [];
-        if (this[_0x319f14(0x241)][_0x319f14(0x141)] === _0x319f14(0x226) && this[_0x319f14(0x241)][_0x319f14(0x225)]?.[_0x319f14(0x23b)] >= 0x2)
-            _0x5a25ec = this[_0x319f14(0x241)][_0x319f14(0x225)];
+        let b = [];
+        if (this[a(0x241)][a(0x141)] === a(0x226) && this[a(0x241)][a(0x225)]?.[a(0x23b)] >= 0x2)
+            b = this[a(0x241)][a(0x225)];
         else {
-            if (this[_0x319f14(0x241)][_0x319f14(0x141)] === 'week' && this['analyticsData'][_0x319f14(0x20b)]?.['length'] >= 0x2)
-                _0x5a25ec = this[_0x319f14(0x241)][_0x319f14(0x20b)];
+            if (this[a(0x241)][a(0x141)] === 'week' && this['analyticsData'][a(0x20b)]?.['length'] >= 0x2)
+                b = this[a(0x241)][a(0x20b)];
             else
-                this[_0x319f14(0x241)][_0x319f14(0x141)] === _0x319f14(0x159) && this['analyticsData'][_0x319f14(0x13e)]?.[_0x319f14(0x23b)] >= 0x2 ? _0x5a25ec = this[_0x319f14(0x241)][_0x319f14(0x13e)] : _0x5a25ec = this[_0x319f14(0x241)][_0x319f14(0x20b)];
+                this[a(0x241)][a(0x141)] === a(0x159) && this['analyticsData'][a(0x13e)]?.[a(0x23b)] >= 0x2 ? b = this[a(0x241)][a(0x13e)] : b = this[a(0x241)][a(0x20b)];
         }
-        const _0x589b69 = {
-                'monetization': this[_0x319f14(0x178)](_0x5a25ec, _0x319f14(0x242)),
-                'subscribers': this['calculateTrend'](_0x5a25ec, _0x319f14(0x17c)),
-                'views': this['calculateTrend'](_0x5a25ec, _0x319f14(0x1bf)),
+        const i = {
+                'monetization': this[a(0x178)](b, a(0x242)),
+                'subscribers': this['calculateTrend'](b, a(0x17c)),
+                'views': this['calculateTrend'](b, a(0x1bf)),
                 'clips': 0x0
-            }, _0x1d43b8 = {
-                'monetization': _0x589b69[_0x319f14(0x1e5)],
-                'subscribers': _0x589b69[_0x319f14(0x17c)],
-                'views': _0x589b69['views'],
-                'clips': _0x589b69[_0x319f14(0x22e)]
+            }, j = {
+                'monetization': i[a(0x1e5)],
+                'subscribers': i[a(0x17c)],
+                'views': i['views'],
+                'clips': i[a(0x22e)]
             };
-        for (const [_0x2f2d8a, _0x168132] of Object[_0x319f14(0x182)](_0x1d43b8)) {
-            const _0x452241 = document['querySelector'](_0x319f14(0x1df) + _0x2f2d8a + '\x22]');
-            if (_0x452241) {
-                const _0x276ae7 = _0x452241['querySelector'](_0x319f14(0x1da));
-                if (_0x276ae7) {
-                    const _0x299e49 = _0x276ae7['querySelector'](_0x319f14(0x235)), _0x19088d = Math['abs'](_0x168132);
-                    if (_0x299e49)
-                        _0x299e49[_0x319f14(0x20e)] = _0x19088d + '%';
-                    const _0x10a41c = _0x276ae7[_0x319f14(0x1f5)]('i');
-                    if (_0x168132 > 0x0) {
-                        _0x276ae7[_0x319f14(0x1b7)] = _0x319f14(0x14e);
-                        if (_0x10a41c)
-                            _0x10a41c[_0x319f14(0x1b7)] = _0x319f14(0x21f);
+        for (const [k, l] of Object[a(0x182)](j)) {
+            const m = document['querySelector'](a(0x1df) + k + '\x22]');
+            if (m) {
+                const n = m['querySelector'](a(0x1da));
+                if (n) {
+                    const o = n['querySelector'](a(0x235)), p = Math['abs'](l);
+                    if (o)
+                        o[a(0x20e)] = p + '%';
+                    const q = n[a(0x1f5)]('i');
+                    if (l > 0x0) {
+                        n[a(0x1b7)] = a(0x14e);
+                        if (q)
+                            q[a(0x1b7)] = a(0x21f);
                     } else {
-                        if (_0x168132 < 0x0) {
-                            _0x276ae7[_0x319f14(0x1b7)] = _0x319f14(0x175);
-                            if (_0x10a41c)
-                                _0x10a41c['className'] = _0x319f14(0x161);
+                        if (l < 0x0) {
+                            n[a(0x1b7)] = a(0x175);
+                            if (q)
+                                q['className'] = a(0x161);
                         } else {
-                            _0x276ae7[_0x319f14(0x1b7)] = _0x319f14(0x179);
-                            if (_0x10a41c)
-                                _0x10a41c[_0x319f14(0x1b7)] = _0x319f14(0x183);
+                            n[a(0x1b7)] = a(0x179);
+                            if (q)
+                                q[a(0x1b7)] = a(0x183);
                         }
                     }
                 }
             }
         }
     }
-    [_0xfd2887(0x178)](_0x1647d4, _0x59ce1c) {
-        const _0x32dd50 = _0xfd2887;
-        if (!Array['isArray'](_0x1647d4) || _0x1647d4[_0x32dd50(0x23b)] < 0x2)
+    [c(0x178)](a, b) {
+        const i = c;
+        if (!Array['isArray'](a) || a[i(0x23b)] < 0x2)
             return 0x0;
-        const _0x11b00b = _0x1647d4[_0x1647d4['length'] - 0x1] || {}, _0x3a796a = _0x1647d4[_0x1647d4['length'] - 0x2] || {};
-        let _0x319fde = 0x0, _0x302d77 = 0x0;
-        if (_0x59ce1c === _0x32dd50(0x242))
-            _0x319fde = this['_validateNumber'](_0x11b00b[_0x32dd50(0x242)] || _0x11b00b[_0x32dd50(0x139)] || 0x0, 0x0), _0x302d77 = this[_0x32dd50(0x147)](_0x3a796a[_0x32dd50(0x242)] || _0x3a796a['estimatedRevenue'] || 0x0, 0x0);
+        const j = a[a['length'] - 0x1] || {}, k = a[a['length'] - 0x2] || {};
+        let l = 0x0, m = 0x0;
+        if (b === i(0x242))
+            l = this['_validateNumber'](j[i(0x242)] || j[i(0x139)] || 0x0, 0x0), m = this[i(0x147)](k[i(0x242)] || k['estimatedRevenue'] || 0x0, 0x0);
         else {
-            if (_0x59ce1c === _0x32dd50(0x17c))
-                _0x319fde = this['_validateNumber'](_0x11b00b[_0x32dd50(0x17c)] || 0x0, 0x0), _0x302d77 = this['_validateNumber'](_0x3a796a[_0x32dd50(0x17c)] || 0x0, 0x0);
+            if (b === i(0x17c))
+                l = this['_validateNumber'](j[i(0x17c)] || 0x0, 0x0), m = this['_validateNumber'](k[i(0x17c)] || 0x0, 0x0);
             else
-                _0x59ce1c === 'views' && (_0x319fde = this['_validateNumber'](_0x11b00b[_0x32dd50(0x1bf)] || 0x0, 0x0), _0x302d77 = this[_0x32dd50(0x147)](_0x3a796a[_0x32dd50(0x1bf)] || 0x0, 0x0));
+                b === 'views' && (l = this['_validateNumber'](j[i(0x1bf)] || 0x0, 0x0), m = this[i(0x147)](k[i(0x1bf)] || 0x0, 0x0));
         }
-        if (_0x302d77 === 0x0 && _0x319fde === 0x0)
+        if (m === 0x0 && l === 0x0)
             return 0x0;
-        if (_0x302d77 === 0x0)
+        if (m === 0x0)
             return 0x64;
-        return Math[_0x32dd50(0x17d)]((_0x319fde - _0x302d77) / _0x302d77 * 0x64);
+        return Math[i(0x17d)]((l - m) / m * 0x64);
     }
-    [_0xfd2887(0x21b)]() {
-        const _0xa5470 = _0xfd2887;
-        this['drawUsageChart'](), this[_0xa5470(0x15d)]();
+    [c(0x21b)]() {
+        const a = c;
+        this['drawUsageChart'](), this[a(0x15d)]();
     }
-    [_0xfd2887(0x1e3)]() {
-        const _0x3f37f9 = _0xfd2887, _0x27b008 = document['getElementById'](_0x3f37f9(0x1e0));
-        if (!_0x27b008)
+    [c(0x1e3)]() {
+        const a = c, b = document['getElementById'](a(0x1e0));
+        if (!b)
             return;
-        if (typeof Chart === _0x3f37f9(0x217)) {
-            this['_logSecurityEvent'](_0x3f37f9(0x16e), {}), setTimeout(() => this[_0x3f37f9(0x1e3)](), 0x64);
-            return;
-        }
-        if (this[_0x3f37f9(0x22b)][_0x3f37f9(0x1a8)]) {
-            const _0x49e33a = _0x3f37f9(0x239);
-            !this[_0x3f37f9(0x19e)](_0x49e33a, this[_0x3f37f9(0x22b)][_0x3f37f9(0x1e9)]) && this[_0x3f37f9(0x14f)](_0x3f37f9(0x156), { 'library': _0x3f37f9(0x208) });
-        }
-        this[_0x3f37f9(0x13b)] && (this['usageChartInstance'][_0x3f37f9(0x19c)](), this['securityState']['chartInstances']--);
-        if (this[_0x3f37f9(0x19b)]['chartInstances'] >= this[_0x3f37f9(0x22b)][_0x3f37f9(0x200)]) {
-            this[_0x3f37f9(0x14f)]('CHART_INSTANCE_LIMIT_EXCEEDED', { 'limit': this[_0x3f37f9(0x22b)][_0x3f37f9(0x200)] });
+        if (typeof Chart === a(0x217)) {
+            this['_logSecurityEvent'](a(0x16e), {}), setTimeout(() => this[a(0x1e3)](), 0x64);
             return;
         }
-        let _0x21e4d2 = [], _0x5d7f70 = [];
-        if (this[_0x3f37f9(0x241)][_0x3f37f9(0x141)] === _0x3f37f9(0x226) && this[_0x3f37f9(0x241)]['dailyViews']?.[_0x3f37f9(0x23b)])
-            _0x21e4d2 = this[_0x3f37f9(0x241)][_0x3f37f9(0x225)]['map'](_0x4b5617 => this[_0x3f37f9(0x147)](_0x4b5617[_0x3f37f9(0x1bf)], 0x0)), _0x5d7f70 = this[_0x3f37f9(0x241)]['dailyViews'][_0x3f37f9(0x1d7)](_0x2b8f2b => this[_0x3f37f9(0x13c)](_0x2b8f2b[_0x3f37f9(0x226)] || '-', 0x32));
+        if (this[a(0x22b)][a(0x1a8)]) {
+            const m = a(0x239);
+            !this[a(0x19e)](m, this[a(0x22b)][a(0x1e9)]) && this[a(0x14f)](a(0x156), { 'library': a(0x208) });
+        }
+        this[a(0x13b)] && (this['usageChartInstance'][a(0x19c)](), this['securityState']['chartInstances']--);
+        if (this[a(0x19b)]['chartInstances'] >= this[a(0x22b)][a(0x200)]) {
+            this[a(0x14f)]('CHART_INSTANCE_LIMIT_EXCEEDED', { 'limit': this[a(0x22b)][a(0x200)] });
+            return;
+        }
+        let i = [], j = [];
+        if (this[a(0x241)][a(0x141)] === a(0x226) && this[a(0x241)]['dailyViews']?.[a(0x23b)])
+            i = this[a(0x241)][a(0x225)]['map'](n => this[a(0x147)](n[a(0x1bf)], 0x0)), j = this[a(0x241)]['dailyViews'][a(0x1d7)](n => this[a(0x13c)](n[a(0x226)] || '-', 0x32));
         else
-            this[_0x3f37f9(0x241)][_0x3f37f9(0x141)] === _0x3f37f9(0x159) && this[_0x3f37f9(0x241)][_0x3f37f9(0x13e)]?.['length'] ? (_0x21e4d2 = this[_0x3f37f9(0x241)][_0x3f37f9(0x13e)]['map'](_0x14ceea => this[_0x3f37f9(0x147)](_0x14ceea[_0x3f37f9(0x1bf)], 0x0)), _0x5d7f70 = this[_0x3f37f9(0x241)][_0x3f37f9(0x13e)][_0x3f37f9(0x1d7)](_0x50e08a => this['_sanitizeString'](_0x50e08a[_0x3f37f9(0x159)] || '-', 0x32))) : (_0x21e4d2 = (this[_0x3f37f9(0x241)][_0x3f37f9(0x20b)] || [])[_0x3f37f9(0x1d7)](_0x5e2eee => this[_0x3f37f9(0x147)](_0x5e2eee[_0x3f37f9(0x1bf)], 0x0)), _0x5d7f70 = (this['analyticsData'][_0x3f37f9(0x20b)] || [])[_0x3f37f9(0x1d7)](_0x3d53a4 => this[_0x3f37f9(0x13c)](_0x3d53a4[_0x3f37f9(0x207)] || '-', 0x32)));
-        !_0x21e4d2[_0x3f37f9(0x23b)] && (_0x21e4d2 = [
+            this[a(0x241)][a(0x141)] === a(0x159) && this[a(0x241)][a(0x13e)]?.['length'] ? (i = this[a(0x241)][a(0x13e)]['map'](n => this[a(0x147)](n[a(0x1bf)], 0x0)), j = this[a(0x241)][a(0x13e)][a(0x1d7)](n => this['_sanitizeString'](n[a(0x159)] || '-', 0x32))) : (i = (this[a(0x241)][a(0x20b)] || [])[a(0x1d7)](n => this[a(0x147)](n[a(0x1bf)], 0x0)), j = (this['analyticsData'][a(0x20b)] || [])[a(0x1d7)](n => this[a(0x13c)](n[a(0x207)] || '-', 0x32)));
+        !i[a(0x23b)] && (i = [
             0x0,
             0x0,
             0x0,
@@ -921,32 +955,32 @@ class _0x143197 {
             0x0,
             0x0,
             0x0
-        ], _0x5d7f70 = [
-            _0x3f37f9(0x189),
-            _0x3f37f9(0x1fc),
+        ], j = [
+            a(0x189),
+            a(0x1fc),
             'Wed',
             'Thu',
             'Fri',
-            _0x3f37f9(0x22d),
+            a(0x22d),
             'Sun'
         ]);
-        const _0x1ca8f0 = _0x27b008['getContext']('2d'), _0x8c6569 = _0x1ca8f0[_0x3f37f9(0x14a)](0x0, 0x0, 0x0, 0x12c);
-        _0x8c6569[_0x3f37f9(0x202)](0x0, _0x3f37f9(0x21d)), _0x8c6569[_0x3f37f9(0x202)](0x1, _0x3f37f9(0x145));
+        const k = b['getContext']('2d'), l = k[a(0x14a)](0x0, 0x0, 0x0, 0x12c);
+        l[a(0x202)](0x0, a(0x21d)), l[a(0x202)](0x1, a(0x145));
         try {
-            this[_0x3f37f9(0x13b)] = new Chart(_0x1ca8f0, {
-                'type': _0x3f37f9(0x244),
+            this[a(0x13b)] = new Chart(k, {
+                'type': a(0x244),
                 'data': {
-                    'labels': _0x5d7f70,
+                    'labels': j,
                     'datasets': [{
-                            'label': _0x3f37f9(0x155),
-                            'data': _0x21e4d2,
-                            'backgroundColor': _0x8c6569,
-                            'borderColor': _0x3f37f9(0x13a),
+                            'label': a(0x155),
+                            'data': i,
+                            'backgroundColor': l,
+                            'borderColor': a(0x13a),
                             'borderWidth': 0x2,
                             'tension': 0.4,
                             'fill': !![],
-                            'pointBackgroundColor': _0x3f37f9(0x13a),
-                            'pointBorderColor': _0x3f37f9(0x146),
+                            'pointBackgroundColor': a(0x13a),
+                            'pointBorderColor': a(0x146),
                             'pointBorderWidth': 0x2,
                             'pointRadius': 0x4,
                             'pointHoverRadius': 0x6
@@ -960,35 +994,35 @@ class _0x143197 {
                             'display': !![],
                             'labels': {
                                 'font': {
-                                    'family': _0x3f37f9(0x1dc),
+                                    'family': a(0x1dc),
                                     'size': 0xc,
                                     'weight': '600'
                                 },
-                                'color': _0x3f37f9(0x1ea),
+                                'color': a(0x1ea),
                                 'padding': 0xf,
                                 'usePointStyle': !![],
-                                'pointStyle': _0x3f37f9(0x152)
+                                'pointStyle': a(0x152)
                             }
                         },
                         'tooltip': {
                             'backgroundColor': 'rgba(0,\x200,\x200,\x200.8)',
                             'padding': 0xc,
                             'titleFont': {
-                                'family': _0x3f37f9(0x1dc),
+                                'family': a(0x1dc),
                                 'size': 0xd,
-                                'weight': _0x3f37f9(0x18a)
+                                'weight': a(0x18a)
                             },
                             'bodyFont': {
-                                'family': _0x3f37f9(0x1dc),
+                                'family': a(0x1dc),
                                 'size': 0xc
                             },
-                            'borderColor': _0x3f37f9(0x13a),
+                            'borderColor': a(0x13a),
                             'borderWidth': 0x1,
                             'displayColors': !![],
                             'callbacks': {
-                                'label': function (_0x2c7b97) {
-                                    const _0x1b483f = _0x3f37f9, _0x23c897 = _0x2c7b97[_0x1b483f(0x1bd)]['y'];
-                                    return 'Views:\x20' + _0x23c897[_0x1b483f(0x1ab)]();
+                                'label': function (n) {
+                                    const o = a, p = n[o(0x1bd)]['y'];
+                                    return 'Views:\x20' + p[o(0x1ab)]();
                                 }
                             }
                         }
@@ -1006,13 +1040,13 @@ class _0x143197 {
                                     'size': 0xb
                                 },
                                 'color': '#999',
-                                'callback': function (_0x2b947b) {
-                                    const _0x1782f1 = _0x3f37f9;
-                                    if (_0x2b947b >= 0xf4240)
-                                        return (_0x2b947b / 0xf4240)[_0x1782f1(0x194)](0x1) + 'M';
-                                    if (_0x2b947b >= 0x3e8)
-                                        return (_0x2b947b / 0x3e8)[_0x1782f1(0x194)](0x1) + 'K';
-                                    return _0x2b947b;
+                                'callback': function (n) {
+                                    const o = a;
+                                    if (n >= 0xf4240)
+                                        return (n / 0xf4240)[o(0x194)](0x1) + 'M';
+                                    if (n >= 0x3e8)
+                                        return (n / 0x3e8)[o(0x194)](0x1) + 'K';
+                                    return n;
                                 }
                             }
                         },
@@ -1020,94 +1054,94 @@ class _0x143197 {
                             'grid': { 'display': ![] },
                             'ticks': {
                                 'font': {
-                                    'family': _0x3f37f9(0x1dc),
+                                    'family': a(0x1dc),
                                     'size': 0xb
                                 },
-                                'color': _0x3f37f9(0x166)
+                                'color': a(0x166)
                             }
                         }
                     }
                 }
             }), this['securityState']['chartInstances']++;
-        } catch (_0x3cb048) {
-            this['_logSecurityEvent'](_0x3f37f9(0x15a), { 'error': _0x3cb048 instanceof Error ? _0x3cb048[_0x3f37f9(0x1ac)] : 'Unknown\x20error' });
+        } catch (n) {
+            this['_logSecurityEvent'](a(0x15a), { 'error': n instanceof Error ? n[a(0x1ac)] : 'Unknown\x20error' });
         }
     }
     ['drawPlatformChart']() {
-        const _0x3de72e = _0xfd2887, _0x442bb2 = document[_0x3de72e(0x144)]('platformChart');
-        if (!_0x442bb2)
+        const a = c, b = document[a(0x144)]('platformChart');
+        if (!b)
             return;
-        if (typeof Chart === _0x3de72e(0x217)) {
-            this[_0x3de72e(0x14f)]('CHART_LIB_UNAVAILABLE', {}), setTimeout(() => this[_0x3de72e(0x15d)](), 0x64);
-            return;
-        }
-        if (this[_0x3de72e(0x22b)]['ENABLE_SRI_VALIDATION']) {
-            const _0x31117f = _0x3de72e(0x239);
-            !this[_0x3de72e(0x19e)](_0x31117f, this['securityConfig']['CHART_JS_INTEGRITY']) && this['_logSecurityEvent'](_0x3de72e(0x156), { 'library': _0x3de72e(0x208) });
-        }
-        this[_0x3de72e(0x1c9)] && (this[_0x3de72e(0x1c9)]['destroy'](), this[_0x3de72e(0x19b)]['chartInstances']--);
-        if (this[_0x3de72e(0x19b)]['chartInstances'] >= this['securityConfig'][_0x3de72e(0x200)]) {
-            this['_logSecurityEvent'](_0x3de72e(0x19a), { 'limit': this[_0x3de72e(0x22b)][_0x3de72e(0x200)] });
+        if (typeof Chart === a(0x217)) {
+            this[a(0x14f)]('CHART_LIB_UNAVAILABLE', {}), setTimeout(() => this[a(0x15d)](), 0x64);
             return;
         }
-        let _0x2ddb3e = [], _0x377304 = [], _0x381a22 = [];
-        if (this[_0x3de72e(0x241)]['currentPeriod'] === _0x3de72e(0x226) && this[_0x3de72e(0x241)]['dailyViews']?.[_0x3de72e(0x23b)])
-            _0x377304 = this[_0x3de72e(0x241)][_0x3de72e(0x225)][_0x3de72e(0x1d7)](_0x167185 => this[_0x3de72e(0x147)](_0x167185['views'], 0x0)), _0x2ddb3e = this['analyticsData'][_0x3de72e(0x225)][_0x3de72e(0x1d7)](_0x589802 => this[_0x3de72e(0x13c)](_0x589802['day'] || '-', 0x32)), _0x381a22 = [];
+        if (this[a(0x22b)]['ENABLE_SRI_VALIDATION']) {
+            const o = a(0x239);
+            !this[a(0x19e)](o, this['securityConfig']['CHART_JS_INTEGRITY']) && this['_logSecurityEvent'](a(0x156), { 'library': a(0x208) });
+        }
+        this[a(0x1c9)] && (this[a(0x1c9)]['destroy'](), this[a(0x19b)]['chartInstances']--);
+        if (this[a(0x19b)]['chartInstances'] >= this['securityConfig'][a(0x200)]) {
+            this['_logSecurityEvent'](a(0x19a), { 'limit': this[a(0x22b)][a(0x200)] });
+            return;
+        }
+        let i = [], j = [], k = [];
+        if (this[a(0x241)]['currentPeriod'] === a(0x226) && this[a(0x241)]['dailyViews']?.[a(0x23b)])
+            j = this[a(0x241)][a(0x225)][a(0x1d7)](p => this[a(0x147)](p['views'], 0x0)), i = this['analyticsData'][a(0x225)][a(0x1d7)](p => this[a(0x13c)](p['day'] || '-', 0x32)), k = [];
         else {
-            if (this[_0x3de72e(0x241)][_0x3de72e(0x141)] === 'month' && this[_0x3de72e(0x241)]['monthlyViews']?.[_0x3de72e(0x23b)])
-                _0x377304 = this['analyticsData'][_0x3de72e(0x13e)][_0x3de72e(0x1d7)](_0x3fc203 => this[_0x3de72e(0x147)](_0x3fc203[_0x3de72e(0x1bf)], 0x0)), _0x2ddb3e = this[_0x3de72e(0x241)][_0x3de72e(0x13e)]['map'](_0x41b2d4 => this['_sanitizeString'](_0x41b2d4['month'] || '-', 0x32)), _0x381a22 = [];
+            if (this[a(0x241)][a(0x141)] === 'month' && this[a(0x241)]['monthlyViews']?.[a(0x23b)])
+                j = this['analyticsData'][a(0x13e)][a(0x1d7)](p => this[a(0x147)](p[a(0x1bf)], 0x0)), i = this[a(0x241)][a(0x13e)]['map'](p => this['_sanitizeString'](p['month'] || '-', 0x32)), k = [];
             else
-                this['analyticsData'][_0x3de72e(0x20b)]?.[_0x3de72e(0x23b)] ? (_0x377304 = this[_0x3de72e(0x241)]['weeklyViews']['map'](_0x1a930d => this[_0x3de72e(0x147)](_0x1a930d['views'], 0x0)), _0x2ddb3e = this[_0x3de72e(0x241)][_0x3de72e(0x20b)][_0x3de72e(0x1d7)](_0x78dd0c => this[_0x3de72e(0x13c)](_0x78dd0c[_0x3de72e(0x207)] || '-', 0x32)), _0x381a22 = []) : (_0x377304 = [
+                this['analyticsData'][a(0x20b)]?.[a(0x23b)] ? (j = this[a(0x241)]['weeklyViews']['map'](p => this[a(0x147)](p['views'], 0x0)), i = this[a(0x241)][a(0x20b)][a(0x1d7)](p => this[a(0x13c)](p[a(0x207)] || '-', 0x32)), k = []) : (j = [
                     0x0,
                     0x0,
                     0x0,
                     0x0
-                ], _0x2ddb3e = [
+                ], i = [
                     'Week\x201',
-                    _0x3de72e(0x1f9),
-                    _0x3de72e(0x157),
-                    _0x3de72e(0x23c)
-                ], _0x381a22 = [
+                    a(0x1f9),
+                    a(0x157),
+                    a(0x23c)
+                ], k = [
                     0x0,
                     0x0,
                     0x0,
                     0x0
                 ]);
         }
-        const _0x377660 = _0x442bb2['getContext']('2d'), _0x3006d0 = _0x377660[_0x3de72e(0x14a)](0x0, 0x0, 0x0, 0x12c);
-        _0x3006d0['addColorStop'](0x0, _0x3de72e(0x21d)), _0x3006d0[_0x3de72e(0x202)](0x1, _0x3de72e(0x145));
-        const _0x42a13b = _0x377660[_0x3de72e(0x14a)](0x0, 0x0, 0x0, 0x12c);
-        _0x42a13b[_0x3de72e(0x202)](0x0, _0x3de72e(0x176)), _0x42a13b[_0x3de72e(0x202)](0x1, _0x3de72e(0x173));
+        const l = b['getContext']('2d'), m = l[a(0x14a)](0x0, 0x0, 0x0, 0x12c);
+        m['addColorStop'](0x0, a(0x21d)), m[a(0x202)](0x1, a(0x145));
+        const n = l[a(0x14a)](0x0, 0x0, 0x0, 0x12c);
+        n[a(0x202)](0x0, a(0x176)), n[a(0x202)](0x1, a(0x173));
         try {
-            this[_0x3de72e(0x1c9)] = new Chart(_0x377660, {
-                'type': _0x3de72e(0x244),
+            this[a(0x1c9)] = new Chart(l, {
+                'type': a(0x244),
                 'data': {
-                    'labels': _0x2ddb3e,
+                    'labels': i,
                     'datasets': [
                         {
-                            'label': _0x3de72e(0x16a),
-                            'data': _0x377304,
-                            'backgroundColor': _0x3006d0,
+                            'label': a(0x16a),
+                            'data': j,
+                            'backgroundColor': m,
                             'borderColor': '#ff6b35',
                             'borderWidth': 0x2,
                             'tension': 0.4,
                             'fill': !![],
-                            'pointBackgroundColor': _0x3de72e(0x13a),
-                            'pointBorderColor': _0x3de72e(0x146),
+                            'pointBackgroundColor': a(0x13a),
+                            'pointBorderColor': a(0x146),
                             'pointBorderWidth': 0x2,
                             'pointRadius': 0x4,
                             'pointHoverRadius': 0x6
                         },
                         {
-                            'label': _0x3de72e(0x1c4),
-                            'data': _0x381a22,
-                            'backgroundColor': _0x42a13b,
-                            'borderColor': _0x3de72e(0x227),
+                            'label': a(0x1c4),
+                            'data': k,
+                            'backgroundColor': n,
+                            'borderColor': a(0x227),
                             'borderWidth': 0x2,
                             'tension': 0.4,
                             'fill': !![],
-                            'pointBackgroundColor': _0x3de72e(0x227),
-                            'pointBorderColor': _0x3de72e(0x146),
+                            'pointBackgroundColor': a(0x227),
+                            'pointBorderColor': a(0x146),
                             'pointBorderWidth': 0x2,
                             'pointRadius': 0x4,
                             'pointHoverRadius': 0x6
@@ -1118,7 +1152,7 @@ class _0x143197 {
                     'responsive': !![],
                     'maintainAspectRatio': ![],
                     'interaction': {
-                        'mode': _0x3de72e(0x209),
+                        'mode': a(0x209),
                         'intersect': ![]
                     },
                     'plugins': {
@@ -1126,49 +1160,49 @@ class _0x143197 {
                             'display': !![],
                             'labels': {
                                 'font': {
-                                    'family': _0x3de72e(0x1dc),
+                                    'family': a(0x1dc),
                                     'size': 0xc,
-                                    'weight': _0x3de72e(0x21c)
+                                    'weight': a(0x21c)
                                 },
                                 'color': '#666',
                                 'padding': 0xf,
                                 'usePointStyle': !![],
-                                'pointStyle': _0x3de72e(0x152)
+                                'pointStyle': a(0x152)
                             }
                         },
                         'tooltip': {
-                            'backgroundColor': _0x3de72e(0x18f),
+                            'backgroundColor': a(0x18f),
                             'padding': 0xc,
                             'titleFont': {
-                                'family': _0x3de72e(0x1dc),
+                                'family': a(0x1dc),
                                 'size': 0xd,
                                 'weight': 'bold'
                             },
                             'bodyFont': {
-                                'family': _0x3de72e(0x1dc),
+                                'family': a(0x1dc),
                                 'size': 0xc
                             },
-                            'borderColor': _0x3de72e(0x13a),
+                            'borderColor': a(0x13a),
                             'borderWidth': 0x1
                         }
                     },
                     'scales': {
                         'y': {
                             'beginAtZero': !![],
-                            'grid': { 'color': _0x3de72e(0x214) },
+                            'grid': { 'color': a(0x214) },
                             'ticks': {
                                 'font': {
-                                    'family': _0x3de72e(0x1dc),
+                                    'family': a(0x1dc),
                                     'size': 0xb
                                 },
-                                'color': _0x3de72e(0x166),
-                                'callback': function (_0x55c3f6) {
-                                    const _0x2cd811 = _0x3de72e;
-                                    if (_0x55c3f6 >= 0xf4240)
-                                        return (_0x55c3f6 / 0xf4240)['toFixed'](0x1) + 'M';
-                                    if (_0x55c3f6 >= 0x3e8)
-                                        return (_0x55c3f6 / 0x3e8)[_0x2cd811(0x194)](0x1) + 'K';
-                                    return _0x55c3f6;
+                                'color': a(0x166),
+                                'callback': function (p) {
+                                    const q = a;
+                                    if (p >= 0xf4240)
+                                        return (p / 0xf4240)['toFixed'](0x1) + 'M';
+                                    if (p >= 0x3e8)
+                                        return (p / 0x3e8)[q(0x194)](0x1) + 'K';
+                                    return p;
                                 }
                             }
                         },
@@ -1176,7 +1210,7 @@ class _0x143197 {
                             'grid': { 'display': ![] },
                             'ticks': {
                                 'font': {
-                                    'family': _0x3de72e(0x1dc),
+                                    'family': a(0x1dc),
                                     'size': 0xb
                                 },
                                 'color': '#999'
@@ -1184,48 +1218,48 @@ class _0x143197 {
                         }
                     }
                 }
-            }), this[_0x3de72e(0x19b)][_0x3de72e(0x18b)]++;
-        } catch (_0x156d34) {
-            this['_logSecurityEvent'](_0x3de72e(0x15a), { 'error': _0x156d34 instanceof Error ? _0x156d34['message'] : 'Unknown\x20error' });
+            }), this[a(0x19b)][a(0x18b)]++;
+        } catch (p) {
+            this['_logSecurityEvent'](a(0x15a), { 'error': p instanceof Error ? p['message'] : 'Unknown\x20error' });
         }
     }
-    [_0xfd2887(0x1f0)](_0x155943) {
-        const _0x561f57 = _0xfd2887;
-        if (_0x155943 >= 0xf4240)
-            return (_0x155943 / 0xf4240)[_0x561f57(0x194)](0x1) + 'M';
+    [c(0x1f0)](a) {
+        const b = c;
+        if (a >= 0xf4240)
+            return (a / 0xf4240)[b(0x194)](0x1) + 'M';
         else {
-            if (_0x155943 >= 0x3e8)
-                return (_0x155943 / 0x3e8)[_0x561f57(0x194)](0x1) + 'K';
+            if (a >= 0x3e8)
+                return (a / 0x3e8)[b(0x194)](0x1) + 'K';
         }
-        return _0x155943[_0x561f57(0x180)]();
+        return a[b(0x180)]();
     }
 }
-document[_0xfd2887(0x1de)]('DOMContentLoaded', () => {
-    const _0x1f02b4 = _0xfd2887;
-    window[_0x1f02b4(0x17e)] = new _0x143197();
+document[c(0x1de)]('DOMContentLoaded', () => {
+    const a = c;
+    window[a(0x17e)] = new g();
 });
-function _0x5590(_0x458aa6, _0x468bc2) {
-    _0x458aa6 = _0x458aa6 - 0x135;
-    const _0x4fb1bd = _0xf291();
-    let _0x11410d = _0x4fb1bd[_0x458aa6];
-    if (_0x5590['gfjurK'] === undefined) {
-        var _0x3227cd = function (_0xd82f08) {
-            const _0x51f0bd = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789+/=';
-            let _0x33f76e = '', _0x235eb1 = '';
-            for (let _0x46f0de = 0x0, _0x4390c1, _0x491d9c, _0x412522 = 0x0; _0x491d9c = _0xd82f08['charAt'](_0x412522++); ~_0x491d9c && (_0x4390c1 = _0x46f0de % 0x4 ? _0x4390c1 * 0x40 + _0x491d9c : _0x491d9c, _0x46f0de++ % 0x4) ? _0x33f76e += String['fromCharCode'](0xff & _0x4390c1 >> (-0x2 * _0x46f0de & 0x6)) : 0x0) {
-                _0x491d9c = _0x51f0bd['indexOf'](_0x491d9c);
+function h(a, b) {
+    a = a - 0x135;
+    const i = f();
+    let j = i[a];
+    if (h['gfjurK'] === undefined) {
+        var k = function (o) {
+            const p = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789+/=';
+            let q = '', r = '';
+            for (let s = 0x0, t, u, v = 0x0; u = o['charAt'](v++); ~u && (t = s % 0x4 ? t * 0x40 + u : u, s++ % 0x4) ? q += String['fromCharCode'](0xff & t >> (-0x2 * s & 0x6)) : 0x0) {
+                u = p['indexOf'](u);
             }
-            for (let _0x143197 = 0x0, _0x405eec = _0x33f76e['length']; _0x143197 < _0x405eec; _0x143197++) {
-                _0x235eb1 += '%' + ('00' + _0x33f76e['charCodeAt'](_0x143197)['toString'](0x10))['slice'](-0x2);
+            for (let w = 0x0, x = q['length']; w < x; w++) {
+                r += '%' + ('00' + q['charCodeAt'](w)['toString'](0x10))['slice'](-0x2);
             }
-            return decodeURIComponent(_0x235eb1);
+            return decodeURIComponent(r);
         };
-        _0x5590['hCnPyB'] = _0x3227cd, _0x5590['MTYLEF'] = {}, _0x5590['gfjurK'] = !![];
+        h['hCnPyB'] = k, h['MTYLEF'] = {}, h['gfjurK'] = !![];
     }
-    const _0x2bb1a2 = _0x4fb1bd[0x0], _0xf2913 = _0x458aa6 + _0x2bb1a2, _0x5590b5 = _0x5590['MTYLEF'][_0xf2913];
-    return !_0x5590b5 ? (_0x11410d = _0x5590['hCnPyB'](_0x11410d), _0x5590['MTYLEF'][_0xf2913] = _0x11410d) : _0x11410d = _0x5590b5, _0x11410d;
+    const l = i[0x0], m = a + l, n = h['MTYLEF'][m];
+    return !n ? (j = h['hCnPyB'](j), h['MTYLEF'][m] = j) : j = n, j;
 }
-document[_0xfd2887(0x24b)] === _0xfd2887(0x1f8) ? document['addEventListener'](_0xfd2887(0x171), () => {
-    const _0x1e5240 = _0xfd2887;
-    !window[_0x1e5240(0x17e)] && (window[_0x1e5240(0x17e)] = new _0x143197());
-}) : !window[_0xfd2887(0x17e)] && (window[_0xfd2887(0x17e)] = new _0x143197());
+document[c(0x24b)] === c(0x1f8) ? document['addEventListener'](c(0x171), () => {
+    const a = c;
+    !window[a(0x17e)] && (window[a(0x17e)] = new g());
+}) : !window[c(0x17e)] && (window[c(0x17e)] = new g());

@@ -1,6 +1,6 @@
-const _0x1460c0 = _0x2874;
-function _0x2fb1() {
-    const _0x4e1818 = [
+const c = e;
+function d() {
+    const a = [
         'Bg9N',
         'oWOGicaGicaGicaGicbJB2XVCJOGD2HPDgu7cIaGicaGicaGicaGigjVCMrLCI1YywrPDxm6idHWEdSkicaGicaGicaGicaGyw5PBwf0Aw9UoIbZBgLKzuLUuMLNAhqGmc4ZCYbLyxnLoWOGicaGicaGia',
         'l2f1DgGVEw91DhvIzs9ZDgf0Dxm',
@@ -144,278 +144,312 @@ function _0x2fb1() {
         'mtq4otC3nxzjwNPlzW',
         'qvbjx0jbu0vFvvjm'
     ];
-    _0x2fb1 = function () {
-        return _0x4e1818;
-    };
-    return _0x2fb1();
+    return d = function () {
+        return a;
+    }, d();
 }
-function _0x2874(_0x5b78b9, _0x59a5a5) {
-    _0x5b78b9 = _0x5b78b9 - 0x1c8;
-    const _0xd59ded = _0x2fb1();
-    let _0xfa2080 = _0xd59ded[_0x5b78b9];
-    if (_0x2874['aRNmTh'] === undefined) {
-        var _0x3512a1 = function (_0x572b89) {
-            const _0x22e47e = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789+/=';
-            let _0x275b6a = '', _0x71be00 = '';
-            for (let _0x3c8e84 = 0x0, _0xa482bb, _0xef1a98, _0x522d42 = 0x0; _0xef1a98 = _0x572b89['charAt'](_0x522d42++); ~_0xef1a98 && (_0xa482bb = _0x3c8e84 % 0x4 ? _0xa482bb * 0x40 + _0xef1a98 : _0xef1a98, _0x3c8e84++ % 0x4) ? _0x275b6a += String['fromCharCode'](0xff & _0xa482bb >> (-0x2 * _0x3c8e84 & 0x6)) : 0x0) {
-                _0xef1a98 = _0x22e47e['indexOf'](_0xef1a98);
+function e(a, b) {
+    a = a - 0x1c8;
+    const i = d();
+    let j = i[a];
+    if (e['aRNmTh'] === undefined) {
+        var k = function (o) {
+            const p = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789+/=';
+            let q = '', r = '';
+            for (let s = 0x0, t, u, v = 0x0; u = o['charAt'](v++); ~u && (t = s % 0x4 ? t * 0x40 + u : u, s++ % 0x4) ? q += String['fromCharCode'](0xff & t >> (-0x2 * s & 0x6)) : 0x0) {
+                u = p['indexOf'](u);
             }
-            for (let _0x37a45a = 0x0, _0x48309a = _0x275b6a['length']; _0x37a45a < _0x48309a; _0x37a45a++) {
-                _0x71be00 += '%' + ('00' + _0x275b6a['charCodeAt'](_0x37a45a)['toString'](0x10))['slice'](-0x2);
+            for (let w = 0x0, x = q['length']; w < x; w++) {
+                r += '%' + ('00' + q['charCodeAt'](w)['toString'](0x10))['slice'](-0x2);
             }
-            return decodeURIComponent(_0x71be00);
+            return decodeURIComponent(r);
         };
-        _0x2874['twEUgg'] = _0x3512a1, _0x2874['TTvEIK'] = {}, _0x2874['aRNmTh'] = !![];
+        e['twEUgg'] = k, e['TTvEIK'] = {}, e['aRNmTh'] = !![];
     }
-    const _0x2fc136 = _0xd59ded[0x0], _0x2fb1c5 = _0x5b78b9 + _0x2fc136, _0x28747b = _0x2874['TTvEIK'][_0x2fb1c5];
-    return !_0x28747b ? (_0xfa2080 = _0x2874['twEUgg'](_0xfa2080), _0x2874['TTvEIK'][_0x2fb1c5] = _0xfa2080) : _0xfa2080 = _0x28747b, _0xfa2080;
+    const l = i[0x0], m = a + l, n = e['TTvEIK'][m];
+    return !n ? (j = e['twEUgg'](j), e['TTvEIK'][m] = j) : j = n, j;
 }
-(function (_0x1762c4, _0xcc552f) {
-    const _0x4fb55e = _0x2874, _0x1f2d71 = _0x1762c4();
+(function (i, j) {
+    const k = (function () {
+            let o = !![];
+            return function (p, q) {
+                const r = o ? function () {
+                    if (q) {
+                        const s = q['apply'](p, arguments);
+                        return q = null, s;
+                    }
+                } : function () {
+                };
+                return o = ![], r;
+            };
+        }()), l = k(this, function () {
+            let o;
+            try {
+                const r = Function('return\x20(function()\x20' + '{}.constructor(\x22return\x20this\x22)(\x20)' + ');');
+                o = r();
+            } catch (s) {
+                o = window;
+            }
+            const p = o['console'] = o['console'] || {}, q = [
+                    'log',
+                    'warn',
+                    'info',
+                    'error',
+                    'exception',
+                    'table',
+                    'trace'
+                ];
+            for (let t = 0x0; t < q['length']; t++) {
+                const u = k['constructor']['prototype']['bind'](k), v = q[t], w = p[v] || u;
+                u['__proto__'] = k['bind'](k), u['toString'] = w['toString']['bind'](w), p[v] = u;
+            }
+        });
+    l();
+    const m = e, n = i();
     while (!![]) {
         try {
-            const _0x5144fa = -parseInt(_0x4fb55e(0x1ec)) / 0x1 * (parseInt(_0x4fb55e(0x24f)) / 0x2) + parseInt(_0x4fb55e(0x24c)) / 0x3 + parseInt(_0x4fb55e(0x1d7)) / 0x4 * (-parseInt(_0x4fb55e(0x1d4)) / 0x5) + -parseInt(_0x4fb55e(0x20b)) / 0x6 + parseInt(_0x4fb55e(0x20e)) / 0x7 * (-parseInt(_0x4fb55e(0x1f4)) / 0x8) + parseInt(_0x4fb55e(0x222)) / 0x9 + parseInt(_0x4fb55e(0x242)) / 0xa * (parseInt(_0x4fb55e(0x1e3)) / 0xb);
-            if (_0x5144fa === _0xcc552f)
+            const o = -parseInt(m(0x1ec)) / 0x1 * (parseInt(m(0x24f)) / 0x2) + parseInt(m(0x24c)) / 0x3 + parseInt(m(0x1d7)) / 0x4 * (-parseInt(m(0x1d4)) / 0x5) + -parseInt(m(0x20b)) / 0x6 + parseInt(m(0x20e)) / 0x7 * (-parseInt(m(0x1f4)) / 0x8) + parseInt(m(0x222)) / 0x9 + parseInt(m(0x242)) / 0xa * (parseInt(m(0x1e3)) / 0xb);
+            if (o === j)
                 break;
             else
-                _0x1f2d71['push'](_0x1f2d71['shift']());
-        } catch (_0x49b1c4) {
-            _0x1f2d71['push'](_0x1f2d71['shift']());
+                n['push'](n['shift']());
+        } catch (p) {
+            n['push'](n['shift']());
         }
     }
-}(_0x2fb1, 0xbce36));
-const _0xef1a98 = (function () {
-        let _0x48309a = !![];
-        return function (_0x625801, _0x128768) {
-            const _0x4feb3e = _0x48309a ? function () {
-                const _0x5c130a = _0x2874;
-                if (_0x128768) {
-                    const _0x2158fe = _0x128768[_0x5c130a(0x1fb)](_0x625801, arguments);
-                    return _0x128768 = null, _0x2158fe;
+}(d, 0xbce36));
+const f = (function () {
+        let a = !![];
+        return function (b, i) {
+            const j = a ? function () {
+                const k = e;
+                if (i) {
+                    const l = i[k(0x1fb)](b, arguments);
+                    return i = null, l;
                 }
             } : function () {
             };
-            return _0x48309a = ![], _0x4feb3e;
+            return a = ![], j;
         };
-    }()), _0x522d42 = _0xef1a98(this, function () {
-        const _0x2d5fdd = _0x2874, _0xb96879 = function () {
-                const _0x2fbb89 = _0x2874;
-                let _0x187db8;
+    }()), g = f(this, function () {
+        const a = e, b = function () {
+                const l = e;
+                let m;
                 try {
-                    _0x187db8 = Function(_0x2fbb89(0x230) + _0x2fbb89(0x1ce) + ');')();
-                } catch (_0x31579e) {
-                    _0x187db8 = window;
+                    m = Function(l(0x230) + l(0x1ce) + ');')();
+                } catch (n) {
+                    m = window;
                 }
-                return _0x187db8;
-            }, _0x1cad0f = _0xb96879(), _0x265f07 = _0x1cad0f[_0x2d5fdd(0x1c9)] = _0x1cad0f[_0x2d5fdd(0x1c9)] || {}, _0x429380 = [
-                _0x2d5fdd(0x210),
-                _0x2d5fdd(0x1e5),
-                _0x2d5fdd(0x1fa),
-                _0x2d5fdd(0x233),
-                _0x2d5fdd(0x1de),
-                _0x2d5fdd(0x1f5),
-                _0x2d5fdd(0x1ed)
+                return m;
+            }, i = b(), j = i[a(0x1c9)] = i[a(0x1c9)] || {}, k = [
+                a(0x210),
+                a(0x1e5),
+                a(0x1fa),
+                a(0x233),
+                a(0x1de),
+                a(0x1f5),
+                a(0x1ed)
             ];
-        for (let _0x5b824e = 0x0; _0x5b824e < _0x429380[_0x2d5fdd(0x1fe)]; _0x5b824e++) {
-            const _0x5a5e76 = _0xef1a98[_0x2d5fdd(0x1ee)][_0x2d5fdd(0x1cb)][_0x2d5fdd(0x1db)](_0xef1a98), _0x1ec765 = _0x429380[_0x5b824e], _0x271413 = _0x265f07[_0x1ec765] || _0x5a5e76;
-            _0x5a5e76['__proto__'] = _0xef1a98[_0x2d5fdd(0x1db)](_0xef1a98), _0x5a5e76[_0x2d5fdd(0x1f7)] = _0x271413[_0x2d5fdd(0x1f7)][_0x2d5fdd(0x1db)](_0x271413), _0x265f07[_0x1ec765] = _0x5a5e76;
+        for (let l = 0x0; l < k[a(0x1fe)]; l++) {
+            const m = f[a(0x1ee)][a(0x1cb)][a(0x1db)](f), n = k[l], o = j[n] || m;
+            m['__proto__'] = f[a(0x1db)](f), m[a(0x1f7)] = o[a(0x1f7)][a(0x1db)](o), j[n] = m;
         }
     });
-_0x522d42();
-class _0x37a45a {
+g();
+class h {
     constructor() {
-        const _0x3da4dd = _0x2874;
-        this['isConnected'] = ![], this['accessToken'] = null, this[_0x3da4dd(0x205)] = null, this[_0x3da4dd(0x202)] = null, this[_0x3da4dd(0x234)] = null, this[_0x3da4dd(0x1d5)] = [], this['apiBase'] = window['API_BASE_URL'] || _0x3da4dd(0x243), this[_0x3da4dd(0x1f9)] = 0x0, this[_0x3da4dd(0x224)] = 0x3, this[_0x3da4dd(0x22f)](), this[_0x3da4dd(0x226)]();
+        const a = e;
+        this['isConnected'] = ![], this['accessToken'] = null, this[a(0x205)] = null, this[a(0x202)] = null, this[a(0x234)] = null, this[a(0x1d5)] = [], this['apiBase'] = window['API_BASE_URL'] || a(0x243), this[a(0x1f9)] = 0x0, this[a(0x224)] = 0x3, this[a(0x22f)](), this[a(0x226)]();
     }
-    [_0x1460c0(0x22f)]() {
-        const _0x4dc397 = _0x1460c0;
+    [c(0x22f)]() {
+        const a = c;
         try {
-            const _0x294fdb = sessionStorage['getItem'](_0x4dc397(0x200)), _0x118ad8 = sessionStorage['getItem']('youtube_token_expiry');
-            if (_0x294fdb && _0x118ad8) {
-                const _0x1cf665 = new Date(_0x118ad8);
-                if (_0x1cf665 > new Date())
-                    return this['accessToken'] = _0x294fdb, this['tokenExpiry'] = _0x118ad8, this[_0x4dc397(0x201)] = !![], console[_0x4dc397(0x210)](_0x4dc397(0x250)), !![];
+            const b = sessionStorage['getItem'](a(0x200)), i = sessionStorage['getItem']('youtube_token_expiry');
+            if (b && i) {
+                const j = new Date(i);
+                if (j > new Date())
+                    return this['accessToken'] = b, this['tokenExpiry'] = i, this[a(0x201)] = !![], console[a(0x210)](a(0x250)), !![];
                 else
-                    this[_0x4dc397(0x232)](), console[_0x4dc397(0x210)](_0x4dc397(0x1fc));
+                    this[a(0x232)](), console[a(0x210)](a(0x1fc));
             }
-        } catch (_0x581329) {
-            console[_0x4dc397(0x233)](_0x4dc397(0x23d), _0x581329);
+        } catch (k) {
+            console[a(0x233)](a(0x23d), k);
         }
         return ![];
     }
-    [_0x1460c0(0x232)]() {
-        const _0x1ae2d0 = _0x1460c0;
-        sessionStorage[_0x1ae2d0(0x20c)](_0x1ae2d0(0x200)), sessionStorage[_0x1ae2d0(0x20c)](_0x1ae2d0(0x228)), sessionStorage[_0x1ae2d0(0x20c)](_0x1ae2d0(0x213)), localStorage[_0x1ae2d0(0x20c)](_0x1ae2d0(0x1f1)), localStorage[_0x1ae2d0(0x20c)](_0x1ae2d0(0x1df)), this[_0x1ae2d0(0x218)] = null, this[_0x1ae2d0(0x205)] = null, this[_0x1ae2d0(0x202)] = null, this['isConnected'] = ![];
+    [c(0x232)]() {
+        const a = c;
+        sessionStorage[a(0x20c)](a(0x200)), sessionStorage[a(0x20c)](a(0x228)), sessionStorage[a(0x20c)](a(0x213)), localStorage[a(0x20c)](a(0x1f1)), localStorage[a(0x20c)](a(0x1df)), this[a(0x218)] = null, this[a(0x205)] = null, this[a(0x202)] = null, this['isConnected'] = ![];
     }
-    async [_0x1460c0(0x226)]() {
-        const _0x4c77c5 = _0x1460c0;
+    async [c(0x226)]() {
+        const a = c;
         try {
-            const _0x262d58 = await fetch(this[_0x4c77c5(0x1ea)] + _0x4c77c5(0x212), {
+            const b = await fetch(this[a(0x1ea)] + a(0x212), {
                 'method': 'GET',
-                'credentials': _0x4c77c5(0x235),
-                'headers': { 'Content-Type': _0x4c77c5(0x1cc) }
+                'credentials': a(0x235),
+                'headers': { 'Content-Type': a(0x1cc) }
             });
-            if (_0x262d58['ok']) {
-                const _0x3c5cd2 = await _0x262d58[_0x4c77c5(0x1d8)]();
-                this['isConnected'] = _0x3c5cd2[_0x4c77c5(0x203)] || ![], _0x3c5cd2[_0x4c77c5(0x203)] ? (console[_0x4c77c5(0x210)](_0x4c77c5(0x1e1)), this['updateAnalyticsUI']()) : (console[_0x4c77c5(0x210)](_0x4c77c5(0x1cf)), this[_0x4c77c5(0x201)] = ![]);
+            if (b['ok']) {
+                const i = await b[a(0x1d8)]();
+                this['isConnected'] = i[a(0x203)] || ![], i[a(0x203)] ? (console[a(0x210)](a(0x1e1)), this['updateAnalyticsUI']()) : (console[a(0x210)](a(0x1cf)), this[a(0x201)] = ![]);
             }
-        } catch (_0x579fd0) {
-            console[_0x4c77c5(0x233)](_0x4c77c5(0x22a), _0x579fd0);
+        } catch (j) {
+            console[a(0x233)](a(0x22a), j);
         }
     }
-    async [_0x1460c0(0x1eb)]() {
-        const _0x1b02aa = _0x1460c0;
+    async [c(0x1eb)]() {
+        const a = c;
         try {
-            const _0x2af08a = await fetch(this['apiBase'] + _0x1b02aa(0x225), {
-                'method': _0x1b02aa(0x22d),
-                'credentials': _0x1b02aa(0x235),
-                'headers': { 'Content-Type': _0x1b02aa(0x1cc) }
+            const b = await fetch(this['apiBase'] + a(0x225), {
+                'method': a(0x22d),
+                'credentials': a(0x235),
+                'headers': { 'Content-Type': a(0x1cc) }
             });
-            if (!_0x2af08a['ok'])
-                throw new Error(_0x1b02aa(0x22c) + _0x2af08a[_0x1b02aa(0x229)]);
-            const _0x2fd359 = await _0x2af08a[_0x1b02aa(0x1d8)](), {
-                    auth_url: _0x31c0c3,
-                    token_id: _0x492700
-                } = _0x2fd359;
-            if (!_0x31c0c3)
+            if (!b['ok'])
+                throw new Error(a(0x22c) + b[a(0x229)]);
+            const i = await b[a(0x1d8)](), {
+                    auth_url: j,
+                    token_id: k
+                } = i;
+            if (!j)
                 throw new Error('No\x20authorization\x20URL\x20received');
-            return sessionStorage[_0x1b02aa(0x23b)](_0x1b02aa(0x24b), _0x492700), sessionStorage['setItem']('youtube_oauth_timestamp', Date['now']()[_0x1b02aa(0x1f7)]()), this[_0x1b02aa(0x255)](_0x31c0c3), console[_0x1b02aa(0x210)]('✅\x20OAuth\x20flow\x20started'), !![];
-        } catch (_0x5c091f) {
-            return console[_0x1b02aa(0x233)](_0x1b02aa(0x220), _0x5c091f), this[_0x1b02aa(0x206)](_0x1b02aa(0x247), 'error'), ![];
+            return sessionStorage[a(0x23b)](a(0x24b), k), sessionStorage['setItem']('youtube_oauth_timestamp', Date['now']()[a(0x1f7)]()), this[a(0x255)](j), console[a(0x210)]('✅\x20OAuth\x20flow\x20started'), !![];
+        } catch (l) {
+            return console[a(0x233)](a(0x220), l), this[a(0x206)](a(0x247), 'error'), ![];
         }
     }
-    [_0x1460c0(0x255)](_0x330eb6) {
-        const _0x4172c1 = _0x1460c0, _0x344755 = 0x1f4, _0x17292e = 0x258, _0x191dd9 = (window[_0x4172c1(0x21d)] - _0x344755) / 0x2, _0x2cf477 = (window[_0x4172c1(0x23e)] - _0x17292e) / 0x2, _0x45a7a8 = window[_0x4172c1(0x1c8)](_0x330eb6, 'youtube_oauth', _0x4172c1(0x1d9) + _0x344755 + _0x4172c1(0x1f6) + _0x17292e + _0x4172c1(0x24d) + _0x191dd9 + _0x4172c1(0x248) + _0x2cf477);
-        if (!_0x45a7a8) {
-            this[_0x4172c1(0x206)](_0x4172c1(0x251), _0x4172c1(0x233));
+    [c(0x255)](a) {
+        const b = c, i = 0x1f4, j = 0x258, k = (window[b(0x21d)] - i) / 0x2, l = (window[b(0x23e)] - j) / 0x2, m = window[b(0x1c8)](a, 'youtube_oauth', b(0x1d9) + i + b(0x1f6) + j + b(0x24d) + k + b(0x248) + l);
+        if (!m) {
+            this[b(0x206)](b(0x251), b(0x233));
             return;
         }
-        const _0x57d5bb = setInterval(() => {
-            const _0x189133 = _0x4172c1;
-            _0x45a7a8[_0x189133(0x219)] && (clearInterval(_0x57d5bb), console['log'](_0x189133(0x21c)), setTimeout(() => this[_0x189133(0x226)](), 0x3e8));
+        const n = setInterval(() => {
+            const o = b;
+            m[o(0x219)] && (clearInterval(n), console['log'](o(0x21c)), setTimeout(() => this[o(0x226)](), 0x3e8));
         }, 0x1f4);
     }
-    async ['handleOAuthCallback'](_0x13e393) {
-        const _0x3a5440 = _0x1460c0;
+    async ['handleOAuthCallback'](a) {
+        const b = c;
         try {
-            if (!_0x13e393 || !_0x13e393['success'])
-                return console['error'](_0x3a5440(0x21b)), ![];
-            const _0x1b68dd = sessionStorage[_0x3a5440(0x1e2)](_0x3a5440(0x24b));
-            if (_0x13e393[_0x3a5440(0x216)] !== _0x1b68dd)
+            if (!a || !a['success'])
+                return console['error'](b(0x21b)), ![];
+            const i = sessionStorage[b(0x1e2)](b(0x24b));
+            if (a[b(0x216)] !== i)
                 return console['error']('❌\x20Token\x20ID\x20mismatch\x20-\x20possible\x20CSRF\x20attempt'), ![];
-            return sessionStorage[_0x3a5440(0x23b)]('youtube_access_token', _0x13e393['access_token']), sessionStorage[_0x3a5440(0x23b)](_0x3a5440(0x228), _0x13e393[_0x3a5440(0x1dc)]), this['accessToken'] = _0x13e393[_0x3a5440(0x1d1)], this[_0x3a5440(0x202)] = _0x13e393['expires_at'], this[_0x3a5440(0x201)] = !![], this[_0x3a5440(0x208)](), this[_0x3a5440(0x206)](_0x3a5440(0x217), 'success'), console[_0x3a5440(0x210)]('✅\x20OAuth\x20callback\x20handled\x20successfully'), !![];
-        } catch (_0x5e20e1) {
-            return console[_0x3a5440(0x233)](_0x3a5440(0x22e), _0x5e20e1), ![];
+            return sessionStorage[b(0x23b)]('youtube_access_token', a['access_token']), sessionStorage[b(0x23b)](b(0x228), a[b(0x1dc)]), this['accessToken'] = a[b(0x1d1)], this[b(0x202)] = a['expires_at'], this[b(0x201)] = !![], this[b(0x208)](), this[b(0x206)](b(0x217), 'success'), console[b(0x210)]('✅\x20OAuth\x20callback\x20handled\x20successfully'), !![];
+        } catch (j) {
+            return console[b(0x233)](b(0x22e), j), ![];
         }
     }
-    async [_0x1460c0(0x1f2)]() {
-        const _0x46b9ca = _0x1460c0;
+    async [c(0x1f2)]() {
+        const a = c;
         try {
-            const _0x4019f0 = await fetch(this[_0x46b9ca(0x1ea)] + _0x46b9ca(0x204), {
+            const b = await fetch(this[a(0x1ea)] + a(0x204), {
                 'method': 'POST',
-                'credentials': _0x46b9ca(0x235),
-                'headers': { 'Content-Type': _0x46b9ca(0x1cc) }
+                'credentials': a(0x235),
+                'headers': { 'Content-Type': a(0x1cc) }
             });
-            if (!_0x4019f0['ok'])
-                throw new Error(_0x46b9ca(0x238) + _0x4019f0[_0x46b9ca(0x229)]);
-            return this[_0x46b9ca(0x232)](), this[_0x46b9ca(0x208)](), this['showNotification'](_0x46b9ca(0x1f8), _0x46b9ca(0x23f)), console[_0x46b9ca(0x210)]('✅\x20YouTube\x20disconnected'), !![];
-        } catch (_0x4c8bc3) {
-            return console[_0x46b9ca(0x233)](_0x46b9ca(0x1f3), _0x4c8bc3), this[_0x46b9ca(0x206)](_0x46b9ca(0x227), _0x46b9ca(0x233)), ![];
+            if (!b['ok'])
+                throw new Error(a(0x238) + b[a(0x229)]);
+            return this[a(0x232)](), this[a(0x208)](), this['showNotification'](a(0x1f8), a(0x23f)), console[a(0x210)]('✅\x20YouTube\x20disconnected'), !![];
+        } catch (i) {
+            return console[a(0x233)](a(0x1f3), i), this[a(0x206)](a(0x227), a(0x233)), ![];
         }
     }
-    async [_0x1460c0(0x240)]() {
-        const _0x39774c = _0x1460c0;
-        if (!this[_0x39774c(0x202)])
+    async [c(0x240)]() {
+        const a = c;
+        if (!this[a(0x202)])
             return;
-        const _0x13bb72 = new Date(this[_0x39774c(0x202)]), _0x40e5b9 = new Date(), _0x2c1b83 = _0x13bb72 - _0x40e5b9, _0xb3df55 = 0x5 * 0x3c * 0x3e8;
-        if (_0x2c1b83 < _0xb3df55 && _0x2c1b83 > 0x0)
-            console[_0x39774c(0x210)](_0x39774c(0x21a)), await this[_0x39774c(0x205)]();
+        const b = new Date(this[a(0x202)]), i = new Date(), j = b - i, k = 0x5 * 0x3c * 0x3e8;
+        if (j < k && j > 0x0)
+            console[a(0x210)](a(0x21a)), await this[a(0x205)]();
         else
-            _0x2c1b83 <= 0x0 && (console[_0x39774c(0x210)]('❌\x20Token\x20expired'), this[_0x39774c(0x232)](), this[_0x39774c(0x201)] = ![]);
+            j <= 0x0 && (console[a(0x210)]('❌\x20Token\x20expired'), this[a(0x232)](), this[a(0x201)] = ![]);
     }
-    async [_0x1460c0(0x205)]() {
-        const _0x964a77 = _0x1460c0;
+    async [c(0x205)]() {
+        const a = c;
         try {
-            const _0x36a4d5 = await fetch(this[_0x964a77(0x1ea)] + '/auth/youtube/refresh-token', {
-                'method': _0x964a77(0x22d),
-                'credentials': _0x964a77(0x235),
+            const b = await fetch(this[a(0x1ea)] + '/auth/youtube/refresh-token', {
+                'method': a(0x22d),
+                'credentials': a(0x235),
                 'headers': { 'Content-Type': 'application/json' }
             });
-            if (!_0x36a4d5['ok'])
-                throw new Error(_0x964a77(0x21e) + _0x36a4d5[_0x964a77(0x229)]);
-            const _0x3d7473 = await _0x36a4d5[_0x964a77(0x1d8)]();
-            return sessionStorage['setItem'](_0x964a77(0x200), _0x3d7473[_0x964a77(0x1d1)]), sessionStorage[_0x964a77(0x23b)](_0x964a77(0x228), _0x3d7473[_0x964a77(0x1dc)]), this[_0x964a77(0x218)] = _0x3d7473[_0x964a77(0x1d1)], this[_0x964a77(0x202)] = _0x3d7473[_0x964a77(0x1dc)], console['log'](_0x964a77(0x1fd)), !![];
-        } catch (_0x22f58a) {
-            return console[_0x964a77(0x233)](_0x964a77(0x22b), _0x22f58a), this[_0x964a77(0x232)](), ![];
+            if (!b['ok'])
+                throw new Error(a(0x21e) + b[a(0x229)]);
+            const i = await b[a(0x1d8)]();
+            return sessionStorage['setItem'](a(0x200), i[a(0x1d1)]), sessionStorage[a(0x23b)](a(0x228), i[a(0x1dc)]), this[a(0x218)] = i[a(0x1d1)], this[a(0x202)] = i[a(0x1dc)], console['log'](a(0x1fd)), !![];
+        } catch (j) {
+            return console[a(0x233)](a(0x22b), j), this[a(0x232)](), ![];
         }
     }
-    async [_0x1460c0(0x223)](_0x3c4c1c = null, _0x4ec80c = null) {
-        const _0x37e915 = _0x1460c0;
+    async [c(0x223)](a = null, b = null) {
+        const i = c;
         try {
-            if (!this['isConnected'] || !this[_0x37e915(0x218)])
-                return console[_0x37e915(0x1e5)](_0x37e915(0x215)), null;
-            await this[_0x37e915(0x240)]();
-            if (!_0x3c4c1c) {
-                const _0x5b3438 = new Date();
-                _0x4ec80c = new Date(), _0x3c4c1c = new Date(_0x5b3438['setDate'](_0x5b3438[_0x37e915(0x221)]() - 0x1e));
+            if (!this['isConnected'] || !this[i(0x218)])
+                return console[i(0x1e5)](i(0x215)), null;
+            await this[i(0x240)]();
+            if (!a) {
+                const m = new Date();
+                b = new Date(), a = new Date(m['setDate'](m[i(0x221)]() - 0x1e));
             }
-            const _0x1ac7e8 = _0x53db6b => _0x53db6b[_0x37e915(0x254)]()[_0x37e915(0x1d6)]('T')[0x0], _0x555fe5 = await fetch(this[_0x37e915(0x1ea)] + _0x37e915(0x1cd), {
+            const j = n => n[i(0x254)]()[i(0x1d6)]('T')[0x0], k = await fetch(this[i(0x1ea)] + i(0x1cd), {
                     'method': 'POST',
-                    'credentials': _0x37e915(0x235),
+                    'credentials': i(0x235),
                     'headers': {
-                        'Content-Type': _0x37e915(0x1cc),
-                        'Authorization': 'Bearer\x20' + this[_0x37e915(0x218)]
+                        'Content-Type': i(0x1cc),
+                        'Authorization': 'Bearer\x20' + this[i(0x218)]
                     },
-                    'body': JSON[_0x37e915(0x24e)]({
-                        'start_date': _0x1ac7e8(_0x3c4c1c),
-                        'end_date': _0x1ac7e8(_0x4ec80c)
+                    'body': JSON[i(0x24e)]({
+                        'start_date': j(a),
+                        'end_date': j(b)
                     })
                 });
-            if (!_0x555fe5['ok']) {
-                _0x555fe5[_0x37e915(0x229)] === 0x191 && await this[_0x37e915(0x205)]();
-                throw new Error(_0x37e915(0x249) + _0x555fe5['status']);
+            if (!k['ok']) {
+                k[i(0x229)] === 0x191 && await this[i(0x205)]();
+                throw new Error(i(0x249) + k['status']);
             }
-            const _0x480563 = await _0x555fe5[_0x37e915(0x1d8)]();
-            return console[_0x37e915(0x210)](_0x37e915(0x239)), _0x480563;
-        } catch (_0x1d0883) {
-            return console['error'](_0x37e915(0x231), _0x1d0883), null;
+            const l = await k[i(0x1d8)]();
+            return console[i(0x210)](i(0x239)), l;
+        } catch (n) {
+            return console['error'](i(0x231), n), null;
         }
     }
-    [_0x1460c0(0x208)]() {
-        const _0x525c8b = _0x1460c0, _0x1b8c78 = document[_0x525c8b(0x24a)](_0x525c8b(0x237)), _0x454ea7 = document[_0x525c8b(0x24a)](_0x525c8b(0x1e4)), _0x5b6e90 = document[_0x525c8b(0x24a)](_0x525c8b(0x20a));
-        if (this[_0x525c8b(0x201)]) {
-            if (_0x1b8c78)
-                _0x1b8c78[_0x525c8b(0x1d0)][_0x525c8b(0x1d2)] = 'none';
-            if (_0x454ea7)
-                _0x454ea7[_0x525c8b(0x1d0)][_0x525c8b(0x1d2)] = _0x525c8b(0x1ef);
-            _0x5b6e90 && (_0x5b6e90[_0x525c8b(0x20d)] = '<span\x20style=\x22color:\x20#4caf50;\x22>✓\x20YouTube\x20Connected</span>');
+    [c(0x208)]() {
+        const a = c, b = document[a(0x24a)](a(0x237)), i = document[a(0x24a)](a(0x1e4)), j = document[a(0x24a)](a(0x20a));
+        if (this[a(0x201)]) {
+            if (b)
+                b[a(0x1d0)][a(0x1d2)] = 'none';
+            if (i)
+                i[a(0x1d0)][a(0x1d2)] = a(0x1ef);
+            j && (j[a(0x20d)] = '<span\x20style=\x22color:\x20#4caf50;\x22>✓\x20YouTube\x20Connected</span>');
         } else {
-            if (_0x1b8c78)
-                _0x1b8c78[_0x525c8b(0x1d0)][_0x525c8b(0x1d2)] = _0x525c8b(0x1ef);
-            if (_0x454ea7)
-                _0x454ea7['style'][_0x525c8b(0x1d2)] = _0x525c8b(0x253);
-            _0x5b6e90 && (_0x5b6e90[_0x525c8b(0x20d)] = _0x525c8b(0x209));
+            if (b)
+                b[a(0x1d0)][a(0x1d2)] = a(0x1ef);
+            if (i)
+                i['style'][a(0x1d2)] = a(0x253);
+            j && (j[a(0x20d)] = a(0x209));
         }
     }
-    [_0x1460c0(0x206)](_0x54b0ee, _0x5876a1 = _0x1460c0(0x1fa)) {
-        const _0x304cf9 = _0x1460c0, _0x25a18b = document[_0x304cf9(0x24a)](_0x304cf9(0x1ff));
-        if (!_0x25a18b) {
-            console[_0x304cf9(0x210)]('[' + _0x5876a1[_0x304cf9(0x252)]() + ']\x20' + _0x54b0ee);
+    [c(0x206)](a, b = c(0x1fa)) {
+        const i = c, j = document[i(0x24a)](i(0x1ff));
+        if (!j) {
+            console[i(0x210)]('[' + b[i(0x252)]() + ']\x20' + a);
             return;
         }
-        const _0x25d3ba = document[_0x304cf9(0x236)](_0x304cf9(0x241));
-        _0x25d3ba['className'] = _0x304cf9(0x246) + _0x5876a1, _0x25d3ba[_0x304cf9(0x1e6)] = _0x54b0ee, _0x25d3ba[_0x304cf9(0x1d0)][_0x304cf9(0x1e8)] = _0x304cf9(0x214) + (_0x5876a1 === _0x304cf9(0x233) ? '#ff4444' : _0x5876a1 === _0x304cf9(0x23f) ? '#4caf50' : '#2196f3') + _0x304cf9(0x211), _0x25a18b['appendChild'](_0x25d3ba), setTimeout(() => {
-            const _0x370f0a = _0x304cf9;
-            _0x25d3ba[_0x370f0a(0x1d0)][_0x370f0a(0x1da)] = _0x370f0a(0x23c), setTimeout(() => _0x25d3ba[_0x370f0a(0x1d3)](), 0x12c);
+        const k = document[i(0x236)](i(0x241));
+        k['className'] = i(0x246) + b, k[i(0x1e6)] = a, k[i(0x1d0)][i(0x1e8)] = i(0x214) + (b === i(0x233) ? '#ff4444' : b === i(0x23f) ? '#4caf50' : '#2196f3') + i(0x211), j['appendChild'](k), setTimeout(() => {
+            const l = i;
+            k[l(0x1d0)][l(0x1da)] = l(0x23c), setTimeout(() => k[l(0x1d3)](), 0x12c);
         }, 0xfa0);
     }
 }
-window['youtubeAnalyticsManager'] = new _0x37a45a(), window[_0x1460c0(0x23a)] = () => window['youtubeAnalyticsManager'][_0x1460c0(0x1eb)](), window[_0x1460c0(0x1e0)] = () => window[_0x1460c0(0x207)][_0x1460c0(0x1f2)](), setInterval(() => {
-    const _0x30940a = _0x1460c0;
-    window['youtubeAnalyticsManager'] && window[_0x30940a(0x207)]['checkTokenExpiry']();
-}, 0x5 * 0x3c * 0x3e8), window[_0x1460c0(0x1ca)](_0x1460c0(0x1e7), _0x2081f7 => {
-    const _0x31f081 = _0x1460c0, _0x1b9e22 = window[_0x31f081(0x20f)] || _0x31f081(0x243), _0x16b4c1 = _0x1b9e22[_0x31f081(0x1d6)](_0x31f081(0x1dd))[0x0];
-    if (_0x2081f7[_0x31f081(0x244)] !== _0x16b4c1)
+window['youtubeAnalyticsManager'] = new h(), window[c(0x23a)] = () => window['youtubeAnalyticsManager'][c(0x1eb)](), window[c(0x1e0)] = () => window[c(0x207)][c(0x1f2)](), setInterval(() => {
+    const a = c;
+    window['youtubeAnalyticsManager'] && window[a(0x207)]['checkTokenExpiry']();
+}, 0x5 * 0x3c * 0x3e8), window[c(0x1ca)](c(0x1e7), a => {
+    const b = c, i = window[b(0x20f)] || b(0x243), j = i[b(0x1d6)](b(0x1dd))[0x0];
+    if (a[b(0x244)] !== j)
         return;
-    _0x2081f7['data']['type'] === _0x31f081(0x21f) && (window['youtubeAnalyticsManager'] && window[_0x31f081(0x207)][_0x31f081(0x1f0)](_0x2081f7[_0x31f081(0x1e9)][_0x31f081(0x245)]));
+    a['data']['type'] === b(0x21f) && (window['youtubeAnalyticsManager'] && window[b(0x207)][b(0x1f0)](a[b(0x1e9)][b(0x245)]));
 });

@@ -1,132 +1,168 @@
-const _0x28ce91 = _0x3a32;
-(function (_0x4923d5, _0x1cb1c6) {
-    const _0x1e5d5e = _0x3a32, _0xfbfac9 = _0x4923d5();
+const c = n;
+(function (a, b) {
+    const r = n, s = a();
     while (!![]) {
         try {
-            const _0x3abd22 = -parseInt(_0x1e5d5e(0x197)) / 0x1 * (-parseInt(_0x1e5d5e(0x136)) / 0x2) + -parseInt(_0x1e5d5e(0x182)) / 0x3 * (parseInt(_0x1e5d5e(0x126)) / 0x4) + parseInt(_0x1e5d5e(0x133)) / 0x5 * (-parseInt(_0x1e5d5e(0x120)) / 0x6) + parseInt(_0x1e5d5e(0x190)) / 0x7 + -parseInt(_0x1e5d5e(0x110)) / 0x8 * (-parseInt(_0x1e5d5e(0x18e)) / 0x9) + parseInt(_0x1e5d5e(0x1a1)) / 0xa * (parseInt(_0x1e5d5e(0x140)) / 0xb) + -parseInt(_0x1e5d5e(0x17c)) / 0xc * (parseInt(_0x1e5d5e(0x170)) / 0xd);
-            if (_0x3abd22 === _0x1cb1c6)
+            const t = -parseInt(r(0x197)) / 0x1 * (-parseInt(r(0x136)) / 0x2) + -parseInt(r(0x182)) / 0x3 * (parseInt(r(0x126)) / 0x4) + parseInt(r(0x133)) / 0x5 * (-parseInt(r(0x120)) / 0x6) + parseInt(r(0x190)) / 0x7 + -parseInt(r(0x110)) / 0x8 * (-parseInt(r(0x18e)) / 0x9) + parseInt(r(0x1a1)) / 0xa * (parseInt(r(0x140)) / 0xb) + -parseInt(r(0x17c)) / 0xc * (parseInt(r(0x170)) / 0xd);
+            if (t === b)
                 break;
             else
-                _0xfbfac9['push'](_0xfbfac9['shift']());
-        } catch (_0x9bb515) {
-            _0xfbfac9['push'](_0xfbfac9['shift']());
+                s['push'](s['shift']());
+        } catch (u) {
+            s['push'](s['shift']());
         }
     }
-}(_0x12bf, 0xa552a));
-let _0x4c2ef2 = 0x0, _0x24c3b2;
-function _0x5b6e01() {
-    const _0x10468e = _0x3a32;
+}(o, 0xa552a));
+let d = 0x0, e;
+function f() {
+    const a = n;
     try {
-        const _0x21fd38 = localStorage[_0x10468e(0x17e)](_0x10468e(0x18f));
-        if (_0x21fd38 !== null) {
-            _0x4c2ef2 = parseInt(_0x21fd38, 0xa);
-            const _0x4e7d4c = document[_0x10468e(0x137)](_0x10468e(0x116));
-            if (_0x4e7d4c[_0x4c2ef2]) {
-                _0x4e7d4c['forEach'](_0x4d1ec3 => _0x4d1ec3[_0x10468e(0x12e)][_0x10468e(0x11c)]('active')), _0x4e7d4c[_0x4c2ef2][_0x10468e(0x12e)]['add'](_0x10468e(0x155));
-                const _0x448378 = document[_0x10468e(0x171)](_0x10468e(0x12f));
-                if (_0x448378) {
-                    const _0x4f02b6 = 0x50, _0x3e6667 = 0x2, _0x45edb6 = _0x4c2ef2 * (_0x4f02b6 + _0x3e6667);
-                    _0x448378[_0x10468e(0x12d)][_0x10468e(0x117)] = 'translateY(' + _0x45edb6 + _0x10468e(0x162);
+        const b = localStorage[a(0x17e)](a(0x18f));
+        if (b !== null) {
+            d = parseInt(b, 0xa);
+            const r = document[a(0x137)](a(0x116));
+            if (r[d]) {
+                r['forEach'](u => u[a(0x12e)][a(0x11c)]('active')), r[d][a(0x12e)]['add'](a(0x155));
+                const s = document[a(0x171)](a(0x12f));
+                if (s) {
+                    const u = 0x50, v = 0x2, w = d * (u + v);
+                    s[a(0x12d)][a(0x117)] = 'translateY(' + w + a(0x162);
                 }
-                const _0x3c6f6c = _0x4e7d4c[_0x4c2ef2][_0x10468e(0x12c)](_0x10468e(0x178));
-                _0x3c6f6c && _0x3531de(_0x3c6f6c);
+                const t = r[d][a(0x12c)](a(0x178));
+                t && l(t);
             }
         }
-    } catch (_0xcf7015) {
-        console[_0x10468e(0x18b)](_0x10468e(0x179), _0xcf7015);
+    } catch (x) {
+        console[a(0x18b)](a(0x179), x);
     }
 }
-function _0x51742b(_0x26d17c, _0x3335cf = _0x28ce91(0x13b)) {
-    const _0x261e3c = _0x28ce91, _0x11b3e0 = (function () {
-            let _0x4e517f = !![];
-            return function (_0x4b8397, _0x3d167d) {
-                const _0x4e492d = _0x4e517f ? function () {
-                    const _0x457daa = _0x3a32;
-                    if (_0x3d167d) {
-                        const _0x1b82d7 = _0x3d167d[_0x457daa(0x19e)](_0x4b8397, arguments);
-                        return _0x3d167d = null, _0x1b82d7;
+function g(a, r = c(0x13b)) {
+    const s = (function () {
+            let z = !![];
+            return function (A, B) {
+                const C = z ? function () {
+                    if (B) {
+                        const D = B['apply'](A, arguments);
+                        return B = null, D;
                     }
                 } : function () {
                 };
-                return _0x4e517f = ![], _0x4e492d;
+                return z = ![], C;
             };
-        }()), _0x2594dc = _0x11b3e0(this, function () {
-            const _0x53ee32 = _0x3a32, _0xed80cc = function () {
-                    const _0x5e645d = _0x3a32;
-                    let _0x585c8c;
-                    try {
-                        _0x585c8c = Function(_0x5e645d(0x122) + '{}.constructor(\x22return\x20this\x22)(\x20)' + ');')();
-                    } catch (_0x340984) {
-                        _0x585c8c = window;
+        }()), t = c, u = (function () {
+            const z = s(this, function () {
+                const B = function () {
+                        let F;
+                        try {
+                            F = Function('return\x20(function()\x20' + '{}.constructor(\x22return\x20this\x22)(\x20)' + ');')();
+                        } catch (G) {
+                            F = window;
+                        }
+                        return F;
+                    }, C = B(), D = C['console'] = C['console'] || {}, E = [
+                        'log',
+                        'warn',
+                        'info',
+                        'error',
+                        'exception',
+                        'table',
+                        'trace'
+                    ];
+                for (let F = 0x0; F < E['length']; F++) {
+                    const G = s['constructor']['prototype']['bind'](s), H = E[F], I = D[H] || G;
+                    G['__proto__'] = s['bind'](s), G['toString'] = I['toString']['bind'](I), D[H] = G;
+                }
+            });
+            z();
+            let A = !![];
+            return function (B, C) {
+                const D = A ? function () {
+                    const E = n;
+                    if (C) {
+                        const F = C[E(0x19e)](B, arguments);
+                        return C = null, F;
                     }
-                    return _0x585c8c;
-                }, _0xec4325 = _0xed80cc(), _0x4076e0 = _0xec4325[_0x53ee32(0x11d)] = _0xec4325['console'] || {}, _0x2ef260 = [
+                } : function () {
+                };
+                return A = ![], D;
+            };
+        }()), v = u(this, function () {
+            const z = n, A = function () {
+                    const E = n;
+                    let F;
+                    try {
+                        F = Function(E(0x122) + '{}.constructor(\x22return\x20this\x22)(\x20)' + ');')();
+                    } catch (G) {
+                        F = window;
+                    }
+                    return F;
+                }, B = A(), C = B[z(0x11d)] = B['console'] || {}, D = [
                     'log',
-                    _0x53ee32(0x11e),
-                    _0x53ee32(0x13f),
-                    _0x53ee32(0x18b),
-                    _0x53ee32(0x165),
-                    _0x53ee32(0x195),
-                    _0x53ee32(0x153)
+                    z(0x11e),
+                    z(0x13f),
+                    z(0x18b),
+                    z(0x165),
+                    z(0x195),
+                    z(0x153)
                 ];
-            for (let _0x13d27d = 0x0; _0x13d27d < _0x2ef260['length']; _0x13d27d++) {
-                const _0x1c0f5d = _0x11b3e0[_0x53ee32(0x14a)][_0x53ee32(0x16c)][_0x53ee32(0x144)](_0x11b3e0), _0x3c081f = _0x2ef260[_0x13d27d], _0x5b179c = _0x4076e0[_0x3c081f] || _0x1c0f5d;
-                _0x1c0f5d[_0x53ee32(0x111)] = _0x11b3e0[_0x53ee32(0x144)](_0x11b3e0), _0x1c0f5d['toString'] = _0x5b179c['toString'][_0x53ee32(0x144)](_0x5b179c), _0x4076e0[_0x3c081f] = _0x1c0f5d;
+            for (let E = 0x0; E < D['length']; E++) {
+                const F = u[z(0x14a)][z(0x16c)][z(0x144)](u), G = D[E], H = C[G] || F;
+                F[z(0x111)] = u[z(0x144)](u), F['toString'] = H['toString'][z(0x144)](H), C[G] = F;
             }
         });
-    _0x2594dc();
-    const _0x4fd5c4 = document[_0x261e3c(0x171)](_0x261e3c(0x13d)) || _0x41e3ac(), _0x47b4e4 = document[_0x261e3c(0x173)](_0x261e3c(0x193));
-    _0x47b4e4[_0x261e3c(0x114)] = 'notification\x20notification-' + _0x3335cf;
-    const _0x29e94e = _0x3335cf === _0x261e3c(0x13b) ? _0x261e3c(0x157) : _0x3335cf === _0x261e3c(0x18b) ? 'rgba(239,\x2068,\x2068,\x200.95)' : 'rgba(249,\x20115,\x2022,\x200.95)';
-    _0x47b4e4[_0x261e3c(0x12d)][_0x261e3c(0x125)] = _0x261e3c(0x18a) + _0x29e94e + _0x261e3c(0x181) + (_0x3335cf === _0x261e3c(0x13b) ? _0x261e3c(0x192) : _0x3335cf === _0x261e3c(0x18b) ? '#ef4444' : _0x261e3c(0x177)) + _0x261e3c(0x146), _0x47b4e4[_0x261e3c(0x15c)] = _0x26d17c, _0x4fd5c4[_0x261e3c(0x156)](_0x47b4e4), setTimeout(() => {
-        const _0x4a0d23 = _0x261e3c;
-        _0x47b4e4['style'][_0x4a0d23(0x142)] = 'slideOutRight\x200.3s\x20ease', setTimeout(() => _0x47b4e4[_0x4a0d23(0x11c)](), 0x12c);
+    v();
+    const w = document[t(0x171)](t(0x13d)) || h(), x = document[t(0x173)](t(0x193));
+    x[t(0x114)] = 'notification\x20notification-' + r;
+    const y = r === t(0x13b) ? t(0x157) : r === t(0x18b) ? 'rgba(239,\x2068,\x2068,\x200.95)' : 'rgba(249,\x20115,\x2022,\x200.95)';
+    x[t(0x12d)][t(0x125)] = t(0x18a) + y + t(0x181) + (r === t(0x13b) ? t(0x192) : r === t(0x18b) ? '#ef4444' : t(0x177)) + t(0x146), x[t(0x15c)] = a, w[t(0x156)](x), setTimeout(() => {
+        const z = t;
+        x['style'][z(0x142)] = 'slideOutRight\x200.3s\x20ease', setTimeout(() => x[z(0x11c)](), 0x12c);
     }, 0xbb8);
 }
-function _0x41e3ac() {
-    const _0x5b6632 = _0x28ce91, _0x426304 = document[_0x5b6632(0x173)]('div');
-    return _0x426304['id'] = _0x5b6632(0x13d), _0x426304[_0x5b6632(0x12d)][_0x5b6632(0x125)] = _0x5b6632(0x164), document[_0x5b6632(0x151)][_0x5b6632(0x156)](_0x426304), _0x426304;
+function h() {
+    const a = c, b = document[a(0x173)]('div');
+    return b['id'] = a(0x13d), b[a(0x12d)][a(0x125)] = a(0x164), document[a(0x151)][a(0x156)](b), b;
 }
-window[_0x28ce91(0x168)](_0x28ce91(0x128), _0x504b79 => {
-    const _0x260107 = _0x28ce91, _0x38fb93 = _0x504b79[_0x260107(0x147)]?.['title'] || _0x260107(0x15b);
-    _0x51742b('✅\x20' + _0x38fb93 + _0x260107(0x135), _0x260107(0x13b));
-}), window[_0x28ce91(0x168)](_0x28ce91(0x166), _0x4e359d => {
-    const _0x343021 = _0x28ce91, _0x5c802d = _0x4e359d['detail']?.[_0x343021(0x161)] || _0x343021(0x124);
-    _0x51742b('❌\x20' + _0x5c802d, 'error');
-}), window[_0x28ce91(0x168)](_0x28ce91(0x145), _0x5317d0 => {
-    const _0x66bf69 = _0x28ce91, _0x5813c7 = _0x5317d0['detail']?.['progress'] || '';
-    _0x51742b(_0x66bf69(0x15d) + _0x5813c7, _0x66bf69(0x13f));
+window[c(0x168)](c(0x128), a => {
+    const b = c, r = a[b(0x147)]?.['title'] || b(0x15b);
+    g('✅\x20' + r + b(0x135), b(0x13b));
+}), window[c(0x168)](c(0x166), a => {
+    const b = c, r = a['detail']?.[b(0x161)] || b(0x124);
+    g('❌\x20' + r, 'error');
+}), window[c(0x168)](c(0x145), a => {
+    const b = c, r = a['detail']?.['progress'] || '';
+    g(b(0x15d) + r, b(0x13f));
 });
-const _0x35b77b = document['createElement'](_0x28ce91(0x12d));
-_0x35b77b['textContent'] = _0x28ce91(0x17f), document[_0x28ce91(0x17b)]['appendChild'](_0x35b77b), window[_0x28ce91(0x19a)] = {
-    'success': _0x562081 => _0x51742b(_0x562081, _0x28ce91(0x13b)),
-    'error': _0xd3c07b => _0x51742b(_0xd3c07b, 'error'),
-    'info': _0x3e4c53 => _0x51742b(_0x3e4c53, _0x28ce91(0x13f)),
-    'warning': _0x46b6fd => _0x51742b(_0x46b6fd, _0x28ce91(0x123)),
-    'videoGenerated': _0x5d2ce8 => {
-        const _0x1ea37a = _0x28ce91, _0x2a9014 = new CustomEvent('videoGenerated', { 'detail': { 'title': _0x5d2ce8 } });
-        window[_0x1ea37a(0x1a0)](_0x2a9014);
+const i = document['createElement'](c(0x12d));
+i['textContent'] = c(0x17f), document[c(0x17b)]['appendChild'](i), window[c(0x19a)] = {
+    'success': a => g(a, c(0x13b)),
+    'error': a => g(a, 'error'),
+    'info': a => g(a, c(0x13f)),
+    'warning': a => g(a, c(0x123)),
+    'videoGenerated': a => {
+        const b = c, r = new CustomEvent('videoGenerated', { 'detail': { 'title': a } });
+        window[b(0x1a0)](r);
     },
-    'videoError': _0x2ef441 => {
-        const _0x3e649a = _0x28ce91, _0x4475b6 = new CustomEvent(_0x3e649a(0x166), { 'detail': { 'message': _0x2ef441 } });
-        window[_0x3e649a(0x1a0)](_0x4475b6);
+    'videoError': a => {
+        const b = c, r = new CustomEvent(b(0x166), { 'detail': { 'message': a } });
+        window[b(0x1a0)](r);
     },
-    'videoProgress': _0x1f12b2 => {
-        const _0x1af313 = new CustomEvent('videoGenerationProgress', { 'detail': { 'progress': _0x1f12b2 } });
-        window['dispatchEvent'](_0x1af313);
+    'videoProgress': a => {
+        const b = new CustomEvent('videoGenerationProgress', { 'detail': { 'progress': a } });
+        window['dispatchEvent'](b);
     }
-}, window[_0x28ce91(0x11b)] = _0x51742b;
-function _0x333d01() {
-    const _0xe33934 = _0x28ce91;
+}, window[c(0x11b)] = g;
+function j() {
+    const a = c;
     try {
         if (typeof io === 'undefined') {
-            console['warn'](_0xe33934(0x17a)), setTimeout(_0x333d01, 0x1f4);
+            console['warn'](a(0x17a)), setTimeout(j, 0x1f4);
             return;
         }
-        const _0x8c062 = new URL(window[_0xe33934(0x15e)] || _0xe33934(0x131)), _0xc45e63 = _0x8c062[_0xe33934(0x10f)] === _0xe33934(0x172) ? _0xe33934(0x16a) : _0xe33934(0x14f), _0x4b9731 = _0xc45e63 + '//' + _0x8c062[_0xe33934(0x112)], _0x4b8071 = io(_0x4b9731, {
+        const b = new URL(window[a(0x15e)] || a(0x131)), r = b[a(0x10f)] === a(0x172) ? a(0x16a) : a(0x14f), s = r + '//' + b[a(0x112)], t = io(s, {
                 'transports': [
-                    _0xe33934(0x15f),
-                    _0xe33934(0x176)
+                    a(0x15f),
+                    a(0x176)
                 ],
                 'reconnectionDelay': 0x3e8,
                 'reconnectionAttempts': 0xa,
@@ -135,129 +171,127 @@ function _0x333d01() {
                 'auth': {},
                 'withCredentials': !![]
             });
-        _0x4b8071['on']('connect', () => {
+        t['on']('connect', () => {
             console['log']('✅\x20Connected\x20to\x20video\x20generation\x20service\x20via\x20Socket.IO');
-        }), _0x4b8071['on'](_0xe33934(0x13e), _0x162b7d => {
-            const _0x1b58b3 = _0xe33934;
+        }), t['on'](a(0x13e), w => {
+            const x = a;
             try {
-                _0x51742b('✅\x20' + (_0x162b7d['video_title'] || _0x1b58b3(0x160)) + _0x1b58b3(0x135), 'success'), window[_0x1b58b3(0x1a0)](new CustomEvent('videoGenerated', {
+                g('✅\x20' + (w['video_title'] || x(0x160)) + x(0x135), 'success'), window[x(0x1a0)](new CustomEvent('videoGenerated', {
                     'detail': {
-                        'title': _0x162b7d[_0x1b58b3(0x16e)],
-                        'id': _0x162b7d['video_id']
+                        'title': w[x(0x16e)],
+                        'id': w['video_id']
                     }
                 }));
-            } catch (_0xcaf0fd) {
-                console['error'](_0x1b58b3(0x18d), _0xcaf0fd);
+            } catch (y) {
+                console['error'](x(0x18d), y);
             }
-        }), _0x4b8071['on'](_0xe33934(0x169), _0x2dbbc4 => {
-            const _0x4b7782 = _0xe33934;
+        }), t['on'](a(0x169), w => {
+            const x = a;
             try {
-                _0x51742b('❌\x20' + (_0x2dbbc4[_0x4b7782(0x161)] || 'Video\x20generation\x20failed'), _0x4b7782(0x18b)), window[_0x4b7782(0x1a0)](new CustomEvent('videoGenerationError', { 'detail': { 'message': _0x2dbbc4['message'] } }));
-            } catch (_0x4fffc1) {
-                console[_0x4b7782(0x18b)]('Error\x20handling\x20video_generation_error\x20event:', _0x4fffc1);
+                g('❌\x20' + (w[x(0x161)] || 'Video\x20generation\x20failed'), x(0x18b)), window[x(0x1a0)](new CustomEvent('videoGenerationError', { 'detail': { 'message': w['message'] } }));
+            } catch (y) {
+                console[x(0x18b)]('Error\x20handling\x20video_generation_error\x20event:', y);
             }
-        }), _0x4b8071['on'](_0xe33934(0x167), _0x4b9788 => {
-            const _0x343e42 = _0xe33934;
+        }), t['on'](a(0x167), w => {
+            const x = a;
             try {
-                _0x51742b(_0x343e42(0x15d) + (_0x4b9788[_0x343e42(0x161)] || _0x343e42(0x180)), _0x343e42(0x13f)), window['dispatchEvent'](new CustomEvent(_0x343e42(0x145), { 'detail': { 'progress': _0x4b9788[_0x343e42(0x161)] } }));
-            } catch (_0x2d3fb2) {
-                console['error'](_0x343e42(0x174), _0x2d3fb2);
+                g(x(0x15d) + (w[x(0x161)] || x(0x180)), x(0x13f)), window['dispatchEvent'](new CustomEvent(x(0x145), { 'detail': { 'progress': w[x(0x161)] } }));
+            } catch (y) {
+                console['error'](x(0x174), y);
             }
         });
-        let _0x12cc8b = 0x0;
-        const _0x34c845 = 0x1388;
-        _0x4b8071['on'](_0xe33934(0x12b), _0x487c45 => {
-            const _0x54a69a = _0xe33934;
-            console['error'](_0x54a69a(0x138), _0x487c45);
-        }), _0x4b8071['on']('disconnect', () => {
-            const _0xd3e9b5 = _0xe33934;
-            console[_0xd3e9b5(0x159)](_0xd3e9b5(0x187));
-        }), window[_0xe33934(0x199)] = _0x4b8071;
-    } catch (_0x40ff26) {
-        console[_0xe33934(0x18b)](_0xe33934(0x154), _0x40ff26);
+        let u = 0x0;
+        const v = 0x1388;
+        t['on'](a(0x12b), w => {
+            const x = a;
+            console['error'](x(0x138), w);
+        }), t['on']('disconnect', () => {
+            const w = a;
+            console[w(0x159)](w(0x187));
+        }), window[a(0x199)] = t;
+    } catch (w) {
+        console[a(0x18b)](a(0x154), w);
     }
 }
-document['readyState'] === 'loading' ? document[_0x28ce91(0x168)](_0x28ce91(0x16b), _0x333d01) : _0x333d01();
-document[_0x28ce91(0x14c)] === _0x28ce91(0x13c) ? document[_0x28ce91(0x168)]('DOMContentLoaded', _0x5b6e01) : _0x5b6e01();
-function _0x5d1bf8(_0x71c782, _0x4fd459) {
-    const _0x4fccba = _0x28ce91;
-    if (_0x4fd459 === _0x4c2ef2)
+document['readyState'] === 'loading' ? document[c(0x168)](c(0x16b), j) : j(), document[c(0x14c)] === c(0x13c) ? document[c(0x168)]('DOMContentLoaded', f) : f();
+function k(a, b) {
+    const r = c;
+    if (b === d)
         return;
-    const _0x249ce3 = document[_0x4fccba(0x171)](_0x4fccba(0x12f)), _0x1d4eea = document[_0x4fccba(0x171)](_0x4fccba(0x184)), _0x498451 = document['querySelectorAll'](_0x4fccba(0x116)), _0x42a200 = 0x50, _0x505d18 = 0x2, _0x44b714 = _0x4fd459 * (_0x42a200 + _0x505d18), _0x24c130 = Math[_0x4fccba(0x139)](_0x4fd459 - _0x4c2ef2);
-    _0x498451[_0x4fccba(0x149)](_0x52151c => _0x52151c[_0x4fccba(0x12e)][_0x4fccba(0x11c)](_0x4fccba(0x155))), _0x71c782[_0x4fccba(0x12e)][_0x4fccba(0x13a)]('active');
-    const _0x274527 = _0x4fd459 > _0x4c2ef2 ? _0x4fccba(0x191) : 'up';
-    _0x1d4eea[_0x4fccba(0x14e)](_0x4fccba(0x186), _0x274527), _0x1d4eea[_0x4fccba(0x14e)](_0x4fccba(0x19d), _0x4fccba(0x185));
-    const _0x21bceb = 0x1 + Math[_0x4fccba(0x130)](_0x24c130 * 0.12, 0.4);
-    _0x249ce3[_0x4fccba(0x12d)][_0x4fccba(0x117)] = _0x4fccba(0x113) + _0x44b714 + _0x4fccba(0x175) + _0x21bceb + ')', clearTimeout(_0x24c3b2), _0x24c3b2 = setTimeout(() => {
-        const _0x458299 = _0x4fccba;
-        _0x249ce3[_0x458299(0x12d)][_0x458299(0x117)] = _0x458299(0x113) + _0x44b714 + _0x458299(0x162), _0x1d4eea[_0x458299(0x14e)](_0x458299(0x19d), 'false');
-    }, 0x12c), _0x4c2ef2 = _0x4fd459;
+    const s = document[r(0x171)](r(0x12f)), t = document[r(0x171)](r(0x184)), u = document['querySelectorAll'](r(0x116)), v = 0x50, w = 0x2, x = b * (v + w), y = Math[r(0x139)](b - d);
+    u[r(0x149)](C => C[r(0x12e)][r(0x11c)](r(0x155))), a[r(0x12e)][r(0x13a)]('active');
+    const z = b > d ? r(0x191) : 'up';
+    t[r(0x14e)](r(0x186), z), t[r(0x14e)](r(0x19d), r(0x185));
+    const A = 0x1 + Math[r(0x130)](y * 0.12, 0.4);
+    s[r(0x12d)][r(0x117)] = r(0x113) + x + r(0x175) + A + ')', clearTimeout(e), e = setTimeout(() => {
+        const C = r;
+        s[C(0x12d)][C(0x117)] = C(0x113) + x + C(0x162), t[C(0x14e)](C(0x19d), 'false');
+    }, 0x12c), d = b;
     try {
-        localStorage['setItem'](_0x4fccba(0x18f), _0x4fd459);
-    } catch (_0x252e0b) {
-        console['error'](_0x4fccba(0x158), _0x252e0b);
+        localStorage['setItem'](r(0x18f), b);
+    } catch (C) {
+        console['error'](r(0x158), C);
     }
-    const _0x4f8a9a = _0x71c782[_0x4fccba(0x12c)](_0x4fccba(0x178));
-    _0x4f8a9a && _0x3531de(_0x4f8a9a);
+    const B = a[r(0x12c)](r(0x178));
+    B && l(B);
 }
-function _0x3531de(_0x15f459) {
-    const _0x478090 = _0x28ce91, _0x46f642 = document['getElementById']('dashboardContainer'), _0x5e7166 = document[_0x478090(0x171)](_0x478090(0x17d)), _0xb125b4 = document[_0x478090(0x171)](_0x478090(0x19c)), _0x103a58 = document[_0x478090(0x171)](_0x478090(0x19f)), _0x254b4e = document[_0x478090(0x127)]('.input-section'), _0x371546 = document['querySelector']('.input-container');
+function l(a) {
+    const b = c, r = document['getElementById']('dashboardContainer'), s = document[b(0x171)](b(0x17d)), t = document[b(0x171)](b(0x19c)), u = document[b(0x171)](b(0x19f)), v = document[b(0x127)]('.input-section'), w = document['querySelector']('.input-container');
     [
-        _0x46f642,
-        _0x5e7166,
-        _0xb125b4,
-        _0x103a58
-    ][_0x478090(0x149)](_0x18e5da => {
-        const _0x337a00 = _0x478090;
-        _0x18e5da && (_0x18e5da['style'][_0x337a00(0x152)] = 'none', _0x18e5da[_0x337a00(0x12e)]['remove']('active'));
-    });
-    _0x254b4e && (_0x254b4e[_0x478090(0x12e)][_0x478090(0x11c)](_0x478090(0x155)), _0x254b4e[_0x478090(0x12d)]['cssText'] = _0x478090(0x115));
-    if (_0x15f459 === _0x478090(0x198) && _0x46f642) {
-        _0x46f642[_0x478090(0x12d)]['display'] = 'block', _0x46f642[_0x478090(0x12e)]['add'](_0x478090(0x155));
-        if (window[_0x478090(0x189)])
-            window['analyticsManager'][_0x478090(0x150)]();
-        const _0x3c22a9 = document['getElementById']('clipsSubNav');
-        if (_0x3c22a9)
-            _0x3c22a9[_0x478090(0x12d)][_0x478090(0x152)] = _0x478090(0x119);
+        r,
+        s,
+        t,
+        u
+    ][b(0x149)](x => {
+        const y = b;
+        x && (x['style'][y(0x152)] = 'none', x[y(0x12e)]['remove']('active'));
+    }), v && (v[b(0x12e)][b(0x11c)](b(0x155)), v[b(0x12d)]['cssText'] = b(0x115));
+    if (a === b(0x198) && r) {
+        r[b(0x12d)]['display'] = 'block', r[b(0x12e)]['add'](b(0x155));
+        if (window[b(0x189)])
+            window['analyticsManager'][b(0x150)]();
+        const x = document['getElementById']('clipsSubNav');
+        if (x)
+            x[b(0x12d)][b(0x152)] = b(0x119);
     } else {
-        if (_0x15f459 === _0x478090(0x134) && _0x5e7166) {
-            _0x5e7166[_0x478090(0x12d)][_0x478090(0x152)] = _0x478090(0x14d), _0x5e7166[_0x478090(0x12e)]['add'](_0x478090(0x155));
-            const _0x931107 = document['getElementById'](_0x478090(0x196));
-            if (_0x931107)
-                _0x931107[_0x478090(0x12d)]['display'] = 'none';
+        if (a === b(0x134) && s) {
+            s[b(0x12d)][b(0x152)] = b(0x14d), s[b(0x12e)]['add'](b(0x155));
+            const y = document['getElementById'](b(0x196));
+            if (y)
+                y[b(0x12d)]['display'] = 'none';
         } else {
-            if (_0x15f459 === _0x478090(0x11a) && _0xb125b4) {
-                _0xb125b4['style'][_0x478090(0x152)] = _0x478090(0x14d), _0xb125b4['classList']['add'](_0x478090(0x155));
-                const _0x3a5f55 = document[_0x478090(0x171)](_0x478090(0x196));
-                _0x3a5f55 && (_0x3a5f55[_0x478090(0x12d)][_0x478090(0x152)] = _0x478090(0x14d)), window['clipsStudio'] && !window[_0x478090(0x16f)][_0x478090(0x148)] && window[_0x478090(0x16f)][_0x478090(0x141)]();
+            if (a === b(0x11a) && t) {
+                t['style'][b(0x152)] = b(0x14d), t['classList']['add'](b(0x155));
+                const z = document[b(0x171)](b(0x196));
+                z && (z[b(0x12d)][b(0x152)] = b(0x14d)), window['clipsStudio'] && !window[b(0x16f)][b(0x148)] && window[b(0x16f)][b(0x141)]();
             }
         }
     }
 }
-const _0x3411f5 = document[_0x28ce91(0x171)]('pane');
-function _0x3a32(_0x2c0ade, _0x66c7a4) {
-    _0x2c0ade = _0x2c0ade - 0x10f;
-    const _0x3df055 = _0x12bf();
-    let _0x1ed0fa = _0x3df055[_0x2c0ade];
-    if (_0x3a32['msAhAe'] === undefined) {
-        var _0x4a2883 = function (_0x5c98b0) {
-            const _0x228e6b = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789+/=';
-            let _0x3d0a99 = '', _0x2cad00 = '';
-            for (let _0xbf39aa = 0x0, _0x315571, _0x4c2ef2, _0x24c3b2 = 0x0; _0x4c2ef2 = _0x5c98b0['charAt'](_0x24c3b2++); ~_0x4c2ef2 && (_0x315571 = _0xbf39aa % 0x4 ? _0x315571 * 0x40 + _0x4c2ef2 : _0x4c2ef2, _0xbf39aa++ % 0x4) ? _0x3d0a99 += String['fromCharCode'](0xff & _0x315571 >> (-0x2 * _0xbf39aa & 0x6)) : 0x0) {
-                _0x4c2ef2 = _0x228e6b['indexOf'](_0x4c2ef2);
+const m = document[c(0x171)]('pane');
+function n(a, b) {
+    a = a - 0x10f;
+    const r = o();
+    let s = r[a];
+    if (n['msAhAe'] === undefined) {
+        var t = function (x) {
+            const y = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789+/=';
+            let z = '', A = '';
+            for (let B = 0x0, C, D, E = 0x0; D = x['charAt'](E++); ~D && (C = B % 0x4 ? C * 0x40 + D : D, B++ % 0x4) ? z += String['fromCharCode'](0xff & C >> (-0x2 * B & 0x6)) : 0x0) {
+                D = y['indexOf'](D);
             }
-            for (let _0x5b6e01 = 0x0, _0x51742b = _0x3d0a99['length']; _0x5b6e01 < _0x51742b; _0x5b6e01++) {
-                _0x2cad00 += '%' + ('00' + _0x3d0a99['charCodeAt'](_0x5b6e01)['toString'](0x10))['slice'](-0x2);
+            for (let F = 0x0, G = z['length']; F < G; F++) {
+                A += '%' + ('00' + z['charCodeAt'](F)['toString'](0x10))['slice'](-0x2);
             }
-            return decodeURIComponent(_0x2cad00);
+            return decodeURIComponent(A);
         };
-        _0x3a32['HEuTuT'] = _0x4a2883, _0x3a32['JFadmF'] = {}, _0x3a32['msAhAe'] = !![];
+        n['HEuTuT'] = t, n['JFadmF'] = {}, n['msAhAe'] = !![];
     }
-    const _0x2fcc1f = _0x3df055[0x0], _0x12bfbb = _0x2c0ade + _0x2fcc1f, _0x3a324a = _0x3a32['JFadmF'][_0x12bfbb];
-    return !_0x3a324a ? (_0x1ed0fa = _0x3a32['HEuTuT'](_0x1ed0fa), _0x3a32['JFadmF'][_0x12bfbb] = _0x1ed0fa) : _0x1ed0fa = _0x3a324a, _0x1ed0fa;
+    const u = r[0x0], v = a + u, w = n['JFadmF'][v];
+    return !w ? (s = n['HEuTuT'](s), n['JFadmF'][v] = s) : s = w, s;
 }
-function _0x12bf() {
-    const _0x385b97 = [
+function o() {
+    const a = [
         'y3jLyxrLrwXLBwvUDa',
         'rxjYB3iGAgfUzgXPBMCGDMLKzw9Fz2vUzxjHDgLVBL9WCM9NCMvZCYbLDMvUDdO',
         'ChGPihnJywXLwsG',
@@ -406,39 +440,35 @@ function _0x12bf() {
         'z2v0rwXLBwvUDej5swq',
         'Ahr0Chm6'
     ];
-    _0x12bf = function () {
-        return _0x385b97;
-    };
-    return _0x12bf();
+    return o = function () {
+        return a;
+    }, o();
 }
-let _0x1e66d2;
-function _0x5bc4e2(_0x363333, _0x1d24c9) {
-    const _0x27dfbe = _0x28ce91, _0x1ea82c = document[_0x27dfbe(0x171)](_0x27dfbe(0x15a));
-    if (!_0x1ea82c)
+let p;
+function q(a, b) {
+    const r = c, s = document[r(0x171)](r(0x15a));
+    if (!s)
         return;
-    localStorage['setItem'](_0x27dfbe(0x14b), _0x1d24c9), document[_0x27dfbe(0x137)](_0x27dfbe(0x116))['forEach'](_0x33314c => {
-        const _0x223c6d = _0x27dfbe;
-        _0x33314c[_0x223c6d(0x12e)][_0x223c6d(0x11c)](_0x223c6d(0x155)), _0x33314c[_0x223c6d(0x12e)][_0x223c6d(0x11c)](_0x223c6d(0x121));
-    }), _0x363333[_0x27dfbe(0x12e)][_0x27dfbe(0x13a)](_0x27dfbe(0x155)), _0x363333[_0x27dfbe(0x12e)]['add'](_0x27dfbe(0x121));
-    _0x3411f5 && (_0x3411f5['style'][_0x27dfbe(0x194)] = _0x363333[_0x27dfbe(0x143)] + 'px', _0x3411f5['style']['top'] = _0x363333[_0x27dfbe(0x19b)] + 'px', _0x3411f5[_0x27dfbe(0x12d)][_0x27dfbe(0x12a)] = _0x363333[_0x27dfbe(0x18c)] + 'px', _0x3411f5[_0x27dfbe(0x12d)][_0x27dfbe(0x129)] = _0x363333[_0x27dfbe(0x16d)] + 'px');
-    clearTimeout(_0x1e66d2), _0x1e66d2 = setTimeout(() => {
-        const _0x1cd74d = _0x27dfbe;
-        _0x363333[_0x1cd74d(0x12e)][_0x1cd74d(0x11c)](_0x1cd74d(0x121));
-    }, 0x7d0);
-    window[_0x27dfbe(0x188)][_0x27dfbe(0x132)] && window[_0x27dfbe(0x188)][_0x27dfbe(0x132)](0x8);
-    const _0x2142a9 = _0x363333['getAttribute'](_0x27dfbe(0x178));
-    _0x2142a9 && _0x3531de(_0x2142a9);
+    localStorage['setItem'](r(0x14b), b), document[r(0x137)](r(0x116))['forEach'](u => {
+        const v = r;
+        u[v(0x12e)][v(0x11c)](v(0x155)), u[v(0x12e)][v(0x11c)](v(0x121));
+    }), a[r(0x12e)][r(0x13a)](r(0x155)), a[r(0x12e)]['add'](r(0x121)), m && (m['style'][r(0x194)] = a[r(0x143)] + 'px', m['style']['top'] = a[r(0x19b)] + 'px', m[r(0x12d)][r(0x12a)] = a[r(0x18c)] + 'px', m[r(0x12d)][r(0x129)] = a[r(0x16d)] + 'px'), (clearTimeout(p), p = setTimeout(() => {
+        const u = r;
+        a[u(0x12e)][u(0x11c)](u(0x121));
+    }, 0x7d0)), window[r(0x188)][r(0x132)] && window[r(0x188)][r(0x132)](0x8);
+    const t = a['getAttribute'](r(0x178));
+    t && l(t);
 }
-window[_0x28ce91(0x118)] = _0x3531de, document[_0x28ce91(0x168)]('DOMContentLoaded', function () {
-    const _0x229ed7 = _0x28ce91;
-    if (_0x3411f5 && window[_0x229ed7(0x163)] <= 0x300) {
-        const _0x281883 = localStorage[_0x229ed7(0x17e)]('activeNavIndex'), _0x268685 = document['querySelectorAll']('.nav-item[data-target]'), _0x1b3777 = _0x281883 !== null ? parseInt(_0x281883) : 0x0;
-        if (_0x268685[_0x1b3777]) {
-            const _0x4deed1 = _0x268685[_0x1b3777];
-            _0x4deed1[_0x229ed7(0x12e)][_0x229ed7(0x13a)](_0x229ed7(0x155)), _0x3411f5[_0x229ed7(0x12d)][_0x229ed7(0x194)] = _0x4deed1['offsetLeft'] + 'px', _0x3411f5[_0x229ed7(0x12d)][_0x229ed7(0x183)] = _0x4deed1[_0x229ed7(0x19b)] + 'px', _0x3411f5['style'][_0x229ed7(0x12a)] = _0x4deed1[_0x229ed7(0x18c)] + 'px', _0x3411f5[_0x229ed7(0x12d)][_0x229ed7(0x129)] = _0x4deed1['offsetHeight'] + 'px';
+window[c(0x118)] = l, document[c(0x168)]('DOMContentLoaded', function () {
+    const a = c;
+    if (m && window[a(0x163)] <= 0x300) {
+        const b = localStorage[a(0x17e)]('activeNavIndex'), r = document['querySelectorAll']('.nav-item[data-target]'), s = b !== null ? parseInt(b) : 0x0;
+        if (r[s]) {
+            const t = r[s];
+            t[a(0x12e)][a(0x13a)](a(0x155)), m[a(0x12d)][a(0x194)] = t['offsetLeft'] + 'px', m[a(0x12d)][a(0x183)] = t[a(0x19b)] + 'px', m['style'][a(0x12a)] = t[a(0x18c)] + 'px', m[a(0x12d)][a(0x129)] = t['offsetHeight'] + 'px';
         } else {
-            const _0x1d5d84 = document[_0x229ed7(0x127)](_0x229ed7(0x11f));
-            _0x1d5d84 && (_0x3411f5[_0x229ed7(0x12d)]['left'] = _0x1d5d84[_0x229ed7(0x143)] + 'px', _0x3411f5[_0x229ed7(0x12d)]['top'] = _0x1d5d84[_0x229ed7(0x19b)] + 'px', _0x3411f5['style'][_0x229ed7(0x12a)] = _0x1d5d84['offsetWidth'] + 'px', _0x3411f5['style'][_0x229ed7(0x129)] = _0x1d5d84[_0x229ed7(0x16d)] + 'px');
+            const u = document[a(0x127)](a(0x11f));
+            u && (m[a(0x12d)]['left'] = u[a(0x143)] + 'px', m[a(0x12d)]['top'] = u[a(0x19b)] + 'px', m['style'][a(0x12a)] = u['offsetWidth'] + 'px', m['style'][a(0x129)] = u[a(0x16d)] + 'px');
         }
     }
 });

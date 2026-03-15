@@ -1,221 +1,257 @@
-const _0x50f126 = _0x647b;
-(function (_0x4ce4a5, _0x35776e) {
-    const _0x5ce7d9 = _0x647b, _0x183c45 = _0x4ce4a5();
+const c = j;
+(function (a, b) {
+    const r = j, s = a();
     while (!![]) {
         try {
-            const _0x53973e = -parseInt(_0x5ce7d9(0x10a)) / 0x1 * (-parseInt(_0x5ce7d9(0x127)) / 0x2) + -parseInt(_0x5ce7d9(0xd5)) / 0x3 * (parseInt(_0x5ce7d9(0xe1)) / 0x4) + parseInt(_0x5ce7d9(0xf2)) / 0x5 + -parseInt(_0x5ce7d9(0x10d)) / 0x6 * (-parseInt(_0x5ce7d9(0x101)) / 0x7) + parseInt(_0x5ce7d9(0xd4)) / 0x8 + parseInt(_0x5ce7d9(0x105)) / 0x9 * (parseInt(_0x5ce7d9(0xf5)) / 0xa) + -parseInt(_0x5ce7d9(0x103)) / 0xb * (parseInt(_0x5ce7d9(0xe9)) / 0xc);
-            if (_0x53973e === _0x35776e)
+            const t = -parseInt(r(0x10a)) / 0x1 * (-parseInt(r(0x127)) / 0x2) + -parseInt(r(0xd5)) / 0x3 * (parseInt(r(0xe1)) / 0x4) + parseInt(r(0xf2)) / 0x5 + -parseInt(r(0x10d)) / 0x6 * (-parseInt(r(0x101)) / 0x7) + parseInt(r(0xd4)) / 0x8 + parseInt(r(0x105)) / 0x9 * (parseInt(r(0xf5)) / 0xa) + -parseInt(r(0x103)) / 0xb * (parseInt(r(0xe9)) / 0xc);
+            if (t === b)
                 break;
             else
-                _0x183c45['push'](_0x183c45['shift']());
-        } catch (_0x2c7a1d) {
-            _0x183c45['push'](_0x183c45['shift']());
+                s['push'](s['shift']());
+        } catch (u) {
+            s['push'](s['shift']());
         }
     }
-}(_0x272c, 0x481ba));
-const _0x596b9b = (function () {
-        let _0xea3565 = !![];
-        return function (_0xc4422a, _0x3a1f56) {
-            const _0x278621 = _0xea3565 ? function () {
-                const _0x495a74 = _0x647b;
-                if (_0x3a1f56) {
-                    const _0x45d02b = _0x3a1f56[_0x495a74(0xfe)](_0xc4422a, arguments);
-                    return _0x3a1f56 = null, _0x45d02b;
+}(p, 0x481ba));
+const d = (function () {
+        const r = (function () {
+                let u = !![];
+                return function (v, w) {
+                    const x = u ? function () {
+                        if (w) {
+                            const y = w['apply'](v, arguments);
+                            return w = null, y;
+                        }
+                    } : function () {
+                    };
+                    return u = ![], x;
+                };
+            }()), s = r(this, function () {
+                const u = function () {
+                        let y;
+                        try {
+                            y = Function('return\x20(function()\x20' + '{}.constructor(\x22return\x20this\x22)(\x20)' + ');')();
+                        } catch (z) {
+                            y = window;
+                        }
+                        return y;
+                    }, v = u(), w = v['console'] = v['console'] || {}, x = [
+                        'log',
+                        'warn',
+                        'info',
+                        'error',
+                        'exception',
+                        'table',
+                        'trace'
+                    ];
+                for (let y = 0x0; y < x['length']; y++) {
+                    const z = r['constructor']['prototype']['bind'](r), A = x[y], B = w[A] || z;
+                    z['__proto__'] = r['bind'](r), z['toString'] = B['toString']['bind'](B), w[A] = z;
+                }
+            });
+        s();
+        let t = !![];
+        return function (u, v) {
+            const w = t ? function () {
+                const x = j;
+                if (v) {
+                    const y = v[x(0xfe)](u, arguments);
+                    return v = null, y;
                 }
             } : function () {
             };
-            return _0xea3565 = ![], _0x278621;
+            return t = ![], w;
         };
-    }()), _0x138a9d = _0x596b9b(this, function () {
-        const _0x36139f = _0x647b;
-        let _0x3ab2f4;
+    }()), e = d(this, function () {
+        const a = j;
+        let b;
         try {
-            const _0x41736a = Function(_0x36139f(0x11c) + '{}.constructor(\x22return\x20this\x22)(\x20)' + ');');
-            _0x3ab2f4 = _0x41736a();
-        } catch (_0x5f205d) {
-            _0x3ab2f4 = window;
+            const t = Function(a(0x11c) + '{}.constructor(\x22return\x20this\x22)(\x20)' + ');');
+            b = t();
+        } catch (u) {
+            b = window;
         }
-        const _0x4f7cce = _0x3ab2f4['console'] = _0x3ab2f4['console'] || {}, _0x22b668 = [
-                _0x36139f(0x125),
-                _0x36139f(0x118),
-                _0x36139f(0x137),
-                _0x36139f(0xff),
-                _0x36139f(0xd2),
-                _0x36139f(0xeb),
-                _0x36139f(0xd1)
+        const r = b['console'] = b['console'] || {}, s = [
+                a(0x125),
+                a(0x118),
+                a(0x137),
+                a(0xff),
+                a(0xd2),
+                a(0xeb),
+                a(0xd1)
             ];
-        for (let _0x5d71d6 = 0x0; _0x5d71d6 < _0x22b668[_0x36139f(0xd7)]; _0x5d71d6++) {
-            const _0x38c530 = _0x596b9b[_0x36139f(0xd8)][_0x36139f(0x116)][_0x36139f(0xc9)](_0x596b9b), _0x3e9410 = _0x22b668[_0x5d71d6], _0x28186b = _0x4f7cce[_0x3e9410] || _0x38c530;
-            _0x38c530['__proto__'] = _0x596b9b[_0x36139f(0xc9)](_0x596b9b), _0x38c530[_0x36139f(0xdb)] = _0x28186b[_0x36139f(0xdb)]['bind'](_0x28186b), _0x4f7cce[_0x3e9410] = _0x38c530;
+        for (let v = 0x0; v < s[a(0xd7)]; v++) {
+            const w = d[a(0xd8)][a(0x116)][a(0xc9)](d), x = s[v], y = r[x] || w;
+            w['__proto__'] = d[a(0xc9)](d), w[a(0xdb)] = y[a(0xdb)]['bind'](y), r[x] = w;
         }
     });
-_0x138a9d();
-const _0x29d4eb = window[_0x50f126(0x11e)] || _0x50f126(0xdc), _0x4e68e8 = { 'selectedPlanType': _0x50f126(0xfa) }, _0x5b43ca = [
-        _0x50f126(0xf6),
-        _0x50f126(0xfa),
-        _0x50f126(0x139)
+e();
+const f = window[c(0x11e)] || c(0xdc), g = { 'selectedPlanType': c(0xfa) }, h = [
+        c(0xf6),
+        c(0xfa),
+        c(0x139)
     ];
-function _0x284bd9(_0xd2f116) {
-    const _0x1ab68f = _0x50f126, _0xb87e38 = Number(_0xd2f116);
-    if (!Number[_0x1ab68f(0x134)](_0xb87e38) || _0xb87e38 < 0x0)
+function i(a) {
+    const b = c, r = Number(a);
+    if (!Number[b(0x134)](r) || r < 0x0)
         return 0x1e;
-    return _0xb87e38;
+    return r;
 }
-function _0x647b(_0x1f1e9f, _0x593673) {
-    _0x1f1e9f = _0x1f1e9f - 0xc9;
-    const _0x23d642 = _0x272c();
-    let _0x3875d0 = _0x23d642[_0x1f1e9f];
-    if (_0x647b['hGMmOz'] === undefined) {
-        var _0x4f5cdb = function (_0x4b7bc0) {
-            const _0x4cf832 = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789+/=';
-            let _0x538c53 = '', _0x426cea = '';
-            for (let _0x4578cf = 0x0, _0xead8d9, _0x596b9b, _0x138a9d = 0x0; _0x596b9b = _0x4b7bc0['charAt'](_0x138a9d++); ~_0x596b9b && (_0xead8d9 = _0x4578cf % 0x4 ? _0xead8d9 * 0x40 + _0x596b9b : _0x596b9b, _0x4578cf++ % 0x4) ? _0x538c53 += String['fromCharCode'](0xff & _0xead8d9 >> (-0x2 * _0x4578cf & 0x6)) : 0x0) {
-                _0x596b9b = _0x4cf832['indexOf'](_0x596b9b);
+function j(a, b) {
+    a = a - 0xc9;
+    const r = p();
+    let s = r[a];
+    if (j['hGMmOz'] === undefined) {
+        var t = function (x) {
+            const y = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789+/=';
+            let z = '', A = '';
+            for (let B = 0x0, C, D, E = 0x0; D = x['charAt'](E++); ~D && (C = B % 0x4 ? C * 0x40 + D : D, B++ % 0x4) ? z += String['fromCharCode'](0xff & C >> (-0x2 * B & 0x6)) : 0x0) {
+                D = y['indexOf'](D);
             }
-            for (let _0x29d4eb = 0x0, _0x4e68e8 = _0x538c53['length']; _0x29d4eb < _0x4e68e8; _0x29d4eb++) {
-                _0x426cea += '%' + ('00' + _0x538c53['charCodeAt'](_0x29d4eb)['toString'](0x10))['slice'](-0x2);
+            for (let F = 0x0, G = z['length']; F < G; F++) {
+                A += '%' + ('00' + z['charCodeAt'](F)['toString'](0x10))['slice'](-0x2);
             }
-            return decodeURIComponent(_0x426cea);
+            return decodeURIComponent(A);
         };
-        _0x647b['DjgDBL'] = _0x4f5cdb, _0x647b['YZhbIN'] = {}, _0x647b['hGMmOz'] = !![];
+        j['DjgDBL'] = t, j['YZhbIN'] = {}, j['hGMmOz'] = !![];
     }
-    const _0x18db88 = _0x23d642[0x0], _0x272c0e = _0x1f1e9f + _0x18db88, _0x647bde = _0x647b['YZhbIN'][_0x272c0e];
-    return !_0x647bde ? (_0x3875d0 = _0x647b['DjgDBL'](_0x3875d0), _0x647b['YZhbIN'][_0x272c0e] = _0x3875d0) : _0x3875d0 = _0x647bde, _0x3875d0;
+    const u = r[0x0], v = a + u, w = j['YZhbIN'][v];
+    return !w ? (s = j['DjgDBL'](s), j['YZhbIN'][v] = s) : s = w, s;
 }
-async function _0x2b5504() {
-    const _0x3f9d0f = _0x50f126;
+async function k() {
+    const a = c;
     try {
-        const _0x4c0042 = await fetch(_0x29d4eb + _0x3f9d0f(0x113), {
+        const b = await fetch(f + a(0x113), {
             'method': 'GET',
-            'credentials': _0x3f9d0f(0x102),
-            'headers': { 'Content-Type': _0x3f9d0f(0xca) }
+            'credentials': a(0x102),
+            'headers': { 'Content-Type': a(0xca) }
         });
-        if (!_0x4c0042['ok'])
+        if (!b['ok'])
             throw new Error('Failed\x20to\x20check\x20limit');
-        const _0x142a63 = await _0x4c0042[_0x3f9d0f(0x110)]();
-        return _0x142a63;
-    } catch (_0x52d5df) {
+        const r = await b[a(0x110)]();
+        return r;
+    } catch (s) {
         return null;
     }
 }
-function _0x366dba(_0x24c5eb) {
-    const _0x56e4c4 = _0x50f126;
+function l(a) {
+    const b = c;
     try {
-        if (!_0x24c5eb || typeof _0x24c5eb !== _0x56e4c4(0x108)) {
-            console['error'](_0x56e4c4(0x136));
+        if (!a || typeof a !== b(0x108)) {
+            console['error'](b(0x136));
             return;
         }
         const {
-                used: _0x140707,
-                limit: _0x5c6886,
-                plan_type: _0x247ac8,
-                last_video_date: _0x22178f,
-                cooldown_seconds: _0x5d2e0a,
-                remaining_seconds: _0xcd8445
-            } = _0x24c5eb, _0xe21641 = Number[_0x56e4c4(0x134)](_0x140707) ? Math['max'](0x0, _0x140707) : 0x0, _0x22ac63 = Number[_0x56e4c4(0x134)](_0x5c6886) ? Math[_0x56e4c4(0x13d)](0x1, _0x5c6886) : 0x1, _0xf02654 = _0x5b43ca[_0x56e4c4(0x115)](_0x247ac8) ? _0x247ac8 : _0x56e4c4(0x106), _0x37c4d5 = _0x284bd9(_0xcd8445) || _0x284bd9(_0x5d2e0a);
-        let _0x2eae50 = Math[_0x56e4c4(0x13d)](0x0, _0x37c4d5), _0x111eb8 = _0x56e4c4(0x11d);
-        if (_0x2eae50 > 0x0) {
-            const _0x49dd3a = Math[_0x56e4c4(0x12e)](_0x2eae50 / 0x3c), _0x3faefa = _0x2eae50 % 0x3c;
-            _0x49dd3a > 0x0 ? _0x111eb8 = _0x49dd3a + 'm\x20' + _0x3faefa + 's' : _0x111eb8 = _0x3faefa + 's';
+                used: r,
+                limit: s,
+                plan_type: t,
+                last_video_date: u,
+                cooldown_seconds: v,
+                remaining_seconds: w
+            } = a, x = Number[b(0x134)](r) ? Math['max'](0x0, r) : 0x0, y = Number[b(0x134)](s) ? Math[b(0x13d)](0x1, s) : 0x1, z = h[b(0x115)](t) ? t : b(0x106), A = i(w) || i(v);
+        let B = Math[b(0x13d)](0x0, A), C = b(0x11d);
+        if (B > 0x0) {
+            const a5 = Math[b(0x12e)](B / 0x3c), a6 = B % 0x3c;
+            a5 > 0x0 ? C = a5 + 'm\x20' + a6 + 's' : C = a6 + 's';
         }
-        let _0x36cfe5 = 'Never';
-        if (_0x22178f && _0x22178f !== '1970-01-01') {
-            const _0x8d28a4 = String(_0x22178f)[_0x56e4c4(0x112)]('\x20'), _0x3fd12c = _0x8d28a4[0x0], _0x5b5123 = _0x8d28a4[0x1] || _0x56e4c4(0xfb);
-            /^\d{4}-\d{2}-\d{2}$/[_0x56e4c4(0xf9)](_0x3fd12c) && /^\d{2}:\d{2}/[_0x56e4c4(0xf9)](_0x5b5123) && (_0x36cfe5 = _0x3fd12c + _0x56e4c4(0x124) + _0x5b5123);
+        let D = 'Never';
+        if (u && u !== '1970-01-01') {
+            const a7 = String(u)[b(0x112)]('\x20'), a8 = a7[0x0], a9 = a7[0x1] || b(0xfb);
+            /^\d{4}-\d{2}-\d{2}$/[b(0xf9)](a8) && /^\d{2}:\d{2}/[b(0xf9)](a9) && (D = a8 + b(0x124) + a9);
         }
-        const _0x57f5d4 = document[_0x56e4c4(0xea)](_0x56e4c4(0xe6));
-        _0x57f5d4[_0x56e4c4(0x11a)] = 'limit-overlay', _0x57f5d4['id'] = _0x56e4c4(0x121);
-        const _0x40642f = document[_0x56e4c4(0xea)](_0x56e4c4(0xe6));
-        _0x40642f['className'] = _0x56e4c4(0x122);
-        const _0x1fd9dc = document[_0x56e4c4(0xea)]('div');
-        _0x1fd9dc[_0x56e4c4(0x11a)] = _0x56e4c4(0x12d);
-        const _0x5e650a = document['createElement'](_0x56e4c4(0xe6));
-        _0x5e650a[_0x56e4c4(0x11a)] = _0x56e4c4(0xee);
-        const _0xc06eb6 = document[_0x56e4c4(0xea)](_0x56e4c4(0xe6));
-        _0xc06eb6[_0x56e4c4(0x11a)] = _0x56e4c4(0x10c), _0xc06eb6[_0x56e4c4(0x10f)] = _0x56e4c4(0x131), _0x5e650a[_0x56e4c4(0xe7)](_0xc06eb6);
-        const _0x2b5d49 = document[_0x56e4c4(0xea)]('h1');
-        _0x2b5d49[_0x56e4c4(0x12f)] = 'You\x27ve\x20hit\x20your\x0adaily\x20limit', _0x5e650a[_0x56e4c4(0xe7)](_0x2b5d49);
-        const _0x2ffbfb = document[_0x56e4c4(0xea)]('p');
-        _0x2ffbfb['className'] = _0x56e4c4(0xf4), _0x2ffbfb[_0x56e4c4(0x12f)] = _0x56e4c4(0xe0) + _0x22ac63 + _0x56e4c4(0x11f), _0x5e650a[_0x56e4c4(0xe7)](_0x2ffbfb), _0x1fd9dc[_0x56e4c4(0xe7)](_0x5e650a);
-        const _0x3bb788 = document[_0x56e4c4(0xea)](_0x56e4c4(0xe6));
-        _0x3bb788['className'] = _0x56e4c4(0xdd);
-        const _0x206cb9 = document[_0x56e4c4(0xea)](_0x56e4c4(0xe6));
-        _0x206cb9[_0x56e4c4(0x11a)] = _0x56e4c4(0xcc);
-        const _0x54ca04 = document['createElement'](_0x56e4c4(0xe6));
-        _0x54ca04[_0x56e4c4(0x11a)] = _0x56e4c4(0x12a), _0x54ca04['innerHTML'] = _0x56e4c4(0x143), _0x54ca04[_0x56e4c4(0xe7)](document[_0x56e4c4(0xef)](_0x56e4c4(0x142))), _0x206cb9[_0x56e4c4(0xe7)](_0x54ca04);
-        const _0x20a012 = document['createElement'](_0x56e4c4(0xe6));
-        _0x20a012[_0x56e4c4(0x11a)] = _0x56e4c4(0xfd), _0x20a012[_0x56e4c4(0x12f)] = _0xe21641 + _0x56e4c4(0x10b) + _0x22ac63 + _0x56e4c4(0x13e), _0x206cb9[_0x56e4c4(0xe7)](_0x20a012), _0x3bb788[_0x56e4c4(0xe7)](_0x206cb9);
-        const _0x13e4a7 = document['createElement'](_0x56e4c4(0xe6));
-        _0x13e4a7[_0x56e4c4(0x11a)] = 'usage-bar-track';
-        const _0x673916 = document[_0x56e4c4(0xea)](_0x56e4c4(0xe6));
-        _0x673916[_0x56e4c4(0x11a)] = 'usage-bar-fill', _0x673916['style'][_0x56e4c4(0xe8)] = _0x56e4c4(0x123), _0x13e4a7['appendChild'](_0x673916), _0x3bb788['appendChild'](_0x13e4a7);
-        const _0x3a1472 = document[_0x56e4c4(0xea)](_0x56e4c4(0xe6));
-        _0x3a1472[_0x56e4c4(0x11a)] = _0x56e4c4(0x13f), _0x3a1472[_0x56e4c4(0x12f)] = _0x56e4c4(0x130);
-        const _0x5cb660 = document[_0x56e4c4(0xea)](_0x56e4c4(0xe3));
-        _0x5cb660[_0x56e4c4(0x12f)] = _0x36cfe5, _0x3a1472[_0x56e4c4(0xe7)](_0x5cb660), _0x3bb788['appendChild'](_0x3a1472);
-        const _0x15e78b = document[_0x56e4c4(0xea)](_0x56e4c4(0xe6));
-        _0x15e78b[_0x56e4c4(0x11a)] = _0x56e4c4(0x13f), _0x15e78b[_0x56e4c4(0x12f)] = _0x56e4c4(0x100);
-        const _0x1ab45e = document['createElement']('span');
-        _0x1ab45e[_0x56e4c4(0x12f)] = _0x111eb8, _0x15e78b[_0x56e4c4(0xe7)](_0x1ab45e), _0x15e78b[_0x56e4c4(0xe7)](document[_0x56e4c4(0xef)](_0x56e4c4(0x135))), _0x3bb788[_0x56e4c4(0xe7)](_0x15e78b), _0x1fd9dc[_0x56e4c4(0xe7)](_0x3bb788), _0x40642f[_0x56e4c4(0xe7)](_0x1fd9dc);
-        const _0x3504b8 = document[_0x56e4c4(0xea)]('div');
-        _0x3504b8['className'] = _0x56e4c4(0xdf);
-        const _0x2c1b3d = document['createElement'](_0x56e4c4(0x132));
-        _0x2c1b3d[_0x56e4c4(0x11a)] = _0x56e4c4(0x107), _0x2c1b3d[_0x56e4c4(0x117)](_0x56e4c4(0x133), _0x3bd57a), _0x2c1b3d['innerHTML'] = _0x56e4c4(0xcb), _0x3504b8[_0x56e4c4(0xe7)](_0x2c1b3d);
-        const _0x7dfc5b = document[_0x56e4c4(0xea)]('div'), _0xf1e4cf = document[_0x56e4c4(0xea)](_0x56e4c4(0xe6));
-        _0xf1e4cf[_0x56e4c4(0x11a)] = _0x56e4c4(0x13c), _0xf1e4cf[_0x56e4c4(0x12f)] = _0x56e4c4(0x12c), _0x7dfc5b['appendChild'](_0xf1e4cf);
-        const _0x4843a2 = document['createElement']('div');
-        _0x4843a2[_0x56e4c4(0x11a)] = _0x56e4c4(0x11b);
-        const _0x14c57d = document[_0x56e4c4(0xea)](_0x56e4c4(0xe6));
-        _0x14c57d[_0x56e4c4(0x11a)] = _0x56e4c4(0x119) + (_0xf02654 === _0x56e4c4(0x106) ? _0x56e4c4(0xfc) : ''), _0x14c57d['setAttribute']('data-plan', _0x56e4c4(0xf6)), _0x14c57d[_0x56e4c4(0x117)](_0x56e4c4(0x133), function (_0x201abe) {
-            const _0x5a1337 = _0x56e4c4;
-            _0x4fccee(_0x201abe['currentTarget'], _0x5a1337(0xf6));
-        }), _0x14c57d[_0x56e4c4(0x10f)] = '<div\x20class=\x22plan-card-icon\x22><svg\x20width=\x2220\x22\x20height=\x2220\x22\x20viewBox=\x220\x200\x20100\x20100\x22\x20fill=\x22none\x22\x20xmlns=\x22http://www.w3.org/2000/svg\x22><defs><linearGradient\x20id=\x22basicGrad\x22\x20x1=\x220%\x22\x20y1=\x220%\x22\x20x2=\x22100%\x22\x20y2=\x22100%\x22><stop\x20offset=\x220%\x22\x20style=\x22stop-color:#f1f5f9;stop-opacity:1\x22\x20/><stop\x20offset=\x2250%\x22\x20style=\x22stop-color:#cbd5e1;stop-opacity:1\x22\x20/><stop\x20offset=\x22100%\x22\x20style=\x22stop-color:#94a3b8;stop-opacity:1\x22\x20/></linearGradient></defs><circle\x20cx=\x2250\x22\x20cy=\x2250\x22\x20r=\x2216\x22\x20fill=\x22url(#basicGrad)\x22></circle><ellipse\x20rx=\x2242\x22\x20ry=\x2218\x22\x20cx=\x2250\x22\x20cy=\x2250\x22\x20stroke=\x22url(#basicGrad)\x22\x20stroke-width=\x2210\x22\x20fill=\x22none\x22\x20transform=\x22rotate(45\x2050\x2050)\x22\x20stroke-linecap=\x22round\x22></ellipse><ellipse\x20rx=\x2242\x22\x20ry=\x2218\x22\x20cx=\x2250\x22\x20cy=\x2250\x22\x20stroke=\x22url(#basicGrad)\x22\x20stroke-width=\x2210\x22\x20fill=\x22none\x22\x20transform=\x22rotate(-45\x2050\x2050)\x22\x20stroke-linecap=\x22round\x22></ellipse></svg></div><div\x20class=\x22plan-card-body\x22><strong>Basic</strong><span>5\x20generations/day</span></div><div\x20class=\x22plan-card-price\x22>$18.99/mo</div>', _0x4843a2[_0x56e4c4(0xe7)](_0x14c57d);
-        const _0x4bbdfd = document[_0x56e4c4(0xea)]('div');
-        _0x4bbdfd[_0x56e4c4(0x11a)] = _0x56e4c4(0x10e), _0x4bbdfd[_0x56e4c4(0xf1)](_0x56e4c4(0xf3), 'prime'), _0x4bbdfd['addEventListener'](_0x56e4c4(0x133), function (_0x31c9ff) {
-            const _0x3b5ef2 = _0x56e4c4;
-            _0x4fccee(_0x31c9ff['currentTarget'], _0x3b5ef2(0xfa));
-        }), _0x4bbdfd['innerHTML'] = _0x56e4c4(0xcf), _0x4843a2[_0x56e4c4(0xe7)](_0x4bbdfd);
-        const _0xff615d = document[_0x56e4c4(0xea)]('div');
-        _0xff615d[_0x56e4c4(0x11a)] = 'plan-card', _0xff615d['setAttribute'](_0x56e4c4(0xf3), _0x56e4c4(0x139)), _0xff615d[_0x56e4c4(0x117)](_0x56e4c4(0x133), function (_0x2cf6e8) {
-            const _0x2253a8 = _0x56e4c4;
-            _0x4fccee(_0x2cf6e8[_0x2253a8(0xf7)], _0x2253a8(0x139));
-        }), _0xff615d['innerHTML'] = _0x56e4c4(0x13a), _0x4843a2[_0x56e4c4(0xe7)](_0xff615d), _0x7dfc5b[_0x56e4c4(0xe7)](_0x4843a2), _0x3504b8[_0x56e4c4(0xe7)](_0x7dfc5b);
-        const _0x32d57b = document[_0x56e4c4(0xea)]('div');
-        _0x32d57b[_0x56e4c4(0x11a)] = _0x56e4c4(0xe4);
-        const _0x47aecc = document[_0x56e4c4(0xea)](_0x56e4c4(0x132));
-        _0x47aecc[_0x56e4c4(0x11a)] = 'cta-btn', _0x47aecc[_0x56e4c4(0x117)]('click', _0x212201), _0x47aecc['innerHTML'] = _0x56e4c4(0x138), _0x32d57b['appendChild'](_0x47aecc), _0x3504b8[_0x56e4c4(0xe7)](_0x32d57b), _0x40642f[_0x56e4c4(0xe7)](_0x3504b8), _0x57f5d4[_0x56e4c4(0xe7)](_0x40642f), document[_0x56e4c4(0xf0)]['appendChild'](_0x57f5d4), setTimeout(() => {
-            const _0x2c1cca = _0x56e4c4;
-            _0x57f5d4[_0x2c1cca(0x109)]['opacity'] = '1';
+        const E = document[b(0xea)](b(0xe6));
+        E[b(0x11a)] = 'limit-overlay', E['id'] = b(0x121);
+        const F = document[b(0xea)](b(0xe6));
+        F['className'] = b(0x122);
+        const G = document[b(0xea)]('div');
+        G[b(0x11a)] = b(0x12d);
+        const H = document['createElement'](b(0xe6));
+        H[b(0x11a)] = b(0xee);
+        const I = document[b(0xea)](b(0xe6));
+        I[b(0x11a)] = b(0x10c), I[b(0x10f)] = b(0x131), H[b(0xe7)](I);
+        const J = document[b(0xea)]('h1');
+        J[b(0x12f)] = 'You\x27ve\x20hit\x20your\x0adaily\x20limit', H[b(0xe7)](J);
+        const K = document[b(0xea)]('p');
+        K['className'] = b(0xf4), K[b(0x12f)] = b(0xe0) + y + b(0x11f), H[b(0xe7)](K), G[b(0xe7)](H);
+        const L = document[b(0xea)](b(0xe6));
+        L['className'] = b(0xdd);
+        const M = document[b(0xea)](b(0xe6));
+        M[b(0x11a)] = b(0xcc);
+        const N = document['createElement'](b(0xe6));
+        N[b(0x11a)] = b(0x12a), N['innerHTML'] = b(0x143), N[b(0xe7)](document[b(0xef)](b(0x142))), M[b(0xe7)](N);
+        const O = document['createElement'](b(0xe6));
+        O[b(0x11a)] = b(0xfd), O[b(0x12f)] = x + b(0x10b) + y + b(0x13e), M[b(0xe7)](O), L[b(0xe7)](M);
+        const P = document['createElement'](b(0xe6));
+        P[b(0x11a)] = 'usage-bar-track';
+        const Q = document[b(0xea)](b(0xe6));
+        Q[b(0x11a)] = 'usage-bar-fill', Q['style'][b(0xe8)] = b(0x123), P['appendChild'](Q), L['appendChild'](P);
+        const R = document[b(0xea)](b(0xe6));
+        R[b(0x11a)] = b(0x13f), R[b(0x12f)] = b(0x130);
+        const S = document[b(0xea)](b(0xe3));
+        S[b(0x12f)] = D, R[b(0xe7)](S), L['appendChild'](R);
+        const T = document[b(0xea)](b(0xe6));
+        T[b(0x11a)] = b(0x13f), T[b(0x12f)] = b(0x100);
+        const U = document['createElement']('span');
+        U[b(0x12f)] = C, T[b(0xe7)](U), T[b(0xe7)](document[b(0xef)](b(0x135))), L[b(0xe7)](T), G[b(0xe7)](L), F[b(0xe7)](G);
+        const V = document[b(0xea)]('div');
+        V['className'] = b(0xdf);
+        const W = document['createElement'](b(0x132));
+        W[b(0x11a)] = b(0x107), W[b(0x117)](b(0x133), o), W['innerHTML'] = b(0xcb), V[b(0xe7)](W);
+        const X = document[b(0xea)]('div'), Y = document[b(0xea)](b(0xe6));
+        Y[b(0x11a)] = b(0x13c), Y[b(0x12f)] = b(0x12c), X['appendChild'](Y);
+        const Z = document['createElement']('div');
+        Z[b(0x11a)] = b(0x11b);
+        const a0 = document[b(0xea)](b(0xe6));
+        a0[b(0x11a)] = b(0x119) + (z === b(0x106) ? b(0xfc) : ''), a0['setAttribute']('data-plan', b(0xf6)), a0[b(0x117)](b(0x133), function (aa) {
+            const ab = b;
+            m(aa['currentTarget'], ab(0xf6));
+        }), a0[b(0x10f)] = '<div\x20class=\x22plan-card-icon\x22><svg\x20width=\x2220\x22\x20height=\x2220\x22\x20viewBox=\x220\x200\x20100\x20100\x22\x20fill=\x22none\x22\x20xmlns=\x22http://www.w3.org/2000/svg\x22><defs><linearGradient\x20id=\x22basicGrad\x22\x20x1=\x220%\x22\x20y1=\x220%\x22\x20x2=\x22100%\x22\x20y2=\x22100%\x22><stop\x20offset=\x220%\x22\x20style=\x22stop-color:#f1f5f9;stop-opacity:1\x22\x20/><stop\x20offset=\x2250%\x22\x20style=\x22stop-color:#cbd5e1;stop-opacity:1\x22\x20/><stop\x20offset=\x22100%\x22\x20style=\x22stop-color:#94a3b8;stop-opacity:1\x22\x20/></linearGradient></defs><circle\x20cx=\x2250\x22\x20cy=\x2250\x22\x20r=\x2216\x22\x20fill=\x22url(#basicGrad)\x22></circle><ellipse\x20rx=\x2242\x22\x20ry=\x2218\x22\x20cx=\x2250\x22\x20cy=\x2250\x22\x20stroke=\x22url(#basicGrad)\x22\x20stroke-width=\x2210\x22\x20fill=\x22none\x22\x20transform=\x22rotate(45\x2050\x2050)\x22\x20stroke-linecap=\x22round\x22></ellipse><ellipse\x20rx=\x2242\x22\x20ry=\x2218\x22\x20cx=\x2250\x22\x20cy=\x2250\x22\x20stroke=\x22url(#basicGrad)\x22\x20stroke-width=\x2210\x22\x20fill=\x22none\x22\x20transform=\x22rotate(-45\x2050\x2050)\x22\x20stroke-linecap=\x22round\x22></ellipse></svg></div><div\x20class=\x22plan-card-body\x22><strong>Basic</strong><span>5\x20generations/day</span></div><div\x20class=\x22plan-card-price\x22>$18.99/mo</div>', Z[b(0xe7)](a0);
+        const a1 = document[b(0xea)]('div');
+        a1[b(0x11a)] = b(0x10e), a1[b(0xf1)](b(0xf3), 'prime'), a1['addEventListener'](b(0x133), function (aa) {
+            const ab = b;
+            m(aa['currentTarget'], ab(0xfa));
+        }), a1['innerHTML'] = b(0xcf), Z[b(0xe7)](a1);
+        const a2 = document[b(0xea)]('div');
+        a2[b(0x11a)] = 'plan-card', a2['setAttribute'](b(0xf3), b(0x139)), a2[b(0x117)](b(0x133), function (aa) {
+            const ab = b;
+            m(aa[ab(0xf7)], ab(0x139));
+        }), a2['innerHTML'] = b(0x13a), Z[b(0xe7)](a2), X[b(0xe7)](Z), V[b(0xe7)](X);
+        const a3 = document[b(0xea)]('div');
+        a3[b(0x11a)] = b(0xe4);
+        const a4 = document[b(0xea)](b(0x132));
+        a4[b(0x11a)] = 'cta-btn', a4[b(0x117)]('click', n), a4['innerHTML'] = b(0x138), a3['appendChild'](a4), V[b(0xe7)](a3), F[b(0xe7)](V), E[b(0xe7)](F), document[b(0xf0)]['appendChild'](E), setTimeout(() => {
+            const aa = b;
+            E[aa(0x109)]['opacity'] = '1';
         }, 0xa);
-    } catch (_0x124a87) {
-        console[_0x56e4c4(0xff)]('[LimitModal]\x20Error\x20rendering\x20modal:', _0x124a87);
+    } catch (aa) {
+        console[b(0xff)]('[LimitModal]\x20Error\x20rendering\x20modal:', aa);
     }
 }
-function _0x4fccee(_0x44b2e7, _0x3f7393) {
-    const _0x6cbb13 = _0x50f126;
-    if (!_0x5b43ca[_0x6cbb13(0x115)](_0x3f7393)) {
-        console[_0x6cbb13(0x118)](_0x6cbb13(0xce), _0x3f7393);
+function m(a, b) {
+    const r = c;
+    if (!h[r(0x115)](b)) {
+        console[r(0x118)](r(0xce), b);
         return;
     }
-    _0x4e68e8[_0x6cbb13(0x141)] = _0x3f7393;
-    const _0x25cbe3 = _0x44b2e7[_0x6cbb13(0x114)](_0x6cbb13(0x126))[_0x6cbb13(0xd0)]('.plan-card');
-    _0x25cbe3['forEach'](_0x782d91 => _0x782d91['classList'][_0x6cbb13(0xcd)]('highlighted')), _0x44b2e7['classList'][_0x6cbb13(0x128)]('highlighted');
+    g[r(0x141)] = b;
+    const s = a[r(0x114)](r(0x126))[r(0xd0)]('.plan-card');
+    s['forEach'](t => t['classList'][r(0xcd)]('highlighted')), a['classList'][r(0x128)]('highlighted');
 }
-function _0x212201() {
-    const _0xf4323e = _0x50f126, _0x12d803 = _0x4e68e8[_0xf4323e(0x141)];
-    if (!_0x5b43ca['includes'](_0x12d803)) {
-        console[_0xf4323e(0xff)](_0xf4323e(0xde), _0x12d803);
+function n() {
+    const a = c, b = g[a(0x141)];
+    if (!h['includes'](b)) {
+        console[a(0xff)](a(0xde), b);
         return;
     }
-    const _0x383cd8 = new URL(_0xf4323e(0x140), window[_0xf4323e(0xec)][_0xf4323e(0xd6)]);
-    _0x383cd8[_0xf4323e(0xe2)]['set'](_0xf4323e(0xed), _0x12d803), window[_0xf4323e(0xec)][_0xf4323e(0x12b)] = _0x383cd8[_0xf4323e(0xdb)]();
+    const r = new URL(a(0x140), window[a(0xec)][a(0xd6)]);
+    r[a(0xe2)]['set'](a(0xed), b), window[a(0xec)][a(0x12b)] = r[a(0xdb)]();
 }
-function _0x3bd57a() {
-    const _0x1e0def = _0x50f126, _0x3a569a = document[_0x1e0def(0xd3)](_0x1e0def(0x121));
-    _0x3a569a && (_0x3a569a[_0x1e0def(0x109)][_0x1e0def(0xf8)] = '0', setTimeout(() => _0x3a569a[_0x1e0def(0xcd)](), 0xfa));
+function o() {
+    const a = c, b = document[a(0xd3)](a(0x121));
+    b && (b[a(0x109)][a(0xf8)] = '0', setTimeout(() => b[a(0xcd)](), 0xfa));
 }
-function _0x272c() {
-    const _0x353dfd = [
+function p() {
+    const a = [
         'mJe1mtLNqNHqwxK',
         'zNjLzq',
         'y2XVC2uTyNrU',
@@ -340,22 +376,21 @@ function _0x272c() {
         'mZiYmtC3ovnfCuzbBq',
         'BgfZDf92AwrLB19KyxrL'
     ];
-    _0x272c = function () {
-        return _0x353dfd;
-    };
-    return _0x272c();
+    return p = function () {
+        return a;
+    }, p();
 }
-async function _0x42b1db() {
-    const _0x30b35b = _0x50f126, _0x4e4ada = await _0x2b5504();
-    if (!_0x4e4ada)
+async function q() {
+    const a = c, b = await k();
+    if (!b)
         return ![];
-    if (!_0x4e4ada[_0x30b35b(0x13b)])
-        return _0x366dba({
-            'used': _0x4e4ada[_0x30b35b(0xd9)],
-            'limit': _0x4e4ada[_0x30b35b(0x129)],
-            'plan_type': _0x4e4ada['plan_type'],
-            'last_video_date': _0x4e4ada[_0x30b35b(0x104)]
+    if (!b[a(0x13b)])
+        return l({
+            'used': b[a(0xd9)],
+            'limit': b[a(0x129)],
+            'plan_type': b['plan_type'],
+            'last_video_date': b[a(0x104)]
         }), ![];
     return !![];
 }
-window[_0x50f126(0x111)] = _0x2b5504, window[_0x50f126(0xda)] = _0x366dba, window['closeLimitModal'] = _0x3bd57a, window[_0x50f126(0x120)] = _0x4fccee, window[_0x50f126(0xe5)] = _0x212201, window['attemptGeneration'] = _0x42b1db;
+window[c(0x111)] = k, window[c(0xda)] = l, window['closeLimitModal'] = o, window[c(0x120)] = m, window[c(0xe5)] = n, window['attemptGeneration'] = q;

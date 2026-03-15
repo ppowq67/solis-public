@@ -1,20 +1,20 @@
-const _0x2e56e8 = _0x4d78;
-(function (_0x5bb1fc, _0x1e5574) {
-    const _0x280fd5 = _0x4d78, _0x32abfa = _0x5bb1fc();
+const c = f;
+(function (a, b) {
+    const i = f, j = a();
     while (!![]) {
         try {
-            const _0x397d35 = parseInt(_0x280fd5(0x1bf)) / 0x1 * (parseInt(_0x280fd5(0x1a4)) / 0x2) + -parseInt(_0x280fd5(0x193)) / 0x3 + -parseInt(_0x280fd5(0x166)) / 0x4 * (-parseInt(_0x280fd5(0x15d)) / 0x5) + -parseInt(_0x280fd5(0x18c)) / 0x6 + -parseInt(_0x280fd5(0x1c7)) / 0x7 * (parseInt(_0x280fd5(0x180)) / 0x8) + -parseInt(_0x280fd5(0x1aa)) / 0x9 * (-parseInt(_0x280fd5(0x1bd)) / 0xa) + parseInt(_0x280fd5(0x1b8)) / 0xb;
-            if (_0x397d35 === _0x1e5574)
+            const k = parseInt(i(0x1bf)) / 0x1 * (parseInt(i(0x1a4)) / 0x2) + -parseInt(i(0x193)) / 0x3 + -parseInt(i(0x166)) / 0x4 * (-parseInt(i(0x15d)) / 0x5) + -parseInt(i(0x18c)) / 0x6 + -parseInt(i(0x1c7)) / 0x7 * (parseInt(i(0x180)) / 0x8) + -parseInt(i(0x1aa)) / 0x9 * (-parseInt(i(0x1bd)) / 0xa) + parseInt(i(0x1b8)) / 0xb;
+            if (k === b)
                 break;
             else
-                _0x32abfa['push'](_0x32abfa['shift']());
-        } catch (_0x58a6de) {
-            _0x32abfa['push'](_0x32abfa['shift']());
+                j['push'](j['shift']());
+        } catch (l) {
+            j['push'](j['shift']());
         }
     }
-}(_0x4786, 0x7f76b));
-function _0x4786() {
-    const _0x3ac678 = [
+}(d, 0x7f76b));
+function d() {
+    const a = [
         'DgfIBgu',
         'CxvLDwvK',
         'y29TCgXLDgvhzw5LCMf0Aw9U',
@@ -148,262 +148,296 @@ function _0x4786() {
         'mJq3ne9vDuTLBW',
         '4PYfifDLyLnVy2TLDcbHy2nLC3mGDMvYAwzPzwqGzM9YihbYB2PLy3qG'
     ];
-    _0x4786 = function () {
-        return _0x3ac678;
-    };
-    return _0x4786();
+    return d = function () {
+        return a;
+    }, d();
 }
-class _0x5b682c {
+class e {
     constructor() {
-        const _0x5b31e4 = _0x4d78;
-        this[_0x5b31e4(0x184)] = document[_0x5b31e4(0x1c2)](_0x5b31e4(0x179)), this[_0x5b31e4(0x1a9)] = document['getElementById'](_0x5b31e4(0x1a9)), this['progressText'] = document['getElementById'](_0x5b31e4(0x1b3)), this[_0x5b31e4(0x1bb)] = new Map(), this[_0x5b31e4(0x167)] = 75.36, this[_0x5b31e4(0x19c)] = 'solisAI_activeGenerations', this[_0x5b31e4(0x188)](), typeof solisWSClient !== _0x5b31e4(0x154) && this['setupWebSocketHandlers']();
+        const a = f;
+        this[a(0x184)] = document[a(0x1c2)](a(0x179)), this[a(0x1a9)] = document['getElementById'](a(0x1a9)), this['progressText'] = document['getElementById'](a(0x1b3)), this[a(0x1bb)] = new Map(), this[a(0x167)] = 75.36, this[a(0x19c)] = 'solisAI_activeGenerations', this[a(0x188)](), typeof solisWSClient !== a(0x154) && this['setupWebSocketHandlers']();
     }
-    [_0x2e56e8(0x188)]() {
-        const _0x57069b = _0x2e56e8;
+    [c(0x188)]() {
+        const a = c;
         try {
-            const _0x31b2c2 = localStorage['getItem'](this['STORAGE_KEY']);
-            if (!_0x31b2c2)
+            const b = localStorage['getItem'](this['STORAGE_KEY']);
+            if (!b)
                 return;
-            const _0x30f4aa = JSON['parse'](_0x31b2c2);
-            console['log'](_0x57069b(0x1b6) + _0x30f4aa[_0x57069b(0x187)] + _0x57069b(0x18d)), _0x30f4aa[_0x57069b(0x17a)](_0x4328ae => {
-                const _0x5e9036 = _0x57069b;
-                this[_0x5e9036(0x17f)](_0x4328ae);
+            const i = JSON['parse'](b);
+            console['log'](a(0x1b6) + i[a(0x187)] + a(0x18d)), i[a(0x17a)](j => {
+                const k = a;
+                this[k(0x17f)](j);
             });
-        } catch (_0x29f415) {
-            console['warn'](_0x57069b(0x153), _0x29f415), localStorage[_0x57069b(0x175)](this[_0x57069b(0x19c)]);
+        } catch (j) {
+            console['warn'](a(0x153), j), localStorage[a(0x175)](this[a(0x19c)]);
         }
     }
-    ['verifyProjectStatus'](_0x2aa5cc) {
-        const _0x38370e = _0x2e56e8;
-        fetch('/api/clips/status/' + _0x2aa5cc, {
-            'method': _0x38370e(0x1ae),
-            'credentials': _0x38370e(0x1a3),
-            'headers': { 'Content-Type': _0x38370e(0x1cb) }
-        })[_0x38370e(0x18b)](_0xa61fc9 => _0xa61fc9[_0x38370e(0x1c0)]())['then'](_0x46de65 => {
-            const _0x3ae32e = _0x38370e;
-            if (_0x46de65['status'] === _0x3ae32e(0x17c) || _0x46de65[_0x3ae32e(0x170)] === _0x3ae32e(0x1a7))
-                console[_0x3ae32e(0x199)]('✅\x20Project\x20' + _0x2aa5cc + _0x3ae32e(0x158) + _0x46de65[_0x3ae32e(0x169)] + '%)'), this['activeGenerations'][_0x3ae32e(0x1b9)](_0x2aa5cc, {
-                    'startTime': Date[_0x3ae32e(0x19a)](),
-                    'progress': _0x46de65[_0x3ae32e(0x169)] || 0x0,
-                    'message': _0x46de65[_0x3ae32e(0x152)] || _0x3ae32e(0x17b)
-                }), this[_0x3ae32e(0x184)] && (this[_0x3ae32e(0x184)]['style'][_0x3ae32e(0x191)] = 'flex'), this[_0x3ae32e(0x16b)](_0x2aa5cc, _0x46de65[_0x3ae32e(0x169)] || 0x0, _0x3ae32e(0x160));
+    ['verifyProjectStatus'](a) {
+        const b = c;
+        fetch('/api/clips/status/' + a, {
+            'method': b(0x1ae),
+            'credentials': b(0x1a3),
+            'headers': { 'Content-Type': b(0x1cb) }
+        })[b(0x18b)](i => i[b(0x1c0)]())['then'](i => {
+            const j = b;
+            if (i['status'] === j(0x17c) || i[j(0x170)] === j(0x1a7))
+                console[j(0x199)]('✅\x20Project\x20' + a + j(0x158) + i[j(0x169)] + '%)'), this['activeGenerations'][j(0x1b9)](a, {
+                    'startTime': Date[j(0x19a)](),
+                    'progress': i[j(0x169)] || 0x0,
+                    'message': i[j(0x152)] || j(0x17b)
+                }), this[j(0x184)] && (this[j(0x184)]['style'][j(0x191)] = 'flex'), this[j(0x16b)](a, i[j(0x169)] || 0x0, j(0x160));
             else {
-                if (_0x46de65[_0x3ae32e(0x170)] === 'completed')
-                    this['removeFromLocalStorage'](_0x2aa5cc);
+                if (i[j(0x170)] === 'completed')
+                    this['removeFromLocalStorage'](a);
                 else
-                    _0x46de65[_0x3ae32e(0x170)] === _0x3ae32e(0x1c6) && (console['error'](_0x3ae32e(0x1ca) + _0x46de65['message']), this[_0x3ae32e(0x156)](_0x2aa5cc));
+                    i[j(0x170)] === j(0x1c6) && (console['error'](j(0x1ca) + i['message']), this[j(0x156)](a));
             }
-        })[_0x38370e(0x177)](_0x51762c => {
-            const _0xd974ad = _0x38370e;
-            console[_0xd974ad(0x1c9)](_0xd974ad(0x155) + _0x2aa5cc + ':', _0x51762c);
+        })[b(0x177)](i => {
+            const j = b;
+            console[j(0x1c9)](j(0x155) + a + ':', i);
         });
     }
-    [_0x2e56e8(0x1d1)](_0x59fe84) {
-        const _0x4b5f7d = _0x2e56e8;
+    [c(0x1d1)](a) {
+        const b = c;
         try {
-            const _0xd3c0b3 = localStorage[_0x4b5f7d(0x197)](this[_0x4b5f7d(0x19c)]) || '[]', _0x1ea09b = JSON['parse'](_0xd3c0b3);
-            !_0x1ea09b[_0x4b5f7d(0x194)](_0x59fe84) && (_0x1ea09b[_0x4b5f7d(0x1a1)](_0x59fe84), localStorage['setItem'](this[_0x4b5f7d(0x19c)], JSON['stringify'](_0x1ea09b)), console[_0x4b5f7d(0x199)]('💾\x20Saved\x20to\x20localStorage:\x20' + _0x59fe84));
-        } catch (_0x310fd6) {
-            console[_0x4b5f7d(0x1c9)](_0x4b5f7d(0x16d), _0x310fd6);
+            const i = localStorage[b(0x197)](this[b(0x19c)]) || '[]', j = JSON['parse'](i);
+            !j[b(0x194)](a) && (j[b(0x1a1)](a), localStorage['setItem'](this[b(0x19c)], JSON['stringify'](j)), console[b(0x199)]('💾\x20Saved\x20to\x20localStorage:\x20' + a));
+        } catch (k) {
+            console[b(0x1c9)](b(0x16d), k);
         }
     }
-    [_0x2e56e8(0x156)](_0x555c00) {
-        const _0x313b7d = _0x2e56e8;
+    [c(0x156)](a) {
+        const b = c;
         try {
-            const _0x36b0b1 = localStorage[_0x313b7d(0x197)](this['STORAGE_KEY']) || '[]';
-            let _0x48e458 = JSON['parse'](_0x36b0b1);
-            _0x48e458 = _0x48e458['filter'](_0x56e8ec => _0x56e8ec !== _0x555c00), _0x48e458[_0x313b7d(0x187)] > 0x0 ? localStorage[_0x313b7d(0x1d3)](this['STORAGE_KEY'], JSON[_0x313b7d(0x183)](_0x48e458)) : localStorage[_0x313b7d(0x175)](this[_0x313b7d(0x19c)]), console[_0x313b7d(0x199)](_0x313b7d(0x159) + _0x555c00);
-        } catch (_0x368cee) {
-            console[_0x313b7d(0x1c9)](_0x313b7d(0x1c4), _0x368cee);
+            const i = localStorage[b(0x197)](this['STORAGE_KEY']) || '[]';
+            let j = JSON['parse'](i);
+            j = j['filter'](k => k !== a), j[b(0x187)] > 0x0 ? localStorage[b(0x1d3)](this['STORAGE_KEY'], JSON[b(0x183)](j)) : localStorage[b(0x175)](this[b(0x19c)]), console[b(0x199)](b(0x159) + a);
+        } catch (k) {
+            console[b(0x1c9)](b(0x1c4), k);
         }
     }
-    [_0x2e56e8(0x18f)]() {
-        const _0x316462 = _0x2e56e8;
-        console[_0x316462(0x199)](_0x316462(0x178)), solisWSClient['on']('moment_detected', _0xf15332 => {
-            const _0x2aa070 = _0x316462, {
-                    project_id: _0xbe3af8,
-                    moment_count: _0x39abbf,
-                    progress: _0x11110a,
-                    moment: _0x47bbb7
-                } = _0xf15332;
-            console['log']('📊\x20Moment\x20' + _0x39abbf + _0x2aa070(0x189), _0x47bbb7?.[_0x2aa070(0x17d)], '(' + _0x11110a + '%)'), this[_0x2aa070(0x16b)](_0xbe3af8, _0x11110a, _0x2aa070(0x181) + _0x39abbf + _0x2aa070(0x18e));
-        }), solisWSClient['on'](_0x316462(0x150), _0x119af2 => {
-            const _0x5d3135 = _0x316462, {
-                    project_id: _0x345b9f,
-                    progress: _0x5d7870,
-                    step: _0x423112
-                } = _0x119af2;
-            if (this[_0x5d3135(0x1bb)][_0x5d3135(0x1ac)](_0x345b9f)) {
-                const _0x5ba6f4 = this[_0x5d3135(0x1bb)]['get'](_0x345b9f)[_0x5d3135(0x169)];
-                _0x5d7870 > _0x5ba6f4 && (console['log'](_0x5d3135(0x1ba) + _0x5d7870 + '%\x20-\x20' + _0x423112), this[_0x5d3135(0x16b)](_0x345b9f, _0x5d7870, _0x423112 || _0x5d3135(0x161)));
+    [c(0x18f)]() {
+        const a = c;
+        console[a(0x199)](a(0x178)), solisWSClient['on']('moment_detected', b => {
+            const i = a, {
+                    project_id: j,
+                    moment_count: k,
+                    progress: l,
+                    moment: m
+                } = b;
+            console['log']('📊\x20Moment\x20' + k + i(0x189), m?.[i(0x17d)], '(' + l + '%)'), this[i(0x16b)](j, l, i(0x181) + k + i(0x18e));
+        }), solisWSClient['on'](a(0x150), b => {
+            const i = a, {
+                    project_id: j,
+                    progress: k,
+                    step: l
+                } = b;
+            if (this[i(0x1bb)][i(0x1ac)](j)) {
+                const m = this[i(0x1bb)]['get'](j)[i(0x169)];
+                k > m && (console['log'](i(0x1ba) + k + '%\x20-\x20' + l), this[i(0x16b)](j, k, l || i(0x161)));
             }
-        }), solisWSClient['on'](_0x316462(0x1d2), _0x31c571 => {
-            const _0x1aa565 = _0x316462, {project_id: _0x585b86} = _0x31c571;
-            console[_0x1aa565(0x199)]('✅\x20Video\x20ready\x20for\x20project:\x20' + _0x585b86), this[_0x1aa565(0x1a8)](_0x585b86);
-        }), solisWSClient['on'](_0x316462(0x1c6), _0x47da11 => {
-            const _0x3374b6 = _0x316462, {
-                    taskId: _0x57cba5,
-                    error: _0x182746
-                } = _0x47da11;
-            console['error'](_0x3374b6(0x17e) + _0x57cba5 + ':\x20' + _0x182746), this['failGeneration'](_0x57cba5);
+        }), solisWSClient['on'](a(0x1d2), b => {
+            const i = a, {project_id: j} = b;
+            console[i(0x199)]('✅\x20Video\x20ready\x20for\x20project:\x20' + j), this[i(0x1a8)](j);
+        }), solisWSClient['on'](a(0x1c6), b => {
+            const i = a, {
+                    taskId: j,
+                    error: k
+                } = b;
+            console['error'](i(0x17e) + j + ':\x20' + k), this['failGeneration'](j);
         });
     }
-    ['startGeneration'](_0x31ab0d, _0x1fe072 = _0x2e56e8(0x1b7)) {
-        const _0x22fa8b = _0x2e56e8;
-        this[_0x22fa8b(0x151)](_0x31ab0d, _0x4670dc => {
-            const _0x4b7705 = _0x22fa8b;
-            if (!_0x4670dc) {
-                console[_0x4b7705(0x1c6)](_0x4b7705(0x171) + _0x31ab0d), this[_0x4b7705(0x1d0)](_0x31ab0d);
+    ['startGeneration'](a, b = c(0x1b7)) {
+        const i = c;
+        this[i(0x151)](a, j => {
+            const k = i;
+            if (!j) {
+                console[k(0x1c6)](k(0x171) + a), this[k(0x1d0)](a);
                 return;
             }
-            console['log'](_0x4b7705(0x176) + _0x31ab0d), this[_0x4b7705(0x184)] && (this['wrapper'][_0x4b7705(0x1a2)]['display'] = _0x4b7705(0x172)), this[_0x4b7705(0x1bb)][_0x4b7705(0x1b9)](_0x31ab0d, {
-                'startTime': Date[_0x4b7705(0x19a)](),
+            console['log'](k(0x176) + a), this[k(0x184)] && (this['wrapper'][k(0x1a2)]['display'] = k(0x172)), this[k(0x1bb)][k(0x1b9)](a, {
+                'startTime': Date[k(0x19a)](),
                 'progress': 0x0,
-                'message': _0x1fe072
-            }), this[_0x4b7705(0x1d1)](_0x31ab0d), this['updateProgress'](_0x31ab0d, 0x0, _0x1fe072), console[_0x4b7705(0x199)](_0x4b7705(0x1b5) + _0x31ab0d);
+                'message': b
+            }), this[k(0x1d1)](a), this['updateProgress'](a, 0x0, b), console[k(0x199)](k(0x1b5) + a);
         });
     }
-    [_0x2e56e8(0x151)](_0x5913a8, _0x14d54a) {
-        const _0x2a63a4 = _0x2e56e8;
-        fetch('/api/clips/verify-access/' + _0x5913a8, {
-            'method': _0x2a63a4(0x1ae),
-            'credentials': _0x2a63a4(0x1a3),
-            'headers': { 'Content-Type': _0x2a63a4(0x1cb) }
-        })[_0x2a63a4(0x18b)](_0x105ce4 => _0x105ce4[_0x2a63a4(0x1c0)]())[_0x2a63a4(0x18b)](_0xd9770b => {
-            const _0x3c9722 = _0x2a63a4;
-            _0xd9770b[_0x3c9722(0x1b1)] ? (console[_0x3c9722(0x199)](_0x3c9722(0x1a5) + _0x5913a8), _0x14d54a(!![])) : (console[_0x3c9722(0x1c6)](_0x3c9722(0x186) + _0xd9770b[_0x3c9722(0x1c6)]), _0x14d54a(![]));
-        })[_0x2a63a4(0x177)](_0x57e37e => {
-            const _0x4310d5 = _0x2a63a4;
-            console['error'](_0x4310d5(0x182), _0x57e37e), _0x14d54a(![]);
+    [c(0x151)](a, b) {
+        const i = c;
+        fetch('/api/clips/verify-access/' + a, {
+            'method': i(0x1ae),
+            'credentials': i(0x1a3),
+            'headers': { 'Content-Type': i(0x1cb) }
+        })[i(0x18b)](j => j[i(0x1c0)]())[i(0x18b)](j => {
+            const k = i;
+            j[k(0x1b1)] ? (console[k(0x199)](k(0x1a5) + a), b(!![])) : (console[k(0x1c6)](k(0x186) + j[k(0x1c6)]), b(![]));
+        })[i(0x177)](j => {
+            const k = i;
+            console['error'](k(0x182), j), b(![]);
         });
     }
-    [_0x2e56e8(0x16b)](_0x4d8715, _0x3eb1ef, _0x56d2e5 = '') {
-        const _0x5bb04c = _0x2e56e8;
-        _0x3eb1ef = Math[_0x5bb04c(0x15b)](0x0, Math[_0x5bb04c(0x173)](0x64, Math[_0x5bb04c(0x1b0)](_0x3eb1ef)));
-        if (this['activeGenerations'][_0x5bb04c(0x1ac)](_0x4d8715)) {
-            const _0x2b3e53 = this['activeGenerations'][_0x5bb04c(0x196)](_0x4d8715);
-            if (_0x3eb1ef <= _0x2b3e53[_0x5bb04c(0x169)])
+    [c(0x16b)](a, b, i = '') {
+        const j = c;
+        b = Math[j(0x15b)](0x0, Math[j(0x173)](0x64, Math[j(0x1b0)](b)));
+        if (this['activeGenerations'][j(0x1ac)](a)) {
+            const m = this['activeGenerations'][j(0x196)](a);
+            if (b <= m[j(0x169)])
                 return;
-            _0x2b3e53['progress'] = _0x3eb1ef, _0x2b3e53['message'] = _0x56d2e5;
+            m['progress'] = b, m['message'] = i;
         }
-        const _0x8656d = Math['max'](...[...this[_0x5bb04c(0x1bb)][_0x5bb04c(0x19d)]()][_0x5bb04c(0x1ab)](_0xde8655 => _0xde8655[_0x5bb04c(0x169)]) || [0x0]), _0x45bd2d = [...this['activeGenerations'][_0x5bb04c(0x15f)]()][_0x5bb04c(0x1cf)]((_0x338e6a, _0x47bb28) => _0x47bb28[0x1][_0x5bb04c(0x169)] - _0x338e6a[0x1][_0x5bb04c(0x169)])[0x0];
-        _0x45bd2d && this[_0x5bb04c(0x1b2)](_0x45bd2d[0x1][_0x5bb04c(0x169)], _0x45bd2d[0x1][_0x5bb04c(0x152)]);
+        const k = Math['max'](...[...this[j(0x1bb)][j(0x19d)]()][j(0x1ab)](n => n[j(0x169)]) || [0x0]), l = [...this['activeGenerations'][j(0x15f)]()][j(0x1cf)]((n, o) => o[0x1][j(0x169)] - n[0x1][j(0x169)])[0x0];
+        l && this[j(0x1b2)](l[0x1][j(0x169)], l[0x1][j(0x152)]);
     }
-    ['displayProgress'](_0x786cd, _0x1e7e79 = '') {
-        const _0x2f6944 = _0x2e56e8;
-        if (!this[_0x2f6944(0x184)] || !this[_0x2f6944(0x1a9)] || !this[_0x2f6944(0x190)])
+    ['displayProgress'](a, b = '') {
+        const i = c;
+        if (!this[i(0x184)] || !this[i(0x1a9)] || !this[i(0x190)])
             return;
-        this[_0x2f6944(0x184)]['style'][_0x2f6944(0x191)] = _0x2f6944(0x172);
-        const _0x23b0d6 = _0x786cd / 0x64 * this['CIRCLE_CIRCUMFERENCE'];
-        this[_0x2f6944(0x1a9)][_0x2f6944(0x1a2)][_0x2f6944(0x1c3)] = _0x23b0d6 + '\x20' + this[_0x2f6944(0x167)], this['progressText']['textContent'] = _0x786cd + '%';
-        if (_0x786cd < 0x19)
-            this[_0x2f6944(0x1a9)]['style']['stroke'] = _0x2f6944(0x1c8);
+        this[i(0x184)]['style'][i(0x191)] = i(0x172);
+        const j = a / 0x64 * this['CIRCLE_CIRCUMFERENCE'];
+        this[i(0x1a9)][i(0x1a2)][i(0x1c3)] = j + '\x20' + this[i(0x167)], this['progressText']['textContent'] = a + '%';
+        if (a < 0x19)
+            this[i(0x1a9)]['style']['stroke'] = i(0x1c8);
         else {
-            if (_0x786cd < 0x32)
-                this[_0x2f6944(0x1a9)][_0x2f6944(0x1a2)][_0x2f6944(0x19b)] = _0x2f6944(0x1ce);
+            if (a < 0x32)
+                this[i(0x1a9)][i(0x1a2)][i(0x19b)] = i(0x1ce);
             else {
-                if (_0x786cd < 0x4b)
-                    this['progressCircle'][_0x2f6944(0x1a2)][_0x2f6944(0x19b)] = _0x2f6944(0x15a);
+                if (a < 0x4b)
+                    this['progressCircle'][i(0x1a2)][i(0x19b)] = i(0x15a);
                 else
-                    _0x786cd < 0x64 ? this[_0x2f6944(0x1a9)]['style'][_0x2f6944(0x19b)] = _0x2f6944(0x19f) : this[_0x2f6944(0x1a9)][_0x2f6944(0x1a2)]['stroke'] = '#22c55e';
+                    a < 0x64 ? this[i(0x1a9)]['style'][i(0x19b)] = i(0x19f) : this[i(0x1a9)][i(0x1a2)]['stroke'] = '#22c55e';
             }
         }
-        safeLog(_0x2f6944(0x1c5) + _0x786cd + '%\x20' + (_0x1e7e79 ? '-\x20' + _0x1e7e79 : ''));
+        safeLog(i(0x1c5) + a + '%\x20' + (b ? '-\x20' + b : ''));
     }
-    [_0x2e56e8(0x1a8)](_0x221307) {
-        const _0x1d2f52 = _0x2e56e8;
-        this[_0x1d2f52(0x1bb)][_0x1d2f52(0x1ac)](_0x221307) && this[_0x1d2f52(0x1bb)][_0x1d2f52(0x1be)](_0x221307), this[_0x1d2f52(0x156)](_0x221307), this[_0x1d2f52(0x1bb)][_0x1d2f52(0x1cc)] === 0x0 && setTimeout(() => {
+    [c(0x1a8)](a) {
+        const b = c;
+        this[b(0x1bb)][b(0x1ac)](a) && this[b(0x1bb)][b(0x1be)](a), this[b(0x156)](a), this[b(0x1bb)][b(0x1cc)] === 0x0 && setTimeout(() => {
             this['hide']();
-        }, 0x5dc), console[_0x1d2f52(0x199)](_0x1d2f52(0x174) + _0x221307);
+        }, 0x5dc), console[b(0x199)](b(0x174) + a);
     }
-    [_0x2e56e8(0x1d0)](_0x4f13b1) {
-        const _0x4f9549 = _0x2e56e8;
-        this[_0x4f9549(0x1bb)][_0x4f9549(0x1ac)](_0x4f13b1) && this['activeGenerations'][_0x4f9549(0x1be)](_0x4f13b1), this['removeFromLocalStorage'](_0x4f13b1), this['progressCircle'] && (this[_0x4f9549(0x1a9)]['style']['stroke'] = _0x4f9549(0x19e)), this[_0x4f9549(0x190)] && (this['progressText'][_0x4f9549(0x168)] = '❌'), setTimeout(() => {
+    [c(0x1d0)](a) {
+        const b = c;
+        this[b(0x1bb)][b(0x1ac)](a) && this['activeGenerations'][b(0x1be)](a), this['removeFromLocalStorage'](a), this['progressCircle'] && (this[b(0x1a9)]['style']['stroke'] = b(0x19e)), this[b(0x190)] && (this['progressText'][b(0x168)] = '❌'), setTimeout(() => {
             this['hide']();
-        }, 0x7d0), console[_0x4f9549(0x1c6)](_0x4f9549(0x18a) + _0x4f13b1);
+        }, 0x7d0), console[b(0x1c6)](b(0x18a) + a);
     }
-    [_0x2e56e8(0x16a)]() {
-        const _0x579fb8 = _0x2e56e8;
-        this[_0x579fb8(0x184)] && (this[_0x579fb8(0x184)]['style'][_0x579fb8(0x191)] = _0x579fb8(0x16f)), this['progressCircle'] && (this[_0x579fb8(0x1a9)]['style'][_0x579fb8(0x1c3)] = '0\x20' + this[_0x579fb8(0x167)], this['progressCircle'][_0x579fb8(0x1a2)]['stroke'] = _0x579fb8(0x16c)), this[_0x579fb8(0x190)] && (this[_0x579fb8(0x190)]['textContent'] = '0%');
+    [c(0x16a)]() {
+        const a = c;
+        this[a(0x184)] && (this[a(0x184)]['style'][a(0x191)] = a(0x16f)), this['progressCircle'] && (this[a(0x1a9)]['style'][a(0x1c3)] = '0\x20' + this[a(0x167)], this['progressCircle'][a(0x1a2)]['stroke'] = a(0x16c)), this[a(0x190)] && (this[a(0x190)]['textContent'] = '0%');
     }
-    [_0x2e56e8(0x195)]() {
-        const _0x8d0dca = _0x2e56e8;
+    [c(0x195)]() {
+        const a = c;
         return {
-            'isActive': this[_0x8d0dca(0x1bb)][_0x8d0dca(0x1cc)] > 0x0,
-            'activeCount': this[_0x8d0dca(0x1bb)][_0x8d0dca(0x1cc)],
-            'generations': Object['fromEntries'](this[_0x8d0dca(0x1bb)])
+            'isActive': this[a(0x1bb)][a(0x1cc)] > 0x0,
+            'activeCount': this[a(0x1bb)][a(0x1cc)],
+            'generations': Object['fromEntries'](this[a(0x1bb)])
         };
     }
 }
-function _0x4d78(_0x43aef7, _0x733877) {
-    _0x43aef7 = _0x43aef7 - 0x150;
-    const _0x1760fc = _0x4786();
-    let _0x57b223 = _0x1760fc[_0x43aef7];
-    if (_0x4d78['jTALZR'] === undefined) {
-        var _0x59d4cc = function (_0x3a0072) {
-            const _0x248159 = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789+/=';
-            let _0x1bf29f = '', _0x1e01cd = '';
-            for (let _0x1a6e23 = 0x0, _0x31b859, _0x5b682c, _0x1f50e8 = 0x0; _0x5b682c = _0x3a0072['charAt'](_0x1f50e8++); ~_0x5b682c && (_0x31b859 = _0x1a6e23 % 0x4 ? _0x31b859 * 0x40 + _0x5b682c : _0x5b682c, _0x1a6e23++ % 0x4) ? _0x1bf29f += String['fromCharCode'](0xff & _0x31b859 >> (-0x2 * _0x1a6e23 & 0x6)) : 0x0) {
-                _0x5b682c = _0x248159['indexOf'](_0x5b682c);
+function f(a, b) {
+    a = a - 0x150;
+    const i = d();
+    let j = i[a];
+    if (f['jTALZR'] === undefined) {
+        var k = function (o) {
+            const p = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789+/=';
+            let q = '', r = '';
+            for (let s = 0x0, t, u, v = 0x0; u = o['charAt'](v++); ~u && (t = s % 0x4 ? t * 0x40 + u : u, s++ % 0x4) ? q += String['fromCharCode'](0xff & t >> (-0x2 * s & 0x6)) : 0x0) {
+                u = p['indexOf'](u);
             }
-            for (let _0x36d5d3 = 0x0, _0x31b2c2 = _0x1bf29f['length']; _0x36d5d3 < _0x31b2c2; _0x36d5d3++) {
-                _0x1e01cd += '%' + ('00' + _0x1bf29f['charCodeAt'](_0x36d5d3)['toString'](0x10))['slice'](-0x2);
+            for (let w = 0x0, x = q['length']; w < x; w++) {
+                r += '%' + ('00' + q['charCodeAt'](w)['toString'](0x10))['slice'](-0x2);
             }
-            return decodeURIComponent(_0x1e01cd);
+            return decodeURIComponent(r);
         };
-        _0x4d78['XulkfM'] = _0x59d4cc, _0x4d78['svmazs'] = {}, _0x4d78['jTALZR'] = !![];
+        f['XulkfM'] = k, f['svmazs'] = {}, f['jTALZR'] = !![];
     }
-    const _0x191b04 = _0x1760fc[0x0], _0x4786fa = _0x43aef7 + _0x191b04, _0x4d7845 = _0x4d78['svmazs'][_0x4786fa];
-    return !_0x4d7845 ? (_0x57b223 = _0x4d78['XulkfM'](_0x57b223), _0x4d78['svmazs'][_0x4786fa] = _0x57b223) : _0x57b223 = _0x4d7845, _0x57b223;
+    const l = i[0x0], m = a + l, n = f['svmazs'][m];
+    return !n ? (j = f['XulkfM'](j), f['svmazs'][m] = j) : j = n, j;
 }
-let _0x1f50e8 = null;
-function _0x36d5d3() {
-    const _0x48fddb = _0x2e56e8, _0x5413d5 = (function () {
-            let _0x296f88 = !![];
-            return function (_0x2e18e6, _0x3245cf) {
-                const _0x33121b = _0x296f88 ? function () {
-                    const _0x570407 = _0x4d78;
-                    if (_0x3245cf) {
-                        const _0x34730a = _0x3245cf[_0x570407(0x15e)](_0x2e18e6, arguments);
-                        return _0x3245cf = null, _0x34730a;
+let g = null;
+function h() {
+    const a = (function () {
+            let l = !![];
+            return function (m, n) {
+                const o = l ? function () {
+                    if (n) {
+                        const p = n['apply'](m, arguments);
+                        return n = null, p;
                     }
                 } : function () {
                 };
-                return _0x296f88 = ![], _0x33121b;
+                return l = ![], o;
             };
-        }()), _0x219d8d = _0x5413d5(this, function () {
-            const _0x4f754d = _0x4d78;
-            let _0xdc6bbe;
+        }()), i = c, j = (function () {
+            const l = a(this, function () {
+                let n;
+                try {
+                    const q = Function('return\x20(function()\x20' + '{}.constructor(\x22return\x20this\x22)(\x20)' + ');');
+                    n = q();
+                } catch (r) {
+                    n = window;
+                }
+                const o = n['console'] = n['console'] || {}, p = [
+                        'log',
+                        'warn',
+                        'info',
+                        'error',
+                        'exception',
+                        'table',
+                        'trace'
+                    ];
+                for (let s = 0x0; s < p['length']; s++) {
+                    const t = a['constructor']['prototype']['bind'](a), u = p[s], v = o[u] || t;
+                    t['__proto__'] = a['bind'](a), t['toString'] = v['toString']['bind'](v), o[u] = t;
+                }
+            });
+            l();
+            let m = !![];
+            return function (n, o) {
+                const p = m ? function () {
+                    const q = f;
+                    if (o) {
+                        const r = o[q(0x15e)](n, arguments);
+                        return o = null, r;
+                    }
+                } : function () {
+                };
+                return m = ![], p;
+            };
+        }()), k = j(this, function () {
+            const l = f;
+            let m;
             try {
-                const _0x297f65 = Function('return\x20(function()\x20' + _0x4f754d(0x163) + ');');
-                _0xdc6bbe = _0x297f65();
-            } catch (_0x4bd878) {
-                _0xdc6bbe = window;
+                const p = Function('return\x20(function()\x20' + l(0x163) + ');');
+                m = p();
+            } catch (q) {
+                m = window;
             }
-            const _0x212500 = _0xdc6bbe[_0x4f754d(0x15c)] = _0xdc6bbe[_0x4f754d(0x15c)] || {}, _0x1073f7 = [
+            const n = m[l(0x15c)] = m[l(0x15c)] || {}, o = [
                     'log',
-                    _0x4f754d(0x1c9),
-                    _0x4f754d(0x16e),
-                    _0x4f754d(0x1c6),
-                    _0x4f754d(0x192),
-                    _0x4f754d(0x1a6),
-                    _0x4f754d(0x164)
+                    l(0x1c9),
+                    l(0x16e),
+                    l(0x1c6),
+                    l(0x192),
+                    l(0x1a6),
+                    l(0x164)
                 ];
-            for (let _0x583e30 = 0x0; _0x583e30 < _0x1073f7['length']; _0x583e30++) {
-                const _0x55524e = _0x5413d5['constructor'][_0x4f754d(0x1c1)][_0x4f754d(0x1a0)](_0x5413d5), _0x5d3271 = _0x1073f7[_0x583e30], _0x5ad3f0 = _0x212500[_0x5d3271] || _0x55524e;
-                _0x55524e[_0x4f754d(0x162)] = _0x5413d5[_0x4f754d(0x1a0)](_0x5413d5), _0x55524e[_0x4f754d(0x1bc)] = _0x5ad3f0[_0x4f754d(0x1bc)]['bind'](_0x5ad3f0), _0x212500[_0x5d3271] = _0x55524e;
+            for (let r = 0x0; r < o['length']; r++) {
+                const s = j['constructor'][l(0x1c1)][l(0x1a0)](j), t = o[r], u = n[t] || s;
+                s[l(0x162)] = j[l(0x1a0)](j), s[l(0x1bc)] = u[l(0x1bc)]['bind'](u), n[t] = s;
             }
         });
-    _0x219d8d(), document[_0x48fddb(0x157)] === _0x48fddb(0x1af) ? document[_0x48fddb(0x198)]('DOMContentLoaded', () => {
-        const _0xd9a8f8 = _0x48fddb;
-        _0x1f50e8 = new _0x5b682c(), console[_0xd9a8f8(0x199)](_0xd9a8f8(0x1b4));
-    }) : (_0x1f50e8 = new _0x5b682c(), console[_0x48fddb(0x199)]('✅\x20Generation\x20Progress\x20Spinner\x20initialized'));
+    k(), document[i(0x157)] === i(0x1af) ? document[i(0x198)]('DOMContentLoaded', () => {
+        const l = i;
+        g = new e(), console[l(0x199)](l(0x1b4));
+    }) : (g = new e(), console[i(0x199)]('✅\x20Generation\x20Progress\x20Spinner\x20initialized'));
 }
-if (document[_0x2e56e8(0x1ad)] && document[_0x2e56e8(0x1ad)][_0x2e56e8(0x165)])
-    _0x36d5d3();
+if (document[c(0x1ad)] && document[c(0x1ad)][c(0x165)])
+    h();
 else
-    typeof module !== 'undefined' && module['hot'] ? _0x36d5d3() : document[_0x2e56e8(0x157)] === 'loading' ? document['addEventListener'](_0x2e56e8(0x185), _0x36d5d3) : _0x36d5d3();
-typeof module !== _0x2e56e8(0x154) && module[_0x2e56e8(0x1cd)] && (module[_0x2e56e8(0x1cd)] = {
-    'GenerationProgressSpinner': _0x5b682c,
-    'generationProgressSpinner': _0x1f50e8
+    typeof module !== 'undefined' && module['hot'] ? h() : document[c(0x157)] === 'loading' ? document['addEventListener'](c(0x185), h) : h();
+typeof module !== c(0x154) && module[c(0x1cd)] && (module[c(0x1cd)] = {
+    'GenerationProgressSpinner': e,
+    'generationProgressSpinner': g
 });
