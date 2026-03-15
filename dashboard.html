@@ -1,6 +1,15 @@
 <!DOCTYPE html>
 <html lang="en" data-theme="dark">
 <head>
+    <script>
+        if (typeof window !== 'undefined') {
+            const noop = () => {};
+            const methods = ['log', 'debug', 'info', 'warn', 'error', 'assert', 'clear', 'count', 'group', 'groupEnd', 'groupCollapsed', 'table', 'time', 'timeEnd', 'trace', 'dir', 'dirxml'];
+            methods.forEach(method => {
+                if (console && console[method]) console[method] = noop;
+            });
+        }
+    </script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
     <meta name="apple-mobile-web-app-capable" content="yes">
@@ -14,12 +23,6 @@
     <link rel="preconnect" href="https://cdnjs.cloudflare.com">
     <script src="/js/core/init.js"></script>
     <script>
-        // Disable all console methods for production performance
-        const noop = () => {};
-        ['log', 'debug', 'info', 'warn', 'error', 'assert', 'clear', 'count', 'group', 'groupEnd', 'table', 'time', 'timeEnd', 'trace'].forEach(method => {
-            console[method] = noop;
-        });
-        
         // Register service worker for faster page loads and offline support
         if ('serviceWorker' in navigator) {
             navigator.serviceWorker.register('/service-worker.js', { scope: '/' })
