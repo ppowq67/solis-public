@@ -1,983 +1,1262 @@
-const _0x31a2c7 = _0x172a;
-(function (_0x54235a, _0x4d24d9) {
-    const _0x1b240f = _0x172a, _0x5c0990 = _0x54235a();
-    while (!![]) {
-        try {
-            const _0xa75545 = -parseInt(_0x1b240f(0x2b8)) / 0x1 * (parseInt(_0x1b240f(0x25d)) / 0x2) + -parseInt(_0x1b240f(0x219)) / 0x3 * (-parseInt(_0x1b240f(0x25b)) / 0x4) + -parseInt(_0x1b240f(0x1ea)) / 0x5 + -parseInt(_0x1b240f(0x262)) / 0x6 + -parseInt(_0x1b240f(0x291)) / 0x7 * (parseInt(_0x1b240f(0x263)) / 0x8) + parseInt(_0x1b240f(0x278)) / 0x9 * (parseInt(_0x1b240f(0x244)) / 0xa) + -parseInt(_0x1b240f(0x272)) / 0xb * (-parseInt(_0x1b240f(0x1dc)) / 0xc);
-            if (_0xa75545 === _0x4d24d9)
-                break;
-            else
-                _0x5c0990['push'](_0x5c0990['shift']());
-        } catch (_0x56d0d2) {
-            _0x5c0990['push'](_0x5c0990['shift']());
-        }
-    }
-}(_0x9fc9, 0x2d81b));
+/**
+ * Solis AI WebSocket Client v2
+ * Production-ready WebSocket client with proper architecture
+ * 
+ * IMPROVEMENTS:
+ * - Message batching and compression
+ * - Circuit breaker pattern for resilience
+ * - Message queue for offline/reconnecting state
+ * - Proper separation of concerns (no UI coupling)
+ * - Memory management with cleanup strategies
+ * - Pagination support for large datasets
+ * - Connection health monitoring
+ * - Intelligent error recovery with exponential backoff
+ * - Request debouncing
+ * - Race condition prevention
+ * - No global state pollution
+ * - Comprehensive error handling
+ */
+
 class SolisAIWebSocketClient {
-    constructor(_0x3a6f7f = null, _0x23ed74 = {}) {
-        const _0x778657 = _0x172a;
-        this['serverUrl'] = _0x3a6f7f || this['_detectServerUrl'](), this[_0x778657(0x213)] = null, this['userId'] = null, this[_0x778657(0x2aa)] = null, this['HEARTBEAT_INTERVAL'] = _0x23ed74[_0x778657(0x235)] || 0x7530, this['HEALTH_CHECK_INTERVAL'] = _0x23ed74['healthCheckInterval'] || 0x2710, this[_0x778657(0x211)] = 0x3, this['CLEANUP_INTERVAL'] = _0x23ed74[_0x778657(0x1db)] || 0x493e0, this[_0x778657(0x27b)] = _0x23ed74[_0x778657(0x1da)] || 0x36ee80, this['connectionHealthCheck'] = {
-            'lastHeartbeatTime': null,
-            'missedHeartbeats': 0x0,
-            'maxMissedHeartbeats': this[_0x778657(0x211)],
-            'healthCheckInterval': null
-        }, this[_0x778657(0x25f)] = {
-            'state': 'closed',
-            'failureCount': 0x0,
-            'failureThreshold': _0x23ed74[_0x778657(0x282)] || 0x5,
-            'resetTimeout': _0x23ed74[_0x778657(0x215)] || 0xea60,
-            'nextAttemptTime': null
-        }, this[_0x778657(0x28d)] = [], this['maxQueueSize'] = _0x23ed74[_0x778657(0x289)] || 0x3e8, this[_0x778657(0x287)] = new Map(), this['messageBatch'] = [], this['batchSize'] = _0x23ed74[_0x778657(0x231)] || 0xa, this[_0x778657(0x2b6)] = _0x23ed74['batchTimeout'] || 0x3e8, this[_0x778657(0x293)] = null, this['debouncedOperations'] = new Map(), this[_0x778657(0x2b9)] = _0x23ed74['debounceDelay'] || 0x12c, this['activeTasks'] = new Map(), this['automationSessions'] = new Map(), this[_0x778657(0x252)] = new Map(), this[_0x778657(0x1f9)] = new Map(), this[_0x778657(0x24d)] = new Map(), this['pendingOperations'] = new Map(), this[_0x778657(0x28a)] = new Map(), this[_0x778657(0x2a7)] = _0x23ed74[_0x778657(0x2a7)] || 0x2710, this[_0x778657(0x1df)] = new Map(), this['reconnectConfig'] = {
-            'attempts': 0x0,
-            'maxAttempts': _0x23ed74[_0x778657(0x20e)] || 0xa,
-            'initialDelay': 0x3e8,
-            'maxDelay': 0x7530,
-            'multiplier': 1.5
-        }, this[_0x778657(0x24a)] = ![], this[_0x778657(0x235)] = null, console['log']('🔌\x20WebSocket\x20Client\x20v2\x20initialized');
+    constructor(serverUrl = null, config = {}) {
+        // Connection management
+        this.serverUrl = serverUrl || this._detectServerUrl();
+        this.socket = null;
+        this.userId = null;
+        this.securityManager = null;
+        
+        // Constants - avoid magic numbers
+        this.HEARTBEAT_INTERVAL = config.heartbeatInterval || 30000; // 30 seconds
+        this.HEALTH_CHECK_INTERVAL = config.healthCheckInterval || 10000; // 10 seconds
+        this.MAX_MISSED_HEARTBEATS = 3;
+        this.CLEANUP_INTERVAL = config.cleanupInterval || 300000; // 5 minutes
+        this.STATE_ENTRY_MAX_AGE = config.stateMaxAge || 3600000; // 1 hour
+        
+        // Connection health monitoring
+        this.connectionHealthCheck = {
+            lastHeartbeatTime: null,
+            missedHeartbeats: 0,
+            maxMissedHeartbeats: this.MAX_MISSED_HEARTBEATS,
+            healthCheckInterval: null,
+        };
+        
+        // Circuit breaker pattern
+        this.circuitBreaker = {
+            state: 'closed', // 'closed', 'open', 'half-open'
+            failureCount: 0,
+            failureThreshold: config.circuitBreakerThreshold || 5,
+            resetTimeout: config.circuitBreakerResetTimeout || 60000,
+            nextAttemptTime: null,
+        };
+        
+        // Message queue for offline handling
+        this.messageQueue = [];
+        this.maxQueueSize = config.maxQueueSize || 1000;
+        this.queuedOperations = new Map();
+        
+        // Message batching
+        this.messageBatch = [];
+        this.batchSize = config.batchSize || 10;
+        this.batchTimeout = config.batchTimeout || 1000;
+        this.batchTimer = null;
+        
+        // Debouncing
+        this.debouncedOperations = new Map();
+        this.debounceDelay = config.debounceDelay || 300;
+        
+        // State management with cleanup
+        this.activeTasks = new Map();
+        this.automationSessions = new Map();
+        this.renderingJobs = new Map();
+        this.analyticsStreams = new Map();
+        this.aiOperations = new Map();
+        this.pendingOperations = new Map();
+        
+        // Cleanup tracking
+        this.cleanupTimers = new Map();
+        this.maxStateSize = config.maxStateSize || 10000;
+        
+        // Event system (no UI coupling)
+        this.callbacks = new Map();
+        
+        // Configuration
+        this.reconnectConfig = {
+            attempts: 0,
+            maxAttempts: config.maxReconnectAttempts || 10,
+            initialDelay: 1000,
+            maxDelay: 30000,
+            multiplier: 1.5,
+        };
+        
+        this.isManuallyDisconnected = false;
+        this.heartbeatInterval = null;
+        
+        console.log('🔌 WebSocket Client v2 initialized');
     }
-    [_0x31a2c7(0x2a8)]() {
-        const _0x4a6212 = _0x31a2c7, _0x5e9619 = localStorage['getItem']('backendPort') || _0x4a6212(0x265), _0x46ddd2 = localStorage[_0x4a6212(0x281)](_0x4a6212(0x1f8)) || 'localhost';
-        return _0x4a6212(0x207) + _0x46ddd2 + ':' + _0x5e9619;
-    }
-    ['connect'](_0x4db9f5, _0x116902 = null) {
-        const _0x1b82a4 = _0x31a2c7;
-        if (!_0x4db9f5)
-            return console[_0x1b82a4(0x200)](_0x1b82a4(0x21f)), ![];
-        this[_0x1b82a4(0x25e)] = _0x4db9f5, this[_0x1b82a4(0x24a)] = ![];
-        !_0x116902 && typeof WebSocketSecurityManager !== _0x1b82a4(0x221) && (_0x116902 = new WebSocketSecurityManager());
-        if (!_0x116902)
-            return console[_0x1b82a4(0x200)]('❌\x20Security\x20manager\x20unavailable'), ![];
-        this[_0x1b82a4(0x2aa)] = _0x116902, this['securityManager'][_0x1b82a4(0x276)](this[_0x1b82a4(0x229)](), _0x4db9f5);
-        if (typeof io === 'undefined')
-            return console[_0x1b82a4(0x200)](_0x1b82a4(0x254)), ![];
-        if (this[_0x1b82a4(0x25f)][_0x1b82a4(0x2b2)] === _0x1b82a4(0x28f)) {
-            const _0x5cd9d3 = Date[_0x1b82a4(0x27d)]();
-            if (_0x5cd9d3 < this[_0x1b82a4(0x25f)][_0x1b82a4(0x20b)])
-                return console[_0x1b82a4(0x294)](_0x1b82a4(0x217)), this[_0x1b82a4(0x288)](_0x1b82a4(0x268), { 'userId': _0x4db9f5 }), ![];
-            this[_0x1b82a4(0x25f)][_0x1b82a4(0x2b2)] = _0x1b82a4(0x214);
-        }
+
+    /**
+     * Detect server URL from window.API_BASE_URL (set by init.js via hostname detection)
+     * NEVER read from localStorage - attackers can modify it
+     * @private
+     */
+    _detectServerUrl() {
+        // Extract protocol and host from API_BASE_URL
         try {
-            const _0x1d2cbf = this['_buildAuthConfig']();
-            return this[_0x1b82a4(0x213)] = io(this[_0x1b82a4(0x21b)], {
-                'reconnection': !![],
-                'reconnectionDelay': this[_0x1b82a4(0x296)][_0x1b82a4(0x23a)],
-                'reconnectionDelayMax': this[_0x1b82a4(0x296)]['maxDelay'],
-                'reconnectionAttempts': this['reconnectConfig']['maxAttempts'],
-                'transports': [
-                    _0x1b82a4(0x29a),
-                    _0x1b82a4(0x1f7)
-                ],
-                'upgrade': ![],
-                'forceNew': !![],
-                'rememberUpgrade': ![],
-                'sync\x20disconnect\x20on\x20unload': !![],
-                'autoConnect': !![],
-                'auth': _0x1d2cbf
-            }), this[_0x1b82a4(0x274)](), this[_0x1b82a4(0x202)](), this['_startConnectionHealthCheck'](), this[_0x1b82a4(0x1f4)](), console[_0x1b82a4(0x206)](_0x1b82a4(0x2b0)), !![];
-        } catch (_0x2a723a) {
-            return console[_0x1b82a4(0x200)](_0x1b82a4(0x2b7), _0x2a723a), this[_0x1b82a4(0x20c)](), ![];
+            const apiUrl = new URL(window.API_BASE_URL || 'https://api.solisai.video/api');
+            // Convert https:// to wss:// for secure WebSocket
+            const protocol = apiUrl.protocol === 'https:' ? 'wss:' : 'ws:';
+            return `${protocol}//${apiUrl.host}`;
+        } catch (error) {
+            console.error('Invalid API_BASE_URL:', error);
+            // Fallback to secure WebSocket endpoint
+            return 'wss://api.solisai.video';
         }
     }
-    [_0x31a2c7(0x26b)]() {
-        const _0x537279 = _0x31a2c7, _0x4f190c = this[_0x537279(0x229)]();
-        if (!_0x4f190c)
-            throw new Error(_0x537279(0x2a5));
-        return this[_0x537279(0x2aa)] && !this[_0x537279(0x2aa)][_0x537279(0x299)] && (this[_0x537279(0x2aa)]['sessionId'] = this[_0x537279(0x2aa)][_0x537279(0x24e)](), this[_0x537279(0x2aa)]['sessionIdRefreshed'] = !![]), {
-            'token': _0x4f190c,
-            'userId': this[_0x537279(0x25e)],
-            'timestamp': Date[_0x537279(0x27d)](),
-            'sessionId': this[_0x537279(0x2aa)]?.[_0x537279(0x260)]
-        };
-    }
-    ['_getAuthToken']() {
-        const _0x27e9ea = _0x31a2c7;
-        return sessionStorage[_0x27e9ea(0x281)](_0x27e9ea(0x1eb)) || document[_0x27e9ea(0x23f)]['split'](';\x20')[_0x27e9ea(0x2b5)](_0x4b7d7a => _0x4b7d7a[_0x27e9ea(0x1f3)]('auth_token='))?.[_0x27e9ea(0x266)]('=')[0x1] || null;
-    }
-    ['_handleConnectionFailure']() {
-        const _0x2061b2 = _0x31a2c7;
-        this[_0x2061b2(0x25f)]['failureCount']++, this[_0x2061b2(0x25f)][_0x2061b2(0x1e8)] >= this[_0x2061b2(0x25f)]['failureThreshold'] && (console[_0x2061b2(0x294)](_0x2061b2(0x29b)), this[_0x2061b2(0x25f)][_0x2061b2(0x2b2)] = _0x2061b2(0x28f), this[_0x2061b2(0x25f)][_0x2061b2(0x1e8)] = 0x0, this[_0x2061b2(0x25f)][_0x2061b2(0x20b)] = Date[_0x2061b2(0x27d)]() + this['circuitBreaker']['resetTimeout']), this['securityManager']?.['_logSecurityEvent'](_0x2061b2(0x269), { 'failureCount': this[_0x2061b2(0x25f)][_0x2061b2(0x1e8)] });
-    }
-    ['_startHeartbeat']() {
-        const _0x4df0e3 = _0x31a2c7;
-        this[_0x4df0e3(0x255)](), this['heartbeatInterval'] = setInterval(() => {
-            const _0x3b8539 = _0x4df0e3;
-            this['socket']?.[_0x3b8539(0x1dd)] && (this[_0x3b8539(0x213)][_0x3b8539(0x29c)](_0x3b8539(0x249), {
-                'timestamp': Date['now'](),
-                'sessionId': this[_0x3b8539(0x2aa)]?.[_0x3b8539(0x260)]
-            }), this[_0x3b8539(0x20d)][_0x3b8539(0x210)] = Date[_0x3b8539(0x27d)]());
-        }, this[_0x4df0e3(0x1f6)]);
-    }
-    [_0x31a2c7(0x255)]() {
-        const _0x237adc = _0x31a2c7;
-        this[_0x237adc(0x235)] && (clearInterval(this[_0x237adc(0x235)]), this['heartbeatInterval'] = null);
-    }
-    [_0x31a2c7(0x1ee)]() {
-        const _0x5c74a9 = _0x31a2c7;
-        this[_0x5c74a9(0x2a9)](), this['connectionHealthCheck']['healthCheckInterval'] = setInterval(() => {
-            const _0x18c02d = _0x5c74a9;
-            !this[_0x18c02d(0x213)]?.[_0x18c02d(0x1dd)] ? (this[_0x18c02d(0x20d)][_0x18c02d(0x1ec)]++, this[_0x18c02d(0x20d)][_0x18c02d(0x1ec)] >= this[_0x18c02d(0x211)] && (console[_0x18c02d(0x294)](_0x18c02d(0x277)), this['socket']?.[_0x18c02d(0x208)](), this['socket']?.[_0x18c02d(0x268)]())) : this[_0x18c02d(0x20d)][_0x18c02d(0x1ec)] = 0x0;
-        }, this[_0x5c74a9(0x22b)]);
-    }
-    [_0x31a2c7(0x2a9)]() {
-        const _0x579096 = _0x31a2c7;
-        this['connectionHealthCheck']['healthCheckInterval'] && (clearInterval(this[_0x579096(0x20d)][_0x579096(0x1fb)]), this[_0x579096(0x20d)][_0x579096(0x1fb)] = null);
-    }
-    ['_startCleanupProcess']() {
-        const _0x8d372b = _0x31a2c7;
-        setInterval(() => {
-            const _0x1de5d3 = _0x172a;
-            this[_0x1de5d3(0x275)]();
-        }, this[_0x8d372b(0x1fc)]);
-    }
-    [_0x31a2c7(0x275)]() {
-        const _0x1396a6 = _0x31a2c7, _0x5633ed = Date['now']();
-        this['_cleanupMap'](this['activeTasks'], this['STATE_ENTRY_MAX_AGE'], _0x5633ed), this[_0x1396a6(0x22e)](this['automationSessions'], this[_0x1396a6(0x27b)], _0x5633ed), this[_0x1396a6(0x22e)](this['renderingJobs'], this[_0x1396a6(0x27b)], _0x5633ed), this[_0x1396a6(0x22e)](this['analyticsStreams'], this[_0x1396a6(0x27b)], _0x5633ed), this['_cleanupMap'](this[_0x1396a6(0x24d)], this['STATE_ENTRY_MAX_AGE'], _0x5633ed), this['_cleanupMap'](this[_0x1396a6(0x1ef)], this[_0x1396a6(0x27b)], _0x5633ed);
-        for (const [_0x15c752, _0xc03218] of this['cleanupTimers']) {
-            _0xc03218[_0x1396a6(0x26e)] && _0x5633ed - _0xc03218[_0x1396a6(0x26e)] > this[_0x1396a6(0x27b)] && (clearTimeout(_0xc03218['id']), this[_0x1396a6(0x28a)]['delete'](_0x15c752));
+
+    /**
+     * Connect to WebSocket server
+     */
+    connect(userId, securityManager = null) {
+        if (!userId) {
+            console.error('❌ UserId required to connect');
+            return false;
         }
-        console[_0x1396a6(0x206)](_0x1396a6(0x290));
-    }
-    [_0x31a2c7(0x22e)](_0x19d960, _0x3a3616, _0x2d20e4) {
-        const _0x1dc80d = _0x31a2c7, _0x47444f = [];
-        for (const [_0x30d5f7, _0x1be2d2] of _0x19d960) {
-            const _0x137fd6 = _0x1be2d2?.[_0x1dc80d(0x2ba)] || _0x1be2d2?.[_0x1dc80d(0x238)] || _0x2d20e4;
-            _0x137fd6 && _0x2d20e4 - _0x137fd6 > _0x3a3616 && _0x47444f[_0x1dc80d(0x1e9)](_0x30d5f7);
+
+        this.userId = userId;
+        this.isManuallyDisconnected = false;
+
+        // Initialize security manager
+        if (!securityManager && typeof WebSocketSecurityManager !== 'undefined') {
+            securityManager = new WebSocketSecurityManager();
         }
-        _0x47444f['forEach'](_0x5463f7 => _0x19d960['delete'](_0x5463f7));
-        if (_0x19d960[_0x1dc80d(0x222)] > this['maxStateSize']) {
-            const _0xb5b0f8 = _0x19d960[_0x1dc80d(0x222)] - this[_0x1dc80d(0x2a7)];
-            let _0x1a5c08 = 0x0;
-            const _0x30e3f7 = Array[_0x1dc80d(0x298)](_0x19d960[_0x1dc80d(0x27e)]())[_0x1dc80d(0x245)](([_0x4c8ebd, _0x43ea6c]) => ({
-                'key': _0x4c8ebd,
-                'age': _0x2d20e4 - (_0x43ea6c?.['timestamp'] || _0x43ea6c?.[_0x1dc80d(0x238)] || _0x2d20e4)
-            }))[_0x1dc80d(0x1e6)]((_0x2764f4, _0x469037) => _0x469037[_0x1dc80d(0x22d)] - _0x2764f4['age'])[_0x1dc80d(0x2bc)](0x0, _0xb5b0f8);
-            _0x30e3f7[_0x1dc80d(0x242)](({key: _0x36c689}) => {
-                const _0x446beb = _0x1dc80d;
-                _0x19d960[_0x446beb(0x1f1)](_0x36c689), _0x1a5c08++;
-            }), _0x1a5c08 > 0x0 && console[_0x1dc80d(0x294)](_0x1dc80d(0x21a) + _0x1a5c08 + _0x1dc80d(0x256));
+
+        if (!securityManager) {
+            console.error('❌ Security manager unavailable');
+            return false;
         }
-    }
-    ['_setupEventListeners']() {
-        const _0x178e98 = _0x31a2c7;
-        this[_0x178e98(0x213)]['on'](_0x178e98(0x268), () => {
-            const _0x265be0 = _0x178e98;
-            console[_0x265be0(0x206)]('✅\x20Connected\x20to\x20WebSocket\x20server'), this[_0x265be0(0x25f)]['failureCount'] = 0x0, this['circuitBreaker']['state'] = _0x265be0(0x2a3), this[_0x265be0(0x205)](), this[_0x265be0(0x216)]();
-        }), this[_0x178e98(0x213)]['on'](_0x178e98(0x208), () => {
-            const _0x3e390f = _0x178e98;
-            console['warn'](_0x3e390f(0x2a4));
-        }), this[_0x178e98(0x213)]['on'](_0x178e98(0x21c), _0x5a51dd => {
-            const _0x2fcccf = _0x178e98;
-            console[_0x2fcccf(0x200)](_0x2fcccf(0x240), _0x5a51dd), this[_0x2fcccf(0x20c)]();
-        }), this['socket']['on'](_0x178e98(0x251), _0x4f0521 => this['_handleProgressUpdate'](_0x4f0521)), this[_0x178e98(0x213)]['on']('processing_complete', _0x5be293 => this['_handleComplete'](_0x5be293)), this[_0x178e98(0x213)]['on'](_0x178e98(0x1e2), _0x37bd69 => this[_0x178e98(0x280)](_0x37bd69)), this[_0x178e98(0x213)]['on'](_0x178e98(0x241), _0x54daa0 => this[_0x178e98(0x1e7)](_0x54daa0)), this['socket']['on']('automation_complete', _0x5da30f => this['_handleAutomationComplete'](_0x5da30f)), this[_0x178e98(0x213)]['on'](_0x178e98(0x25c), _0x3b41fb => this['_handleAutomationError'](_0x3b41fb)), this['socket']['on']('rendering_update', _0xba7dcf => this[_0x178e98(0x24c)](_0xba7dcf)), this[_0x178e98(0x213)]['on'](_0x178e98(0x284), _0x12a36e => this[_0x178e98(0x1f5)](_0x12a36e)), this[_0x178e98(0x213)]['on'](_0x178e98(0x29e), _0x1010db => this[_0x178e98(0x223)](_0x1010db)), this['socket']['on'](_0x178e98(0x2b3), _0x3c3cee => this['_handleAnalyticsUpdate'](_0x3c3cee)), this[_0x178e98(0x213)]['on'](_0x178e98(0x27c), _0x2da451 => this['_handleAIOperationUpdate'](_0x2da451)), this[_0x178e98(0x213)]['on'](_0x178e98(0x25a), _0x519329 => this['_handleAIOperationComplete'](_0x519329)), this[_0x178e98(0x213)]['on'](_0x178e98(0x28e), _0x3ac85a => this[_0x178e98(0x2ae)](_0x3ac85a)), this['socket']['on'](_0x178e98(0x22a), _0x582d4c => this[_0x178e98(0x2a1)](_0x582d4c)), this[_0x178e98(0x213)]['on'](_0x178e98(0x28c), _0x54c086 => {
-            const _0x42aadd = _0x178e98;
-            console['log']('✅\x20Joined\x20user\x20room:', _0x54c086[_0x42aadd(0x279)]);
-        }), this[_0x178e98(0x213)]['on'](_0x178e98(0x232), _0x14bb0f => this['_handleClipDeleted'](_0x14bb0f)), this[_0x178e98(0x213)]['on'](_0x178e98(0x28b), () => {
-            const _0x581021 = _0x178e98;
-            console[_0x581021(0x206)](_0x581021(0x204)), this[_0x581021(0x296)][_0x581021(0x271)] = 0x0, this[_0x581021(0x205)]();
-        }), this['socket']['on'](_0x178e98(0x230), () => {
-            const _0x58a499 = _0x178e98;
-            this[_0x58a499(0x296)]['attempts']++, console[_0x58a499(0x206)](_0x58a499(0x209) + this['reconnectConfig'][_0x58a499(0x271)]);
-        });
-    }
-    ['_joinUserRoom']() {
-        const _0x21cf35 = _0x31a2c7;
-        this['socket']?.[_0x21cf35(0x1dd)] && this['userId'] && this[_0x21cf35(0x213)][_0x21cf35(0x29c)]('join_user_room', { 'user_id': this[_0x21cf35(0x25e)] });
-    }
-    ['_queueOperation'](_0x28f3b8, _0x1b94dd) {
-        const _0x2dc700 = _0x31a2c7;
-        this[_0x2dc700(0x28d)][_0x2dc700(0x20a)] >= this[_0x2dc700(0x289)] && (console['warn'](_0x2dc700(0x1e0)), this[_0x2dc700(0x28d)][_0x2dc700(0x24b)]());
-        const _0x35bfb6 = {
-            'operation': _0x28f3b8,
-            'data': _0x1b94dd,
-            'timestamp': Date[_0x2dc700(0x27d)](),
-            'retries': 0x0,
-            'maxRetries': 0x3
-        };
-        this[_0x2dc700(0x28d)][_0x2dc700(0x1e9)](_0x35bfb6), this[_0x2dc700(0x287)]['set'](_0x28f3b8 + '_' + Date[_0x2dc700(0x27d)](), _0x35bfb6), console['log'](_0x2dc700(0x1fe) + _0x28f3b8);
-    }
-    ['_processQueuedMessages']() {
-        const _0x370902 = _0x31a2c7;
-        if (this[_0x370902(0x28d)]['length'] === 0x0)
-            return;
-        console[_0x370902(0x206)](_0x370902(0x283) + this[_0x370902(0x28d)][_0x370902(0x20a)] + _0x370902(0x22c));
-        while (this['messageQueue'][_0x370902(0x20a)] > 0x0) {
-            const _0x2e6c1f = this[_0x370902(0x28d)][_0x370902(0x24b)]();
-            try {
-                this['_executeQueuedOperation'](_0x2e6c1f);
-            } catch (_0x3a0100) {
-                console[_0x370902(0x200)](_0x370902(0x23d), _0x3a0100), _0x2e6c1f[_0x370902(0x2af)] < _0x2e6c1f['maxRetries'] && (_0x2e6c1f[_0x370902(0x2af)]++, this[_0x370902(0x28d)][_0x370902(0x1e9)](_0x2e6c1f));
+
+        this.securityManager = securityManager;
+        this.securityManager.init(this._getAuthToken(), userId);
+
+        // Check Socket.IO availability
+        if (typeof io === 'undefined') {
+            console.error('❌ Socket.IO not loaded');
+            return false;
+        }
+
+        // Check circuit breaker
+        if (this.circuitBreaker.state === 'open') {
+            const now = Date.now();
+            if (now < this.circuitBreaker.nextAttemptTime) {
+                console.warn('⚠️ Circuit breaker open, cannot connect');
+                this._queueOperation('connect', { userId });
+                return false;
             }
+            this.circuitBreaker.state = 'half-open';
         }
-    }
-    [_0x31a2c7(0x29d)](_0x29c0e3) {
-        const _0x36e8e7 = _0x31a2c7, {
-                operation: _0x3ddb06,
-                data: _0xc4e0e6
-            } = _0x29c0e3;
-        switch (_0x3ddb06) {
-        case _0x36e8e7(0x257):
-            this[_0x36e8e7(0x21d)](_0xc4e0e6[_0x36e8e7(0x297)], _0xc4e0e6['projectId']);
-            break;
-        case 'register_task':
-            this[_0x36e8e7(0x23e)](_0xc4e0e6[_0x36e8e7(0x2ac)], _0xc4e0e6['taskType']);
-            break;
-        default:
-            console[_0x36e8e7(0x294)]('Unknown\x20queued\x20operation:\x20' + _0x3ddb06);
-        }
-    }
-    ['registerTask'](_0x4a3c04, _0x8096ae = _0x31a2c7(0x1fd)) {
-        const _0x4d834a = _0x31a2c7, _0x21a835 = {
-                'id': _0x4a3c04,
-                'type': _0x8096ae,
-                'startTime': Date[_0x4d834a(0x27d)](),
-                'timestamp': Date[_0x4d834a(0x27d)](),
-                'progress': 0x0,
-                'status': 'started'
-            };
-        this[_0x4d834a(0x1f2)][_0x4d834a(0x237)](_0x4a3c04, _0x21a835), console[_0x4d834a(0x206)](_0x4d834a(0x1ed) + _0x4a3c04);
-    }
-    ['_handleProgressUpdate'](_0x447d47) {
-        const _0x1e1573 = _0x31a2c7;
-        if (!this[_0x1e1573(0x2aa)]?.['validateIncomingMessage'](_0x447d47)) {
-            console['warn'](_0x1e1573(0x203));
-            return;
-        }
-        const {
-            taskId: _0x10529b,
-            status: _0x2d0f4f,
-            progress: _0x54f413,
-            step: _0x145d95
-        } = _0x447d47;
-        if (this[_0x1e1573(0x1f2)][_0x1e1573(0x228)](_0x10529b)) {
-            const _0x2cdc11 = this[_0x1e1573(0x1f2)]['get'](_0x10529b);
-            _0x2cdc11['progress'] = _0x54f413, _0x2cdc11[_0x1e1573(0x23c)] = _0x2d0f4f, _0x2cdc11[_0x1e1573(0x21e)] = _0x145d95, _0x2cdc11[_0x1e1573(0x2ba)] = Date[_0x1e1573(0x27d)](), this[_0x1e1573(0x243)](_0x1e1573(0x258), {
-                'taskId': _0x10529b,
-                'progress': _0x54f413,
-                'step': _0x145d95,
-                'status': _0x2d0f4f
-            }), console[_0x1e1573(0x206)]('⏳\x20' + _0x10529b + ':\x20' + _0x54f413 + '%\x20-\x20' + _0x145d95);
-        }
-    }
-    [_0x31a2c7(0x246)](_0x55757b) {
-        const _0x24de38 = _0x31a2c7;
-        if (!this['securityManager']?.[_0x24de38(0x220)](_0x55757b))
-            return;
-        const {
-            taskId: _0x3d3761,
-            result: _0x533127
-        } = _0x55757b;
-        if (this[_0x24de38(0x1f2)][_0x24de38(0x228)](_0x3d3761)) {
-            const _0x17fc43 = this[_0x24de38(0x1f2)][_0x24de38(0x1fa)](_0x3d3761);
-            _0x17fc43[_0x24de38(0x23c)] = _0x24de38(0x26f), _0x17fc43[_0x24de38(0x258)] = 0x64, _0x17fc43[_0x24de38(0x1de)] = _0x533127, _0x17fc43[_0x24de38(0x2ba)] = Date[_0x24de38(0x27d)](), this[_0x24de38(0x243)](_0x24de38(0x236), {
-                'taskId': _0x3d3761,
-                'result': _0x533127,
-                'duration': Date[_0x24de38(0x27d)]() - _0x17fc43['startTime']
-            }), console[_0x24de38(0x206)]('✅\x20Task\x20completed:\x20' + _0x3d3761);
-        }
-    }
-    ['_handleError'](_0x484ddb) {
-        const _0x15134d = _0x31a2c7;
-        if (!this[_0x15134d(0x2aa)]?.[_0x15134d(0x220)](_0x484ddb))
-            return;
-        const {
-            taskId: _0x5db5b6,
-            error: _0x5b3348
-        } = _0x484ddb;
-        if (this[_0x15134d(0x1f2)][_0x15134d(0x228)](_0x5db5b6)) {
-            const _0x345df1 = this[_0x15134d(0x1f2)]['get'](_0x5db5b6);
-            _0x345df1[_0x15134d(0x23c)] = _0x15134d(0x200), _0x345df1[_0x15134d(0x200)] = _0x5b3348, _0x345df1[_0x15134d(0x2ba)] = Date[_0x15134d(0x27d)](), this[_0x15134d(0x243)](_0x15134d(0x200), {
-                'taskId': _0x5db5b6,
-                'error': _0x5b3348
-            }), console['error']('❌\x20Task\x20error:\x20' + _0x5db5b6 + '\x20-\x20' + _0x5b3348);
-        }
-    }
-    ['_handleClipDeleted'](_0x2da3eb) {
-        const _0x297a1c = _0x31a2c7;
-        if (!this[_0x297a1c(0x2aa)]?.[_0x297a1c(0x220)](_0x2da3eb)) {
-            console[_0x297a1c(0x294)](_0x297a1c(0x218));
-            return;
-        }
-        const {
-            itemId: _0x40dc06,
-            projectId: _0x362537,
-            timestamp: _0xb3cc1d
-        } = _0x2da3eb;
-        this['_debounce'](_0x297a1c(0x2a2) + _0x40dc06, () => {
-            const _0x277d1f = _0x297a1c;
-            this[_0x277d1f(0x267)](_0x40dc06, _0x362537, _0xb3cc1d);
-        }, this[_0x297a1c(0x2b9)]);
-    }
-    [_0x31a2c7(0x267)](_0x1758ae, _0x36ab46, _0x190787) {
-        const _0x2739e7 = _0x31a2c7;
+
         try {
-            this['activeTasks'][_0x2739e7(0x1f1)](_0x1758ae), this[_0x2739e7(0x23b)]['delete'](_0x1758ae), this[_0x2739e7(0x252)]['delete'](_0x36ab46), this['_emitCallback'](_0x2739e7(0x232), {
-                'itemId': _0x1758ae,
-                'projectId': _0x36ab46,
-                'timestamp': _0x190787
-            }), this[_0x2739e7(0x2aa)]?.['_logSecurityEvent']('clip_deleted_handled', {
-                'itemId': _0x1758ae,
-                'projectId': _0x36ab46
-            }), console[_0x2739e7(0x206)]('🗑️\x20Clip\x20deleted:\x20ID=' + _0x1758ae + ',\x20Project=' + _0x36ab46);
-        } catch (_0x380e42) {
-            console[_0x2739e7(0x200)](_0x2739e7(0x1e3), _0x380e42);
-        }
-    }
-    [_0x31a2c7(0x250)](_0x31d34b, _0x4a99b2, _0x1d33fd) {
-        const _0x166db7 = _0x31a2c7;
-        this[_0x166db7(0x226)][_0x166db7(0x228)](_0x31d34b) && clearTimeout(this[_0x166db7(0x226)][_0x166db7(0x1fa)](_0x31d34b)[_0x166db7(0x20f)]);
-        const _0x402b60 = setTimeout(() => {
-            const _0x2e63a6 = _0x166db7;
-            _0x4a99b2(), this[_0x2e63a6(0x226)][_0x2e63a6(0x1f1)](_0x31d34b);
-        }, _0x1d33fd);
-        this[_0x166db7(0x226)][_0x166db7(0x237)](_0x31d34b, {
-            'timerId': _0x402b60,
-            'createdAt': Date[_0x166db7(0x27d)]()
-        });
-    }
-    [_0x31a2c7(0x1e7)](_0x3e3e1c) {
-        const _0x2e30e5 = _0x31a2c7;
-        if (!this[_0x2e30e5(0x2aa)]?.[_0x2e30e5(0x220)](_0x3e3e1c))
-            return;
-        const {
-            sessionId: _0x151065,
-            status: _0x36ae60,
-            progress: _0xafd1cc,
-            step: _0x14a968,
-            automationType: _0x1f4ff3
-        } = _0x3e3e1c;
-        this[_0x2e30e5(0x23b)][_0x2e30e5(0x237)](_0x151065, {
-            'id': _0x151065,
-            'type': _0x1f4ff3,
-            'status': _0x36ae60,
-            'progress': _0xafd1cc,
-            'step': _0x14a968,
-            'timestamp': Date[_0x2e30e5(0x27d)]()
-        }), this[_0x2e30e5(0x243)](_0x2e30e5(0x241), {
-            'sessionId': _0x151065,
-            'status': _0x36ae60,
-            'progress': _0xafd1cc,
-            'step': _0x14a968,
-            'automationType': _0x1f4ff3
-        });
-    }
-    ['_handleAutomationComplete'](_0x50796a) {
-        const _0x4ccd94 = _0x31a2c7;
-        if (!this[_0x4ccd94(0x2aa)]?.[_0x4ccd94(0x220)](_0x50796a))
-            return;
-        const {
-            sessionId: _0xb2b587,
-            result: _0x319c32
-        } = _0x50796a;
-        if (this[_0x4ccd94(0x23b)][_0x4ccd94(0x228)](_0xb2b587)) {
-            const _0x31d45a = this[_0x4ccd94(0x23b)][_0x4ccd94(0x1fa)](_0xb2b587);
-            _0x31d45a[_0x4ccd94(0x23c)] = _0x4ccd94(0x26f), _0x31d45a[_0x4ccd94(0x1de)] = _0x319c32, _0x31d45a[_0x4ccd94(0x2ba)] = Date[_0x4ccd94(0x27d)]();
-        }
-        this[_0x4ccd94(0x243)](_0x4ccd94(0x2bb), {
-            'sessionId': _0xb2b587,
-            'result': _0x319c32
-        });
-    }
-    [_0x31a2c7(0x239)](_0xe4e006) {
-        const _0x44d259 = _0x31a2c7;
-        if (!this[_0x44d259(0x2aa)]?.['validateIncomingMessage'](_0xe4e006))
-            return;
-        const {
-            sessionId: _0x596231,
-            error: _0x5c095e
-        } = _0xe4e006;
-        if (this['automationSessions']['has'](_0x596231)) {
-            const _0x215be6 = this[_0x44d259(0x23b)][_0x44d259(0x1fa)](_0x596231);
-            _0x215be6[_0x44d259(0x23c)] = _0x44d259(0x200), _0x215be6['error'] = _0x5c095e, _0x215be6[_0x44d259(0x2ba)] = Date[_0x44d259(0x27d)]();
-        }
-        this[_0x44d259(0x243)](_0x44d259(0x25c), {
-            'sessionId': _0x596231,
-            'error': _0x5c095e
-        });
-    }
-    ['_handleRenderingUpdate'](_0x3b1a2f) {
-        const _0x5b39ab = _0x31a2c7;
-        if (!this[_0x5b39ab(0x2aa)]?.[_0x5b39ab(0x220)](_0x3b1a2f))
-            return;
-        const {
-            jobId: _0x4a845e,
-            status: _0x2c87ff,
-            progress: _0x5de5bb,
-            currentPhase: _0x575032,
-            framesProcessed: _0x34baee,
-            totalFrames: _0x5a1d5a
-        } = _0x3b1a2f;
-        this[_0x5b39ab(0x252)][_0x5b39ab(0x237)](_0x4a845e, {
-            'id': _0x4a845e,
-            'status': _0x2c87ff,
-            'progress': _0x5de5bb,
-            'currentPhase': _0x575032,
-            'framesProcessed': _0x34baee,
-            'totalFrames': _0x5a1d5a,
-            'timestamp': Date['now']()
-        }), this[_0x5b39ab(0x243)](_0x5b39ab(0x286), {
-            'jobId': _0x4a845e,
-            'status': _0x2c87ff,
-            'progress': _0x5de5bb,
-            'currentPhase': _0x575032,
-            'framesProcessed': _0x34baee,
-            'totalFrames': _0x5a1d5a
-        });
-    }
-    [_0x31a2c7(0x1f5)](_0x332b8f) {
-        const _0x33dcc0 = _0x31a2c7;
-        if (!this['securityManager']?.[_0x33dcc0(0x220)](_0x332b8f))
-            return;
-        const {
-            jobId: _0x2ffec0,
-            outputPath: _0xf31047,
-            duration: _0x22e31e
-        } = _0x332b8f;
-        if (this[_0x33dcc0(0x252)]['has'](_0x2ffec0)) {
-            const _0x4efc46 = this[_0x33dcc0(0x252)][_0x33dcc0(0x1fa)](_0x2ffec0);
-            _0x4efc46['status'] = _0x33dcc0(0x26f), _0x4efc46[_0x33dcc0(0x1d9)] = _0xf31047, _0x4efc46[_0x33dcc0(0x1e5)] = _0x22e31e, _0x4efc46[_0x33dcc0(0x2ba)] = Date[_0x33dcc0(0x27d)]();
-        }
-        this['_emitCallback']('rendering_complete', {
-            'jobId': _0x2ffec0,
-            'outputPath': _0xf31047,
-            'duration': _0x22e31e
-        });
-    }
-    [_0x31a2c7(0x223)](_0x37b7c0) {
-        const _0x23c9ba = _0x31a2c7;
-        if (!this[_0x23c9ba(0x2aa)]?.[_0x23c9ba(0x220)](_0x37b7c0))
-            return;
-        const {
-            jobId: _0x40bf68,
-            error: _0x446734,
-            phase: _0x1fff9b
-        } = _0x37b7c0;
-        if (this[_0x23c9ba(0x252)][_0x23c9ba(0x228)](_0x40bf68)) {
-            const _0x40b5b0 = this[_0x23c9ba(0x252)]['get'](_0x40bf68);
-            _0x40b5b0[_0x23c9ba(0x23c)] = 'error', _0x40b5b0[_0x23c9ba(0x200)] = _0x446734, _0x40b5b0[_0x23c9ba(0x261)] = _0x1fff9b, _0x40b5b0[_0x23c9ba(0x2ba)] = Date['now']();
-        }
-        this[_0x23c9ba(0x243)]('rendering_error', {
-            'jobId': _0x40bf68,
-            'error': _0x446734,
-            'phase': _0x1fff9b
-        });
-    }
-    [_0x31a2c7(0x259)](_0x1c804f) {
-        const _0x1c8bb4 = _0x31a2c7;
-        if (!this[_0x1c8bb4(0x2aa)]?.[_0x1c8bb4(0x220)](_0x1c804f))
-            return;
-        const {
-            streamId: _0x3b8a5d,
-            metrics: _0x44045a,
-            timestamp: _0x39869a
-        } = _0x1c804f;
-        this[_0x1c8bb4(0x1f9)][_0x1c8bb4(0x237)](_0x3b8a5d, {
-            'id': _0x3b8a5d,
-            'metrics': _0x44045a,
-            'timestamp': _0x39869a || Date[_0x1c8bb4(0x27d)]()
-        }), this[_0x1c8bb4(0x243)](_0x1c8bb4(0x2b3), {
-            'streamId': _0x3b8a5d,
-            'metrics': _0x44045a,
-            'timestamp': _0x39869a
-        });
-    }
-    ['_handleAIOperationUpdate'](_0x796e62) {
-        const _0x2f9507 = _0x31a2c7;
-        if (!this[_0x2f9507(0x2aa)]?.[_0x2f9507(0x220)](_0x796e62))
-            return;
-        const {
-            operationId: _0x217586,
-            status: _0x307281,
-            progress: _0x2eb2c9,
-            operation: _0x13de5c,
-            currentStep: _0x473a9c
-        } = _0x796e62;
-        this[_0x2f9507(0x24d)][_0x2f9507(0x237)](_0x217586, {
-            'id': _0x217586,
-            'status': _0x307281,
-            'progress': _0x2eb2c9,
-            'operation': _0x13de5c,
-            'currentStep': _0x473a9c,
-            'timestamp': Date['now']()
-        }), this[_0x2f9507(0x243)]('ai_operation_update', {
-            'operationId': _0x217586,
-            'status': _0x307281,
-            'progress': _0x2eb2c9,
-            'operation': _0x13de5c,
-            'currentStep': _0x473a9c
-        });
-    }
-    [_0x31a2c7(0x1f0)](_0x54670c) {
-        const _0x5bd3f1 = _0x31a2c7;
-        if (!this[_0x5bd3f1(0x2aa)]?.[_0x5bd3f1(0x220)](_0x54670c))
-            return;
-        const {
-            operationId: _0x58b98c,
-            result: _0x1e1e8d,
-            output: _0x1eccff
-        } = _0x54670c;
-        if (this[_0x5bd3f1(0x24d)]['has'](_0x58b98c)) {
-            const _0x159f7b = this[_0x5bd3f1(0x24d)][_0x5bd3f1(0x1fa)](_0x58b98c);
-            _0x159f7b[_0x5bd3f1(0x23c)] = _0x5bd3f1(0x26f), _0x159f7b[_0x5bd3f1(0x1de)] = _0x1e1e8d, _0x159f7b['output'] = _0x1eccff, _0x159f7b['timestamp'] = Date[_0x5bd3f1(0x27d)]();
-        }
-        this[_0x5bd3f1(0x243)]('ai_operation_complete', {
-            'operationId': _0x58b98c,
-            'result': _0x1e1e8d,
-            'output': _0x1eccff
-        });
-    }
-    [_0x31a2c7(0x2ae)](_0x30dbbf) {
-        const _0x101813 = _0x31a2c7;
-        if (!this[_0x101813(0x2aa)]?.['validateIncomingMessage'](_0x30dbbf))
-            return;
-        const {
-            operationId: _0xdbb41d,
-            error: _0x3cac61
-        } = _0x30dbbf;
-        if (this[_0x101813(0x24d)][_0x101813(0x228)](_0xdbb41d)) {
-            const _0x139e23 = this[_0x101813(0x24d)][_0x101813(0x1fa)](_0xdbb41d);
-            _0x139e23[_0x101813(0x23c)] = 'error', _0x139e23[_0x101813(0x200)] = _0x3cac61, _0x139e23['timestamp'] = Date[_0x101813(0x27d)]();
-        }
-        this['_emitCallback'](_0x101813(0x28e), {
-            'operationId': _0xdbb41d,
-            'error': _0x3cac61
-        });
-    }
-    [_0x31a2c7(0x2a1)](_0x524806) {
-        const _0x308f55 = _0x31a2c7;
-        if (!this['securityManager']?.[_0x308f55(0x220)](_0x524806))
-            return;
-        const {
-            operations: _0x35ac04,
-            type: _0x261c85
-        } = _0x524806;
-        if (_0x261c85 === 'processing')
-            _0x35ac04[_0x308f55(0x242)](_0x4fb35e => {
-                const _0x3baa58 = _0x308f55;
-                this[_0x3baa58(0x1f2)][_0x3baa58(0x237)](_0x4fb35e['id'], {
-                    ..._0x4fb35e,
-                    'timestamp': Date['now']()
-                });
+            const authConfig = this._buildAuthConfig();
+            
+            this.socket = io(this.serverUrl, {
+                reconnection: true,
+                reconnectionDelay: this.reconnectConfig.initialDelay,
+                reconnectionDelayMax: this.reconnectConfig.maxDelay,
+                reconnectionAttempts: this.reconnectConfig.maxAttempts,
+                transports: ['websocket', 'polling'],
+                upgrade: false,
+                forceNew: true,
+                rememberUpgrade: false,
+                'sync disconnect on unload': true,
+                autoConnect: true,
+                auth: authConfig,
             });
-        else {
-            if (_0x261c85 === _0x308f55(0x27f))
-                _0x35ac04['forEach'](_0x171ee2 => {
-                    const _0x89de81 = _0x308f55;
-                    this[_0x89de81(0x23b)][_0x89de81(0x237)](_0x171ee2['id'], {
-                        ..._0x171ee2,
-                        'timestamp': Date[_0x89de81(0x27d)]()
-                    });
+
+            this._setupEventListeners();
+            this._startHeartbeat();
+            this._startConnectionHealthCheck();
+            this._startCleanupProcess();
+            
+            console.log('✅ WebSocket connected successfully');
+            return true;
+        } catch (error) {
+            console.error('❌ WebSocket connection failed:', error);
+            this._handleConnectionFailure();
+            return false;
+        }
+    }
+
+    /**
+     * Build authentication config from secure source
+     * Generates new sessionId on each connect to prevent session reuse across reconnections
+     * @private
+     */
+    _buildAuthConfig() {
+        const authToken = this._getAuthToken();
+        
+        if (!authToken) {
+            throw new Error('No authentication token available');
+        }
+
+        // Generate fresh sessionId for this connection to prevent session reuse
+        if (this.securityManager && !this.securityManager.sessionIdRefreshed) {
+            this.securityManager.sessionId = this.securityManager._generateSecureId();
+            this.securityManager.sessionIdRefreshed = true;
+        }
+
+        return {
+            token: authToken,
+            userId: this.userId,
+            timestamp: Date.now(),
+            sessionId: this.securityManager?.sessionId,
+        };
+    }
+
+    /**
+     * Get auth token from secure source (cookie, sessionStorage, etc)
+     * @private
+     */
+    _getAuthToken() {
+        // Never use localStorage for sensitive data
+        // Prefer sessionStorage or httpOnly cookies
+        return sessionStorage.getItem('auth_token') || 
+               document.cookie.split('; ').find(row => row.startsWith('auth_token='))?.split('=')[1] ||
+               null;
+    }
+
+    /**
+     * Handle connection failure and circuit breaker logic
+     * @private
+     */
+    _handleConnectionFailure() {
+        this.circuitBreaker.failureCount++;
+        
+        if (this.circuitBreaker.failureCount >= this.circuitBreaker.failureThreshold) {
+            console.warn('⚠️ Circuit breaker opened due to excessive failures');
+            this.circuitBreaker.state = 'open';
+            this.circuitBreaker.failureCount = 0;
+            this.circuitBreaker.nextAttemptTime = Date.now() + this.circuitBreaker.resetTimeout;
+        }
+
+        this.securityManager?._logSecurityEvent('connection_failure', {
+            failureCount: this.circuitBreaker.failureCount
+        });
+    }
+
+    /**
+     * Start heartbeat to keep connection alive and detect disconnects
+     * @private
+     */
+    _startHeartbeat() {
+        this._stopHeartbeat();
+        
+        this.heartbeatInterval = setInterval(() => {
+            if (this.socket?.connected) {
+                this.socket.emit('heartbeat', { 
+                    timestamp: Date.now(),
+                    sessionId: this.securityManager?.sessionId,
                 });
-            else {
-                if (_0x261c85 === 'rendering')
-                    _0x35ac04[_0x308f55(0x242)](_0x41b507 => {
-                        const _0x2284f1 = _0x308f55;
-                        this['renderingJobs'][_0x2284f1(0x237)](_0x41b507['id'], {
-                            ..._0x41b507,
-                            'timestamp': Date['now']()
-                        });
-                    });
-                else
-                    _0x261c85 === 'ai_operations' && _0x35ac04[_0x308f55(0x242)](_0x20761b => {
-                        const _0x440d4a = _0x308f55;
-                        this[_0x440d4a(0x24d)][_0x440d4a(0x237)](_0x20761b['id'], {
-                            ..._0x20761b,
-                            'timestamp': Date[_0x440d4a(0x27d)]()
-                        });
-                    });
+                this.connectionHealthCheck.lastHeartbeatTime = Date.now();
+            }
+        }, this.HEARTBEAT_INTERVAL);
+    }
+
+    /**
+     * Stop heartbeat interval
+     * @private
+     */
+    _stopHeartbeat() {
+        if (this.heartbeatInterval) {
+            clearInterval(this.heartbeatInterval);
+            this.heartbeatInterval = null;
+        }
+    }
+
+    /**
+     * Monitor connection health
+     * @private
+     */
+    _startConnectionHealthCheck() {
+        this._stopConnectionHealthCheck();
+        
+        this.connectionHealthCheck.healthCheckInterval = setInterval(() => {
+            if (!this.socket?.connected) {
+                this.connectionHealthCheck.missedHeartbeats++;
+                
+                if (this.connectionHealthCheck.missedHeartbeats >= this.MAX_MISSED_HEARTBEATS) {
+                    console.warn('⚠️ Connection health degraded, forcing reconnect');
+                    this.socket?.disconnect();
+                    this.socket?.connect();
+                }
+            } else {
+                this.connectionHealthCheck.missedHeartbeats = 0;
+            }
+        }, this.HEALTH_CHECK_INTERVAL);
+    }
+
+    /**
+     * Stop connection health check
+     * @private
+     */
+    _stopConnectionHealthCheck() {
+        if (this.connectionHealthCheck.healthCheckInterval) {
+            clearInterval(this.connectionHealthCheck.healthCheckInterval);
+            this.connectionHealthCheck.healthCheckInterval = null;
+        }
+    }
+
+    /**
+     * Start automatic cleanup process
+     * @private
+     */
+    _startCleanupProcess() {
+        setInterval(() => {
+            this._performCleanup();
+        }, this.CLEANUP_INTERVAL);
+    }
+
+    /**
+     * Perform cleanup of old state entries
+     * @private
+     */
+    _performCleanup() {
+        const now = Date.now();
+        
+        // Cleanup old entries from each map
+        this._cleanupMap(this.activeTasks, this.STATE_ENTRY_MAX_AGE, now);
+        this._cleanupMap(this.automationSessions, this.STATE_ENTRY_MAX_AGE, now);
+        this._cleanupMap(this.renderingJobs, this.STATE_ENTRY_MAX_AGE, now);
+        this._cleanupMap(this.analyticsStreams, this.STATE_ENTRY_MAX_AGE, now);
+        this._cleanupMap(this.aiOperations, this.STATE_ENTRY_MAX_AGE, now);
+        this._cleanupMap(this.pendingOperations, this.STATE_ENTRY_MAX_AGE, now);
+        
+        // Cleanup timers
+        for (const [key, timer] of this.cleanupTimers) {
+            if (timer.createdAt && now - timer.createdAt > this.STATE_ENTRY_MAX_AGE) {
+                clearTimeout(timer.id);
+                this.cleanupTimers.delete(key);
             }
         }
-        console[_0x308f55(0x206)]('📦\x20Batch\x20operations\x20(' + _0x261c85 + _0x308f55(0x26a) + _0x35ac04[_0x308f55(0x20a)] + '\x20items');
+
+        console.log('🧹 Cleanup completed');
     }
-    [_0x31a2c7(0x21d)](_0x921abf, _0x2650d) {
-        const _0x1dffbd = _0x31a2c7;
-        if (!this[_0x1dffbd(0x213)]?.[_0x1dffbd(0x1dd)])
-            return this[_0x1dffbd(0x288)]('delete_clip', {
-                'itemId': _0x921abf,
-                'projectId': _0x2650d
-            }), ![];
-        try {
-            const _0x202d21 = _0x1dffbd(0x257), _0x55e659 = {
-                    'itemId': _0x921abf,
-                    'projectId': _0x2650d,
-                    'timestamp': Date[_0x1dffbd(0x27d)](),
-                    'userId': this[_0x1dffbd(0x25e)]
-                };
-            if (!this['securityManager'][_0x1dffbd(0x201)](_0x202d21, _0x55e659))
-                return console['warn'](_0x1dffbd(0x1e1)), ![];
-            const _0xca89dc = this[_0x1dffbd(0x2aa)][_0x1dffbd(0x227)](_0x202d21, _0x55e659);
-            return this[_0x1dffbd(0x213)][_0x1dffbd(0x29c)](_0x202d21, _0xca89dc), console[_0x1dffbd(0x206)]('📤\x20Clip\x20deletion\x20emitted:\x20' + _0x921abf), !![];
-        } catch (_0x1b96c5) {
-            return console[_0x1dffbd(0x200)](_0x1dffbd(0x264), _0x1b96c5), this['_queueOperation'](_0x1dffbd(0x257), {
-                'itemId': _0x921abf,
-                'projectId': _0x2650d
-            }), ![];
+
+    /**
+     * Cleanup old entries from a map
+     * Fix: Check if timestamp exists first to prevent race conditions
+     * @private
+     */
+    _cleanupMap(map, maxAge, now) {
+        const toDelete = [];
+        
+        for (const [key, value] of map) {
+            // Ensure timestamp exists before comparing (prevents race condition)
+            const timestamp = value?.timestamp || value?.startTime || now;
+            if (timestamp && now - timestamp > maxAge) {
+                toDelete.push(key);
+            }
+        }
+        
+        // Delete flagged entries
+        toDelete.forEach(key => map.delete(key));
+
+        // If map still too large, remove oldest entries
+        if (map.size > this.maxStateSize) {
+            const excess = map.size - this.maxStateSize;
+            let removed = 0;
+            
+            // Sort by age and remove oldest
+            const entries = Array.from(map.entries())
+                .map(([key, value]) => ({
+                    key, 
+                    age: now - (value?.timestamp || value?.startTime || now)
+                }))
+                .sort((a, b) => b.age - a.age)
+                .slice(0, excess);
+            
+            entries.forEach(({ key }) => {
+                map.delete(key);
+                removed++;
+            });
+            
+            if (removed > 0) {
+                console.warn(`⚠️ Removed ${removed} entries due to size limit`);
+            }
         }
     }
-    [_0x31a2c7(0x212)](_0x5b76f6, _0x2c07ee) {
-        const _0x32a0a5 = _0x31a2c7;
-        this[_0x32a0a5(0x213)]?.[_0x32a0a5(0x1dd)] && (this['socket'][_0x32a0a5(0x29c)](_0x32a0a5(0x224), {
-            'session_id': _0x5b76f6,
-            'automation_type': _0x2c07ee
-        }), console[_0x32a0a5(0x206)]('📝\x20Automation\x20session\x20registered:\x20' + _0x5b76f6));
+
+    /**
+     * Setup Socket.IO event listeners
+     * @private
+     */
+    _setupEventListeners() {
+        // Connection events
+        this.socket.on('connect', () => {
+            console.log('✅ Connected to WebSocket server');
+            this.circuitBreaker.failureCount = 0;
+            this.circuitBreaker.state = 'closed';
+            this._joinUserRoom();
+            this._processQueuedMessages();
+        });
+
+        this.socket.on('disconnect', () => {
+            console.warn('⚠️ Disconnected from WebSocket server');
+        });
+
+        this.socket.on('connect_error', (error) => {
+            console.error('❌ Connection error:', error);
+            this._handleConnectionFailure();
+        });
+
+        // Processing events
+        this.socket.on('processing_update', data => this._handleProgressUpdate(data));
+        this.socket.on('processing_complete', data => this._handleComplete(data));
+        this.socket.on('processing_error', data => this._handleError(data));
+
+        // Automation events
+        this.socket.on('automation_update', data => this._handleAutomationUpdate(data));
+        this.socket.on('automation_complete', data => this._handleAutomationComplete(data));
+        this.socket.on('automation_error', data => this._handleAutomationError(data));
+
+        // Rendering events
+        this.socket.on('rendering_update', data => this._handleRenderingUpdate(data));
+        this.socket.on('rendering_complete', data => this._handleRenderingComplete(data));
+        this.socket.on('rendering_error', data => this._handleRenderingError(data));
+
+        // Analytics events
+        this.socket.on('analytics_update', data => this._handleAnalyticsUpdate(data));
+
+        // AI events
+        this.socket.on('ai_operation_update', data => this._handleAIOperationUpdate(data));
+        this.socket.on('ai_operation_complete', data => this._handleAIOperationComplete(data));
+        this.socket.on('ai_operation_error', data => this._handleAIOperationError(data));
+
+        // Batch events
+        this.socket.on('batch_operations', data => this._handleBatchOperations(data));
+
+        // Room events
+        this.socket.on('room_joined', data => {
+            console.log('✅ Joined user room:', data.user_id);
+        });
+
+        // Clip deletion
+        this.socket.on('clip_deleted', data => this._handleClipDeleted(data));
+
+        // Reconnection
+        this.socket.on('reconnect', () => {
+            console.log('✅ Reconnected to server');
+            this.reconnectConfig.attempts = 0;
+            this._joinUserRoom();
+        });
+
+        this.socket.on('reconnect_attempt', () => {
+            this.reconnectConfig.attempts++;
+            console.log(`⚠️ Reconnection attempt ${this.reconnectConfig.attempts}`);
+        });
     }
-    [_0x31a2c7(0x1ff)](_0x368096, _0x1aa5e8, _0x583294) {
-        const _0x2d220e = _0x31a2c7;
-        this[_0x2d220e(0x213)]?.[_0x2d220e(0x1dd)] && (this[_0x2d220e(0x213)][_0x2d220e(0x29c)]('register_rendering_job', {
-            'job_id': _0x368096,
-            'project_id': _0x1aa5e8,
-            'ranks': _0x583294
-        }), console['log'](_0x2d220e(0x2b4) + _0x368096));
+
+    /**
+     * Join user-specific room for targeted messages
+     * @private
+     */
+    _joinUserRoom() {
+        if (this.socket?.connected && this.userId) {
+            this.socket.emit('join_user_room', { user_id: this.userId });
+        }
     }
-    [_0x31a2c7(0x2a6)](_0x126107, _0x3f0c56) {
-        const _0x2f7271 = _0x31a2c7;
-        this['socket']?.[_0x2f7271(0x1dd)] && (this['socket'][_0x2f7271(0x29c)](_0x2f7271(0x273), {
-            'stream_id': _0x126107,
-            'source': _0x3f0c56
-        }), console[_0x2f7271(0x206)](_0x2f7271(0x285) + _0x126107));
+
+    /**
+     * Queue operation for when connection is available
+     * @private
+     */
+    _queueOperation(operation, data) {
+        if (this.messageQueue.length >= this.maxQueueSize) {
+            console.warn('⚠️ Message queue full, dropping oldest message');
+            this.messageQueue.shift();
+        }
+
+        const queueEntry = {
+            operation,
+            data,
+            timestamp: Date.now(),
+            retries: 0,
+            maxRetries: 3,
+        };
+
+        this.messageQueue.push(queueEntry);
+        this.queuedOperations.set(`${operation}_${Date.now()}`, queueEntry);
+
+        console.log(`📤 Queued operation: ${operation}`);
     }
-    [_0x31a2c7(0x26d)](_0x1b3ffe, _0x372728) {
-        const _0x37fc32 = _0x31a2c7;
-        this[_0x37fc32(0x213)]?.[_0x37fc32(0x1dd)] && (this[_0x37fc32(0x213)][_0x37fc32(0x29c)](_0x37fc32(0x2b1), {
-            'operation_id': _0x1b3ffe,
-            'operation_type': _0x372728
-        }), console[_0x37fc32(0x206)](_0x37fc32(0x27a) + _0x1b3ffe));
-    }
-    ['on'](_0x19b745, _0x37f43a) {
-        const _0x20fe80 = _0x31a2c7;
-        !this[_0x20fe80(0x1df)]['has'](_0x19b745) && this[_0x20fe80(0x1df)][_0x20fe80(0x237)](_0x19b745, []), this['callbacks'][_0x20fe80(0x1fa)](_0x19b745)['push'](_0x37f43a);
-    }
-    [_0x31a2c7(0x2ad)](_0x468107, _0x4c8cc5) {
-        const _0x5b61d4 = _0x31a2c7;
-        if (!this[_0x5b61d4(0x1df)]['has'](_0x468107))
-            return;
-        const _0x14953d = this[_0x5b61d4(0x1df)]['get'](_0x468107), _0x12e32e = _0x14953d['indexOf'](_0x4c8cc5);
-        _0x12e32e > -0x1 && _0x14953d[_0x5b61d4(0x1e4)](_0x12e32e, 0x1);
-    }
-    ['_emitCallback'](_0x259294, _0x440e10) {
-        const _0xdce24 = _0x31a2c7;
-        if (!this[_0xdce24(0x1df)][_0xdce24(0x228)](_0x259294))
-            return;
-        this[_0xdce24(0x1df)]['get'](_0x259294)[_0xdce24(0x242)](_0x57f27d => {
-            const _0x542e5d = _0xdce24;
+
+    /**
+     * Process queued messages when connection is restored
+     * @private
+     */
+    _processQueuedMessages() {
+        if (this.messageQueue.length === 0) return;
+
+        console.log(`📨 Processing ${this.messageQueue.length} queued messages`);
+
+        while (this.messageQueue.length > 0) {
+            const entry = this.messageQueue.shift();
             try {
-                _0x57f27d(_0x440e10);
-            } catch (_0x293656) {
-                console['error'](_0x542e5d(0x26c) + _0x259294 + _0x542e5d(0x247), _0x293656);
+                // Re-execute the operation
+                this._executeQueuedOperation(entry);
+            } catch (error) {
+                console.error('❌ Error processing queued operation:', error);
+                if (entry.retries < entry.maxRetries) {
+                    entry.retries++;
+                    this.messageQueue.push(entry); // Re-queue for retry
+                }
+            }
+        }
+    }
+
+    /**
+     * Execute a queued operation
+     * @private
+     */
+    _executeQueuedOperation(entry) {
+        const { operation, data } = entry;
+
+        switch (operation) {
+            case 'delete_clip':
+                this.emitClipDeletion(data.itemId, data.projectId);
+                break;
+            case 'register_task':
+                this.registerTask(data.taskId, data.taskType);
+                break;
+            // Add more operation types as needed
+            default:
+                console.warn(`Unknown queued operation: ${operation}`);
+        }
+    }
+
+    /**
+     * Register task and track progress
+     */
+    registerTask(taskId, taskType = 'processing') {
+        const task = {
+            id: taskId,
+            type: taskType,
+            startTime: Date.now(),
+            timestamp: Date.now(),
+            progress: 0,
+            status: 'started',
+        };
+
+        this.activeTasks.set(taskId, task);
+        console.log(`📝 Task registered: ${taskId}`);
+    }
+
+    /**
+     * Handle progress update for task
+     * @private
+     */
+    _handleProgressUpdate(data) {
+        if (!this.securityManager?.validateIncomingMessage(data)) {
+            console.warn('⚠️ Progress update failed security validation');
+            return;
+        }
+
+        const { taskId, status, progress, step } = data;
+
+        if (this.activeTasks.has(taskId)) {
+            const task = this.activeTasks.get(taskId);
+            task.progress = progress;
+            task.status = status;
+            task.currentStep = step;
+            task.timestamp = Date.now();
+
+            this._emitCallback('progress', {
+                taskId,
+                progress,
+                step,
+                status,
+            });
+
+            console.log(`⏳ ${taskId}: ${progress}% - ${step}`);
+        }
+    }
+
+    /**
+     * Handle task completion
+     * @private
+     */
+    _handleComplete(data) {
+        if (!this.securityManager?.validateIncomingMessage(data)) {
+            return;
+        }
+
+        const { taskId, result } = data;
+
+        if (this.activeTasks.has(taskId)) {
+            const task = this.activeTasks.get(taskId);
+            task.status = 'completed';
+            task.progress = 100;
+            task.result = result;
+            task.timestamp = Date.now();
+
+            this._emitCallback('complete', {
+                taskId,
+                result,
+                duration: Date.now() - task.startTime,
+            });
+
+            console.log(`✅ Task completed: ${taskId}`);
+        }
+    }
+
+    /**
+     * Handle task error
+     * @private
+     */
+    _handleError(data) {
+        if (!this.securityManager?.validateIncomingMessage(data)) {
+            return;
+        }
+
+        const { taskId, error } = data;
+
+        if (this.activeTasks.has(taskId)) {
+            const task = this.activeTasks.get(taskId);
+            task.status = 'error';
+            task.error = error;
+            task.timestamp = Date.now();
+
+            this._emitCallback('error', {
+                taskId,
+                error,
+            });
+
+            console.error(`❌ Task error: ${taskId} - ${error}`);
+        }
+    }
+
+    /**
+     * Handle clip deletion with debouncing
+     * @private
+     */
+    _handleClipDeleted(data) {
+        if (!this.securityManager?.validateIncomingMessage(data)) {
+            console.warn('⚠️ Clip deletion failed validation');
+            return;
+        }
+
+        const { itemId, projectId, timestamp } = data;
+
+        // Debounce clip deletion handling
+        this._debounce(`clip_delete_${itemId}`, () => {
+            this._performClipDeletion(itemId, projectId, timestamp);
+        }, this.debounceDelay);
+    }
+
+    /**
+     * Perform clip deletion
+     * @private
+     */
+    _performClipDeletion(itemId, projectId, timestamp) {
+        try {
+            // Clean up from tracking maps
+            this.activeTasks.delete(itemId);
+            this.automationSessions.delete(itemId);
+            this.renderingJobs.delete(projectId);
+
+            this._emitCallback('clip_deleted', {
+                itemId,
+                projectId,
+                timestamp,
+            });
+
+            this.securityManager?._logSecurityEvent('clip_deleted_handled', {
+                itemId,
+                projectId
+            });
+
+            console.log(`🗑️ Clip deleted: ID=${itemId}, Project=${projectId}`);
+        } catch (error) {
+            console.error('❌ Error handling clip deletion:', error);
+        }
+    }
+
+    /**
+     * Debounce operation execution
+     * @private
+     */
+    _debounce(key, callback, delay) {
+        // Clear existing timer
+        if (this.debouncedOperations.has(key)) {
+            clearTimeout(this.debouncedOperations.get(key).timerId);
+        }
+
+        // Set new timer
+        const timerId = setTimeout(() => {
+            callback();
+            this.debouncedOperations.delete(key);
+        }, delay);
+
+        this.debouncedOperations.set(key, { timerId, createdAt: Date.now() });
+    }
+
+    /**
+     * Handle automation update
+     * @private
+     */
+    _handleAutomationUpdate(data) {
+        if (!this.securityManager?.validateIncomingMessage(data)) {
+            return;
+        }
+
+        const { sessionId, status, progress, step, automationType } = data;
+
+        this.automationSessions.set(sessionId, {
+            id: sessionId,
+            type: automationType,
+            status,
+            progress,
+            step,
+            timestamp: Date.now(),
+        });
+
+        this._emitCallback('automation_update', {
+            sessionId,
+            status,
+            progress,
+            step,
+            automationType,
+        });
+    }
+
+    /**
+     * Handle automation completion
+     * @private
+     */
+    _handleAutomationComplete(data) {
+        if (!this.securityManager?.validateIncomingMessage(data)) {
+            return;
+        }
+
+        const { sessionId, result } = data;
+
+        if (this.automationSessions.has(sessionId)) {
+            const session = this.automationSessions.get(sessionId);
+            session.status = 'completed';
+            session.result = result;
+            session.timestamp = Date.now();
+        }
+
+        this._emitCallback('automation_complete', {
+            sessionId,
+            result,
+        });
+    }
+
+    /**
+     * Handle automation error
+     * @private
+     */
+    _handleAutomationError(data) {
+        if (!this.securityManager?.validateIncomingMessage(data)) {
+            return;
+        }
+
+        const { sessionId, error } = data;
+
+        if (this.automationSessions.has(sessionId)) {
+            const session = this.automationSessions.get(sessionId);
+            session.status = 'error';
+            session.error = error;
+            session.timestamp = Date.now();
+        }
+
+        this._emitCallback('automation_error', {
+            sessionId,
+            error,
+        });
+    }
+
+    /**
+     * Handle rendering update
+     * @private
+     */
+    _handleRenderingUpdate(data) {
+        if (!this.securityManager?.validateIncomingMessage(data)) {
+            return;
+        }
+
+        const { jobId, status, progress, currentPhase, framesProcessed, totalFrames } = data;
+
+        this.renderingJobs.set(jobId, {
+            id: jobId,
+            status,
+            progress,
+            currentPhase,
+            framesProcessed,
+            totalFrames,
+            timestamp: Date.now(),
+        });
+
+        this._emitCallback('rendering_update', {
+            jobId,
+            status,
+            progress,
+            currentPhase,
+            framesProcessed,
+            totalFrames,
+        });
+    }
+
+    /**
+     * Handle rendering completion
+     * @private
+     */
+    _handleRenderingComplete(data) {
+        if (!this.securityManager?.validateIncomingMessage(data)) {
+            return;
+        }
+
+        const { jobId, outputPath, duration } = data;
+
+        if (this.renderingJobs.has(jobId)) {
+            const job = this.renderingJobs.get(jobId);
+            job.status = 'completed';
+            job.outputPath = outputPath;
+            job.duration = duration;
+            job.timestamp = Date.now();
+        }
+
+        this._emitCallback('rendering_complete', {
+            jobId,
+            outputPath,
+            duration,
+        });
+    }
+
+    /**
+     * Handle rendering error
+     * @private
+     */
+    _handleRenderingError(data) {
+        if (!this.securityManager?.validateIncomingMessage(data)) {
+            return;
+        }
+
+        const { jobId, error, phase } = data;
+
+        if (this.renderingJobs.has(jobId)) {
+            const job = this.renderingJobs.get(jobId);
+            job.status = 'error';
+            job.error = error;
+            job.failedPhase = phase;
+            job.timestamp = Date.now();
+        }
+
+        this._emitCallback('rendering_error', {
+            jobId,
+            error,
+            phase,
+        });
+    }
+
+    /**
+     * Handle analytics update
+     * @private
+     */
+    _handleAnalyticsUpdate(data) {
+        if (!this.securityManager?.validateIncomingMessage(data)) {
+            return;
+        }
+
+        const { streamId, metrics, timestamp } = data;
+
+        this.analyticsStreams.set(streamId, {
+            id: streamId,
+            metrics,
+            timestamp: timestamp || Date.now(),
+        });
+
+        this._emitCallback('analytics_update', {
+            streamId,
+            metrics,
+            timestamp,
+        });
+    }
+
+    /**
+     * Handle AI operation update
+     * @private
+     */
+    _handleAIOperationUpdate(data) {
+        if (!this.securityManager?.validateIncomingMessage(data)) {
+            return;
+        }
+
+        const { operationId, status, progress, operation, currentStep } = data;
+
+        this.aiOperations.set(operationId, {
+            id: operationId,
+            status,
+            progress,
+            operation,
+            currentStep,
+            timestamp: Date.now(),
+        });
+
+        this._emitCallback('ai_operation_update', {
+            operationId,
+            status,
+            progress,
+            operation,
+            currentStep,
+        });
+    }
+
+    /**
+     * Handle AI operation completion
+     * @private
+     */
+    _handleAIOperationComplete(data) {
+        if (!this.securityManager?.validateIncomingMessage(data)) {
+            return;
+        }
+
+        const { operationId, result, output } = data;
+
+        if (this.aiOperations.has(operationId)) {
+            const op = this.aiOperations.get(operationId);
+            op.status = 'completed';
+            op.result = result;
+            op.output = output;
+            op.timestamp = Date.now();
+        }
+
+        this._emitCallback('ai_operation_complete', {
+            operationId,
+            result,
+            output,
+        });
+    }
+
+    /**
+     * Handle AI operation error
+     * @private
+     */
+    _handleAIOperationError(data) {
+        if (!this.securityManager?.validateIncomingMessage(data)) {
+            return;
+        }
+
+        const { operationId, error } = data;
+
+        if (this.aiOperations.has(operationId)) {
+            const op = this.aiOperations.get(operationId);
+            op.status = 'error';
+            op.error = error;
+            op.timestamp = Date.now();
+        }
+
+        this._emitCallback('ai_operation_error', {
+            operationId,
+            error,
+        });
+    }
+
+    /**
+     * Handle batch operations
+     * @private
+     */
+    _handleBatchOperations(data) {
+        if (!this.securityManager?.validateIncomingMessage(data)) {
+            return;
+        }
+
+        const { operations, type } = data;
+
+        if (type === 'processing') {
+            operations.forEach(op => {
+                this.activeTasks.set(op.id, { ...op, timestamp: Date.now() });
+            });
+        } else if (type === 'automation') {
+            operations.forEach(op => {
+                this.automationSessions.set(op.id, { ...op, timestamp: Date.now() });
+            });
+        } else if (type === 'rendering') {
+            operations.forEach(op => {
+                this.renderingJobs.set(op.id, { ...op, timestamp: Date.now() });
+            });
+        } else if (type === 'ai_operations') {
+            operations.forEach(op => {
+                this.aiOperations.set(op.id, { ...op, timestamp: Date.now() });
+            });
+        }
+
+        console.log(`📦 Batch operations (${type}): ${operations.length} items`);
+    }
+
+    /**
+     * Emit secure clip deletion
+     */
+    emitClipDeletion(itemId, projectId) {
+        if (!this.socket?.connected) {
+            this._queueOperation('delete_clip', { itemId, projectId });
+            return false;
+        }
+
+        try {
+            const eventType = 'delete_clip';
+            const data = {
+                itemId,
+                projectId,
+                timestamp: Date.now(),
+                userId: this.userId,
+            };
+
+            if (!this.securityManager.validateMessage(eventType, data)) {
+                console.warn('⚠️ Message validation failed');
+                return false;
+            }
+
+            const envelope = this.securityManager.createSecureEnvelope(eventType, data);
+            this.socket.emit(eventType, envelope);
+
+            console.log(`📤 Clip deletion emitted: ${itemId}`);
+            return true;
+        } catch (error) {
+            console.error('❌ Error emitting clip deletion:', error);
+            this._queueOperation('delete_clip', { itemId, projectId });
+            return false;
+        }
+    }
+
+    /**
+     * Register automation session
+     */
+    registerAutomationSession(sessionId, automationType) {
+        if (this.socket?.connected) {
+            this.socket.emit('register_automation_session', {
+                session_id: sessionId,
+                automation_type: automationType,
+            });
+            console.log(`📝 Automation session registered: ${sessionId}`);
+        }
+    }
+
+    /**
+     * Register rendering job
+     */
+    registerRenderingJob(jobId, projectId, ranks) {
+        if (this.socket?.connected) {
+            this.socket.emit('register_rendering_job', {
+                job_id: jobId,
+                project_id: projectId,
+                ranks,
+            });
+            console.log(`📝 Rendering job registered: ${jobId}`);
+        }
+    }
+
+    /**
+     * Register analytics stream
+     */
+    registerAnalyticsStream(streamId, source) {
+        if (this.socket?.connected) {
+            this.socket.emit('register_analytics_stream', {
+                stream_id: streamId,
+                source,
+            });
+            console.log(`📝 Analytics stream registered: ${streamId}`);
+        }
+    }
+
+    /**
+     * Register AI operation
+     */
+    registerAIOperation(operationId, operationType) {
+        if (this.socket?.connected) {
+            this.socket.emit('register_ai_operation', {
+                operation_id: operationId,
+                operation_type: operationType,
+            });
+            console.log(`📝 AI operation registered: ${operationId}`);
+        }
+    }
+
+    /**
+     * Register callback for event type
+     */
+    on(eventType, callback) {
+        if (!this.callbacks.has(eventType)) {
+            this.callbacks.set(eventType, []);
+        }
+        this.callbacks.get(eventType).push(callback);
+    }
+
+    /**
+     * Unregister callback
+     */
+    off(eventType, callback) {
+        if (!this.callbacks.has(eventType)) return;
+        const callbacks = this.callbacks.get(eventType);
+        const index = callbacks.indexOf(callback);
+        if (index > -1) {
+            callbacks.splice(index, 1);
+        }
+    }
+
+    /**
+     * Emit callback to all listeners
+     * @private
+     */
+    _emitCallback(eventType, data) {
+        if (!this.callbacks.has(eventType)) return;
+        this.callbacks.get(eventType).forEach(callback => {
+            try {
+                callback(data);
+            } catch (error) {
+                console.error(`Error in ${eventType} callback:`, error);
             }
         });
     }
-    [_0x31a2c7(0x2ab)](_0x443f20 = 0x0, _0x55e4fc = 0x64) {
-        const _0x381fce = _0x31a2c7, _0x3c0641 = Array[_0x381fce(0x298)](this['activeTasks']['values']()), _0xdc8e40 = _0x443f20 * _0x55e4fc, _0x2f502b = _0xdc8e40 + _0x55e4fc;
+
+    /**
+     * Get active tasks with pagination
+     * @param {number} page - Page number (starts at 0)
+     * @param {number} pageSize - Items per page (default 100)
+     */
+    getActiveTasks(page = 0, pageSize = 100) {
+        const all = Array.from(this.activeTasks.values());
+        const start = page * pageSize;
+        const end = start + pageSize;
         return {
-            'items': _0x3c0641['slice'](_0xdc8e40, _0x2f502b),
-            'total': _0x3c0641[_0x381fce(0x20a)],
-            'page': _0x443f20,
-            'pageSize': _0x55e4fc,
-            'totalPages': Math[_0x381fce(0x270)](_0x3c0641[_0x381fce(0x20a)] / _0x55e4fc)
+            items: all.slice(start, end),
+            total: all.length,
+            page,
+            pageSize,
+            totalPages: Math.ceil(all.length / pageSize),
         };
     }
-    [_0x31a2c7(0x29f)](_0x302d1e = 0x0, _0x3249f3 = 0x64) {
-        const _0x2d98cf = _0x31a2c7, _0x72c09f = Array[_0x2d98cf(0x298)](this['automationSessions'][_0x2d98cf(0x233)]()), _0x24ef67 = _0x302d1e * _0x3249f3, _0xdbcc73 = _0x24ef67 + _0x3249f3;
+
+    /**
+     * Get active automation sessions with pagination
+     */
+    getActiveAutomationSessions(page = 0, pageSize = 100) {
+        const all = Array.from(this.automationSessions.values());
+        const start = page * pageSize;
+        const end = start + pageSize;
         return {
-            'items': _0x72c09f['slice'](_0x24ef67, _0xdbcc73),
-            'total': _0x72c09f[_0x2d98cf(0x20a)],
-            'page': _0x302d1e,
-            'pageSize': _0x3249f3,
-            'totalPages': Math['ceil'](_0x72c09f[_0x2d98cf(0x20a)] / _0x3249f3)
+            items: all.slice(start, end),
+            total: all.length,
+            page,
+            pageSize,
+            totalPages: Math.ceil(all.length / pageSize),
         };
     }
-    [_0x31a2c7(0x234)](_0x55a559 = 0x0, _0xb0ad4 = 0x64) {
-        const _0x87b670 = _0x31a2c7, _0x2847b3 = Array[_0x87b670(0x298)](this[_0x87b670(0x252)][_0x87b670(0x233)]()), _0x183dec = _0x55a559 * _0xb0ad4, _0x43704f = _0x183dec + _0xb0ad4;
+
+    /**
+     * Get active rendering jobs with pagination
+     */
+    getActiveRenderingJobs(page = 0, pageSize = 100) {
+        const all = Array.from(this.renderingJobs.values());
+        const start = page * pageSize;
+        const end = start + pageSize;
         return {
-            'items': _0x2847b3[_0x87b670(0x2bc)](_0x183dec, _0x43704f),
-            'total': _0x2847b3['length'],
-            'page': _0x55a559,
-            'pageSize': _0xb0ad4,
-            'totalPages': Math[_0x87b670(0x270)](_0x2847b3[_0x87b670(0x20a)] / _0xb0ad4)
+            items: all.slice(start, end),
+            total: all.length,
+            page,
+            pageSize,
+            totalPages: Math.ceil(all.length / pageSize),
         };
     }
-    [_0x31a2c7(0x24f)](_0x2a025d = 0x0, _0x56e2c2 = 0x64) {
-        const _0xbbb899 = _0x31a2c7, _0x502872 = Array[_0xbbb899(0x298)](this[_0xbbb899(0x24d)][_0xbbb899(0x233)]()), _0x39f310 = _0x2a025d * _0x56e2c2, _0x3d1200 = _0x39f310 + _0x56e2c2;
+
+    /**
+     * Get AI operations with pagination
+     */
+    getActiveAIOperations(page = 0, pageSize = 100) {
+        const all = Array.from(this.aiOperations.values());
+        const start = page * pageSize;
+        const end = start + pageSize;
         return {
-            'items': _0x502872['slice'](_0x39f310, _0x3d1200),
-            'total': _0x502872[_0xbbb899(0x20a)],
-            'page': _0x2a025d,
-            'pageSize': _0x56e2c2,
-            'totalPages': Math[_0xbbb899(0x270)](_0x502872[_0xbbb899(0x20a)] / _0x56e2c2)
+            items: all.slice(start, end),
+            total: all.length,
+            page,
+            pageSize,
+            totalPages: Math.ceil(all.length / pageSize),
         };
     }
-    [_0x31a2c7(0x22f)](_0x2fa9d0 = 0x0, _0x542da2 = 0x64) {
-        const _0x5f084a = _0x31a2c7, _0x3c4adf = Array[_0x5f084a(0x298)](this[_0x5f084a(0x1f9)][_0x5f084a(0x233)]()), _0x2ff179 = _0x2fa9d0 * _0x542da2, _0x188b49 = _0x2ff179 + _0x542da2;
+
+    /**
+     * Get analytics streams with pagination
+     */
+    getAnalyticsStreams(page = 0, pageSize = 100) {
+        const all = Array.from(this.analyticsStreams.values());
+        const start = page * pageSize;
+        const end = start + pageSize;
         return {
-            'items': _0x3c4adf[_0x5f084a(0x2bc)](_0x2ff179, _0x188b49),
-            'total': _0x3c4adf[_0x5f084a(0x20a)],
-            'page': _0x2fa9d0,
-            'pageSize': _0x542da2,
-            'totalPages': Math['ceil'](_0x3c4adf['length'] / _0x542da2)
+            items: all.slice(start, end),
+            total: all.length,
+            page,
+            pageSize,
+            totalPages: Math.ceil(all.length / pageSize),
         };
     }
-    [_0x31a2c7(0x225)]() {
-        const _0x3189b0 = _0x31a2c7;
-        return this[_0x3189b0(0x213)]?.['connected'] || ![];
+
+    /**
+     * Check if connected
+     */
+    isConnected() {
+        return this.socket?.connected || false;
     }
-    ['getConnectionStatus']() {
-        const _0x27ef2b = _0x31a2c7;
+
+    /**
+     * Get connection status
+     */
+    getConnectionStatus() {
         return {
-            'connected': this['isConnected'](),
-            'userId': this[_0x27ef2b(0x25e)],
-            'circuitBreakerState': this[_0x27ef2b(0x25f)]['state'],
-            'queuedMessages': this[_0x27ef2b(0x28d)][_0x27ef2b(0x20a)],
-            'reconnectAttempts': this['reconnectConfig'][_0x27ef2b(0x271)],
-            'activeTasks': this[_0x27ef2b(0x1f2)][_0x27ef2b(0x222)],
-            'activeAutomation': this[_0x27ef2b(0x23b)][_0x27ef2b(0x222)]
+            connected: this.isConnected(),
+            userId: this.userId,
+            circuitBreakerState: this.circuitBreaker.state,
+            queuedMessages: this.messageQueue.length,
+            reconnectAttempts: this.reconnectConfig.attempts,
+            activeTasks: this.activeTasks.size,
+            activeAutomation: this.automationSessions.size,
         };
     }
-    [_0x31a2c7(0x208)]() {
-        const _0x113051 = _0x31a2c7;
-        this[_0x113051(0x24a)] = !![], this[_0x113051(0x255)](), this[_0x113051(0x2a9)](), this[_0x113051(0x213)] && this[_0x113051(0x213)][_0x113051(0x208)](), this[_0x113051(0x1f2)][_0x113051(0x292)](), this[_0x113051(0x23b)][_0x113051(0x292)](), this[_0x113051(0x252)]['clear'](), this[_0x113051(0x1f9)][_0x113051(0x292)](), this[_0x113051(0x24d)]['clear'](), this['pendingOperations']['clear'](), this[_0x113051(0x28d)] = [], this[_0x113051(0x226)][_0x113051(0x292)](), this['securityManager']?.[_0x113051(0x248)](), console[_0x113051(0x206)](_0x113051(0x2a0));
+
+    /**
+     * Graceful disconnect
+     */
+    disconnect() {
+        this.isManuallyDisconnected = true;
+        this._stopHeartbeat();
+        this._stopConnectionHealthCheck();
+
+        if (this.socket) {
+            this.socket.disconnect();
+        }
+
+        // Cleanup all state
+        this.activeTasks.clear();
+        this.automationSessions.clear();
+        this.renderingJobs.clear();
+        this.analyticsStreams.clear();
+        this.aiOperations.clear();
+        this.pendingOperations.clear();
+        this.messageQueue = [];
+        this.debouncedOperations.clear();
+
+        this.securityManager?.destroy();
+
+        console.log('🔌 WebSocket disconnected gracefully');
     }
 }
-function _0x172a(_0x3c2a1b, _0x1af930) {
-    _0x3c2a1b = _0x3c2a1b - 0x1d9;
-    const _0x9fc9da = _0x9fc9();
-    let _0x172aa9 = _0x9fc9da[_0x3c2a1b];
-    return _0x172aa9;
+
+// Export for module systems
+if (typeof module !== 'undefined' && module.exports) {
+    module.exports = SolisAIWebSocketClient;
 }
-function _0x9fc9() {
-    const _0x2d32f8 = [
-        'auth_token',
-        'missedHeartbeats',
-        '📝\x20Task\x20registered:\x20',
-        '_startConnectionHealthCheck',
-        'pendingOperations',
-        '_handleAIOperationComplete',
-        'delete',
-        'activeTasks',
-        'startsWith',
-        '_startCleanupProcess',
-        '_handleRenderingComplete',
-        'HEARTBEAT_INTERVAL',
-        'polling',
-        'backendHost',
-        'analyticsStreams',
-        'get',
-        'healthCheckInterval',
-        'CLEANUP_INTERVAL',
-        'processing',
-        '📤\x20Queued\x20operation:\x20',
-        'registerRenderingJob',
-        'error',
-        'validateMessage',
-        '_startHeartbeat',
-        '⚠️\x20Progress\x20update\x20failed\x20security\x20validation',
-        '✅\x20Reconnected\x20to\x20server',
-        '_joinUserRoom',
-        'log',
-        'http://',
-        'disconnect',
-        '⚠️\x20Reconnection\x20attempt\x20',
-        'length',
-        'nextAttemptTime',
-        '_handleConnectionFailure',
-        'connectionHealthCheck',
-        'maxReconnectAttempts',
-        'timerId',
-        'lastHeartbeatTime',
-        'MAX_MISSED_HEARTBEATS',
-        'registerAutomationSession',
-        'socket',
-        'half-open',
-        'circuitBreakerResetTimeout',
-        '_processQueuedMessages',
-        '⚠️\x20Circuit\x20breaker\x20open,\x20cannot\x20connect',
-        '⚠️\x20Clip\x20deletion\x20failed\x20validation',
-        '328035YgGBvH',
-        '⚠️\x20Removed\x20',
-        'serverUrl',
-        'connect_error',
-        'emitClipDeletion',
-        'currentStep',
-        '❌\x20UserId\x20required\x20to\x20connect',
-        'validateIncomingMessage',
-        'undefined',
-        'size',
-        '_handleRenderingError',
-        'register_automation_session',
-        'isConnected',
-        'debouncedOperations',
-        'createSecureEnvelope',
-        'has',
-        '_getAuthToken',
-        'batch_operations',
-        'HEALTH_CHECK_INTERVAL',
-        '\x20queued\x20messages',
-        'age',
-        '_cleanupMap',
-        'getAnalyticsStreams',
-        'reconnect_attempt',
-        'batchSize',
-        'clip_deleted',
-        'values',
-        'getActiveRenderingJobs',
-        'heartbeatInterval',
-        'complete',
-        'set',
-        'startTime',
-        '_handleAutomationError',
-        'initialDelay',
-        'automationSessions',
-        'status',
-        '❌\x20Error\x20processing\x20queued\x20operation:',
-        'registerTask',
-        'cookie',
-        '❌\x20Connection\x20error:',
-        'automation_update',
-        'forEach',
-        '_emitCallback',
-        '1095520YlRDCI',
-        'map',
-        '_handleComplete',
-        '\x20callback:',
-        'destroy',
-        'heartbeat',
-        'isManuallyDisconnected',
-        'shift',
-        '_handleRenderingUpdate',
-        'aiOperations',
-        '_generateSecureId',
-        'getActiveAIOperations',
-        '_debounce',
-        'processing_update',
-        'renderingJobs',
-        'SolisAIWebSocketClient',
-        '❌\x20Socket.IO\x20not\x20loaded',
-        '_stopHeartbeat',
-        '\x20entries\x20due\x20to\x20size\x20limit',
-        'delete_clip',
-        'progress',
-        '_handleAnalyticsUpdate',
-        'ai_operation_complete',
-        '4oROLpt',
-        'automation_error',
-        '66766FkZUXR',
-        'userId',
-        'circuitBreaker',
-        'sessionId',
-        'failedPhase',
-        '1585464MfUJnz',
-        '776yNqmrK',
-        '❌\x20Error\x20emitting\x20clip\x20deletion:',
-        '5500',
-        'split',
-        '_performClipDeletion',
-        'connect',
-        'connection_failure',
-        '):\x20',
-        '_buildAuthConfig',
-        'Error\x20in\x20',
-        'registerAIOperation',
-        'createdAt',
-        'completed',
-        'ceil',
-        'attempts',
-        '12131306HTuIbO',
-        'register_analytics_stream',
-        '_setupEventListeners',
-        '_performCleanup',
-        'init',
-        '⚠️\x20Connection\x20health\x20degraded,\x20forcing\x20reconnect',
-        '9vcVgxa',
-        'user_id',
-        '📝\x20AI\x20operation\x20registered:\x20',
-        'STATE_ENTRY_MAX_AGE',
-        'ai_operation_update',
-        'now',
-        'entries',
-        'automation',
-        '_handleError',
-        'getItem',
-        'circuitBreakerThreshold',
-        '📨\x20Processing\x20',
-        'rendering_complete',
-        '📝\x20Analytics\x20stream\x20registered:\x20',
-        'rendering_update',
-        'queuedOperations',
-        '_queueOperation',
-        'maxQueueSize',
-        'cleanupTimers',
-        'reconnect',
-        'room_joined',
-        'messageQueue',
-        'ai_operation_error',
-        'open',
-        '🧹\x20Cleanup\x20completed',
-        '19285CtgLbG',
-        'clear',
-        'batchTimer',
-        'warn',
-        'exports',
-        'reconnectConfig',
-        'itemId',
-        'from',
-        'sessionIdRefreshed',
-        'websocket',
-        '⚠️\x20Circuit\x20breaker\x20opened\x20due\x20to\x20excessive\x20failures',
-        'emit',
-        '_executeQueuedOperation',
-        'rendering_error',
-        'getActiveAutomationSessions',
-        '🔌\x20WebSocket\x20disconnected\x20gracefully',
-        '_handleBatchOperations',
-        'clip_delete_',
-        'closed',
-        '⚠️\x20Disconnected\x20from\x20WebSocket\x20server',
-        'No\x20authentication\x20token\x20available',
-        'registerAnalyticsStream',
-        'maxStateSize',
-        '_detectServerUrl',
-        '_stopConnectionHealthCheck',
-        'securityManager',
-        'getActiveTasks',
-        'taskId',
-        'off',
-        '_handleAIOperationError',
-        'retries',
-        '✅\x20WebSocket\x20connected\x20successfully',
-        'register_ai_operation',
-        'state',
-        'analytics_update',
-        '📝\x20Rendering\x20job\x20registered:\x20',
-        'find',
-        'batchTimeout',
-        '❌\x20WebSocket\x20connection\x20failed:',
-        '7ALCPOv',
-        'debounceDelay',
-        'timestamp',
-        'automation_complete',
-        'slice',
-        'outputPath',
-        'stateMaxAge',
-        'cleanupInterval',
-        '12ZRamet',
-        'connected',
-        'result',
-        'callbacks',
-        '⚠️\x20Message\x20queue\x20full,\x20dropping\x20oldest\x20message',
-        '⚠️\x20Message\x20validation\x20failed',
-        'processing_error',
-        '❌\x20Error\x20handling\x20clip\x20deletion:',
-        'splice',
-        'duration',
-        'sort',
-        '_handleAutomationUpdate',
-        'failureCount',
-        'push',
-        '1850940CBfqHk'
-    ];
-    _0x9fc9 = function () {
-        return _0x2d32f8;
-    };
-    return _0x9fc9();
+
+// Make available globally
+if (typeof window !== 'undefined') {
+    window.SolisAIWebSocketClient = SolisAIWebSocketClient;
 }
-typeof module !== _0x31a2c7(0x221) && module['exports'] && (module[_0x31a2c7(0x295)] = SolisAIWebSocketClient);
-typeof window !== _0x31a2c7(0x221) && (window[_0x31a2c7(0x253)] = SolisAIWebSocketClient);

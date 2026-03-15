@@ -1,295 +1,429 @@
-const _0x42f9c7 = _0x4ac3;
-(function (_0x384416, _0x2ddafb) {
-    const _0x516cfe = _0x4ac3, _0x285f73 = _0x384416();
-    while (!![]) {
-        try {
-            const _0x28a58e = parseInt(_0x516cfe(0x190)) / 0x1 + -parseInt(_0x516cfe(0x133)) / 0x2 * (-parseInt(_0x516cfe(0x13d)) / 0x3) + parseInt(_0x516cfe(0x191)) / 0x4 + -parseInt(_0x516cfe(0x14a)) / 0x5 * (-parseInt(_0x516cfe(0x164)) / 0x6) + -parseInt(_0x516cfe(0x150)) / 0x7 + parseInt(_0x516cfe(0x149)) / 0x8 + -parseInt(_0x516cfe(0x18d)) / 0x9;
-            if (_0x28a58e === _0x2ddafb)
-                break;
-            else
-                _0x285f73['push'](_0x285f73['shift']());
-        } catch (_0x18ea80) {
-            _0x285f73['push'](_0x285f73['shift']());
-        }
-    }
-}(_0x52df, 0x61a73));
+// Premium/Payment Logic Handler
+// Handles payment success and storage updates
+
+// Cache for subscription info to reduce API calls
 const subscriptionCache = {
-    'data': null,
-    'timestamp': 0x0,
-    'ttl': 0x7530
+    data: null,
+    timestamp: 0,
+    ttl: 30000 // 30 second cache
 };
-window[_0x42f9c7(0x144)]('message', function (_0x2c0dee) {
-    const _0x29c9c8 = _0x42f9c7;
-    if (_0x2c0dee[_0x29c9c8(0x15a)] !== window[_0x29c9c8(0x13a)][_0x29c9c8(0x15a)])
-        return;
-    if (_0x2c0dee[_0x29c9c8(0x13e)] && _0x2c0dee[_0x29c9c8(0x13e)]['type'] === _0x29c9c8(0x187)) {
-        console['log']('🎉\x20Payment\x20success\x20message\x20received:', _0x2c0dee[_0x29c9c8(0x13e)]);
-        const {plan: _0x1822f2} = _0x2c0dee[_0x29c9c8(0x13e)];
-        handlePaymentSuccessOnDashboard(_0x1822f2);
+
+// Listen for payment success from premium.html
+window.addEventListener('message', function(event) {
+    // Accept messages from premium.html
+    if (event.origin !== window.location.origin) return;
+    
+    if (event.data && event.data.type === 'PAYMENT_SUCCESS') {
+        console.log('🎉 Payment success message received:', event.data);
+        const { plan } = event.data;
+        handlePaymentSuccessOnDashboard(plan);
     }
 });
-async function handlePaymentSuccessOnDashboard(_0xbbdf0e) {
-    const _0x2c44d7 = _0x42f9c7;
-    console[_0x2c44d7(0x15e)](_0x2c44d7(0x18b), _0xbbdf0e);
+
+// Handle payment success on dashboard.html
+async function handlePaymentSuccessOnDashboard(planName) {
+    console.log('💳 Processing payment success for plan:', planName);
+    
     try {
-        createConfettiEffect(), showPaymentSuccessModalOnDashboard(_0xbbdf0e);
+        // 1. Show confetti and thank you modal
+        createConfettiEffect();
+        showPaymentSuccessModalOnDashboard(planName);
+        
+        // 2. Fetch updated user data from backend to ensure plan is synced
+        // Use httpOnly cookies with credentials: 'include' instead of localStorage token
         try {
-            const _0x518d03 = await fetch(window['API_BASE_URL'] + '/auth/subscription', {
-                'method': 'GET',
-                'credentials': _0x2c44d7(0x156),
-                'headers': { 'Content-Type': 'application/json' }
-            });
-            if (_0x518d03['ok']) {
-                const _0x52e14d = await _0x518d03[_0x2c44d7(0x157)]();
-                if (!_0x52e14d || typeof _0x52e14d !== _0x2c44d7(0x131) || !_0x52e14d[_0x2c44d7(0x169)])
-                    throw new Error(_0x2c44d7(0x180));
-                console['log'](_0x2c44d7(0x14c), _0x52e14d), subscriptionCache[_0x2c44d7(0x13e)] = _0x52e14d['subscription'], subscriptionCache[_0x2c44d7(0x159)] = Date[_0x2c44d7(0x17e)]();
-                if (_0x52e14d[_0x2c44d7(0x169)] && _0x52e14d[_0x2c44d7(0x169)][_0x2c44d7(0x155)] && typeof _0x52e14d[_0x2c44d7(0x169)][_0x2c44d7(0x155)] === 'string') {
-                    const _0x1a2e95 = JSON[_0x2c44d7(0x170)](localStorage[_0x2c44d7(0x181)](_0x2c44d7(0x172)) || '{}');
-                    _0x1a2e95[_0x2c44d7(0x155)] = _0x52e14d[_0x2c44d7(0x169)][_0x2c44d7(0x155)]['toLowerCase'](), localStorage[_0x2c44d7(0x18a)](_0x2c44d7(0x172), JSON[_0x2c44d7(0x148)](_0x1a2e95));
+            const response = await fetch(`${window.API_BASE_URL}/auth/subscription`, {
+                method: 'GET',
+                credentials: 'include',
+                headers: {
+                    'Content-Type': 'application/json'
                 }
-                updateStorageDisplayOnDashboard(_0x52e14d[_0x2c44d7(0x169)]);
-            } else
-                throw new Error('HTTP\x20' + _0x518d03['status']);
-        } catch (_0xec18a9) {
-            console[_0x2c44d7(0x173)](_0x2c44d7(0x174), _0xec18a9);
+            });
+            
+            if (response.ok) {
+                const data = await response.json();
+                // Validate response structure
+                if (!data || typeof data !== 'object' || !data.subscription) {
+                    throw new Error('Invalid subscription response');
+                }
+                console.log('📊 Updated subscription info:', data);
+                
+                // Update cache
+                subscriptionCache.data = data.subscription;
+                subscriptionCache.timestamp = Date.now();
+                
+                // Update localStorage with new subscription info - validate plan first
+                if (data.subscription && data.subscription.plan && typeof data.subscription.plan === 'string') {
+                    const currentUser = JSON.parse(localStorage.getItem('currentUser') || '{}');
+                    currentUser.plan = data.subscription.plan.toLowerCase();
+                    localStorage.setItem('currentUser', JSON.stringify(currentUser));
+                }
+                
+                // 3. Update storage display on dashboard
+                updateStorageDisplayOnDashboard(data.subscription);
+            } else {
+                throw new Error(`HTTP ${response.status}`);
+            }
+        } catch (error) {
+            console.error('❌ Error handling payment success:', error);
         }
-    } catch (_0x313ba4) {
-        console[_0x2c44d7(0x173)](_0x2c44d7(0x15f), _0x313ba4);
+    } catch (error) {
+        console.error('❌ Error in payment success handler:', error);
     }
 }
+
+// Create confetti effect on dashboard
 function createConfettiEffect() {
-    const _0x3e9d73 = _0x42f9c7, _0x59b71b = [
-            _0x3e9d73(0x12e),
-            _0x3e9d73(0x16e),
-            _0x3e9d73(0x176),
-            _0x3e9d73(0x132),
-            _0x3e9d73(0x136),
-            _0x3e9d73(0x16d),
-            '#4ECDC4',
-            _0x3e9d73(0x16f),
-            _0x3e9d73(0x141),
-            _0x3e9d73(0x17f),
-            _0x3e9d73(0x13c),
-            _0x3e9d73(0x147)
-        ], _0x1e56e0 = [
-            _0x3e9d73(0x166),
-            _0x3e9d73(0x188),
-            _0x3e9d73(0x178)
-        ], _0x27d014 = 0x64;
-    for (let _0x37930f = 0x0; _0x37930f < _0x27d014; _0x37930f++) {
-        const _0x1b17b8 = document['createElement']('div');
-        _0x1b17b8[_0x3e9d73(0x130)] = _0x3e9d73(0x14b);
-        const _0x4bdb5c = _0x1e56e0[Math[_0x3e9d73(0x183)](Math[_0x3e9d73(0x142)]() * _0x1e56e0[_0x3e9d73(0x137)])], _0x12a7bf = _0x59b71b[Math[_0x3e9d73(0x183)](Math[_0x3e9d73(0x142)]() * _0x59b71b[_0x3e9d73(0x137)])], _0x4e7d3d = Math[_0x3e9d73(0x142)]() * 0xc + 0x6;
-        let _0x21d9fd, _0xa31aa5, _0x5eb79e, _0x50ad02;
-        const _0x2357ce = Math['floor'](Math['random']() * 0x3);
-        if (_0x2357ce === 0x0)
-            _0x21d9fd = Math[_0x3e9d73(0x142)]() * 0x64, _0xa31aa5 = -0xa, _0x5eb79e = 0x2d + Math[_0x3e9d73(0x142)]() * 0xa, _0x50ad02 = 0x28 + Math[_0x3e9d73(0x142)]() * 0x14;
-        else
-            _0x2357ce === 0x1 ? (_0x21d9fd = -0xa, _0xa31aa5 = 0x3c + Math[_0x3e9d73(0x142)]() * 0x28, _0x5eb79e = 0x2d + Math[_0x3e9d73(0x142)]() * 0xa, _0x50ad02 = 0x28 + Math[_0x3e9d73(0x142)]() * 0x14) : (_0x21d9fd = 0x6e, _0xa31aa5 = 0x3c + Math[_0x3e9d73(0x142)]() * 0x28, _0x5eb79e = 0x2d + Math[_0x3e9d73(0x142)]() * 0xa, _0x50ad02 = 0x28 + Math['random']() * 0x14);
-        let _0x58b8b8 = '';
-        if (_0x4bdb5c === _0x3e9d73(0x166))
-            _0x58b8b8 = _0x3e9d73(0x184);
-        else
-            _0x4bdb5c === _0x3e9d73(0x178) && (_0x58b8b8 = 'clip-path:\x20polygon(50%\x200%,\x200%\x20100%,\x20100%\x20100%);');
-        _0x1b17b8[_0x3e9d73(0x185)][_0x3e9d73(0x17a)] = _0x3e9d73(0x16a) + _0x4e7d3d + _0x3e9d73(0x146) + _0x4e7d3d + _0x3e9d73(0x182) + _0x12a7bf + ';\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20' + _0x58b8b8 + _0x3e9d73(0x12d) + _0x21d9fd + _0x3e9d73(0x171) + _0xa31aa5 + _0x3e9d73(0x14d) + Math[_0x3e9d73(0x142)]() * 0.5 + _0x3e9d73(0x160) + _0x5eb79e + _0x3e9d73(0x152) + _0x50ad02 + _0x3e9d73(0x140), document[_0x3e9d73(0x18f)][_0x3e9d73(0x195)](_0x1b17b8), setTimeout(() => _0x1b17b8[_0x3e9d73(0x15b)](), 0xbb8);
+    const colors = ['#FF9671', '#FFD4C4', '#FF7A50', '#FF6B9D', '#C44569', '#6DDCCF', '#4ECDC4', '#B8A9E5', '#FFD700', '#FF69B4', '#00CED1', '#FF4500'];
+    const shapes = ['circle', 'square', 'triangle'];
+    const confettiCount = 100;
+    
+    for (let i = 0; i < confettiCount; i++) {
+        const confetti = document.createElement('div');
+        confetti.className = 'confetti-particle';
+        
+        const shape = shapes[Math.floor(Math.random() * shapes.length)];
+        const color = colors[Math.floor(Math.random() * colors.length)];
+        const size = Math.random() * 12 + 6;
+        
+        // Determine starting position: top, left bottom, or right bottom
+        let startLeft, startTop, endLeft, endTop;
+        const direction = Math.floor(Math.random() * 3);
+        
+        if (direction === 0) {
+            // From top
+            startLeft = Math.random() * 100;
+            startTop = -10;
+            endLeft = 45 + Math.random() * 10; // Towards center
+            endTop = 40 + Math.random() * 20;
+        } else if (direction === 1) {
+            // From left bottom
+            startLeft = -10;
+            startTop = 60 + Math.random() * 40;
+            endLeft = 45 + Math.random() * 10;
+            endTop = 40 + Math.random() * 20;
+        } else {
+            // From right bottom
+            startLeft = 110;
+            startTop = 60 + Math.random() * 40;
+            endLeft = 45 + Math.random() * 10;
+            endTop = 40 + Math.random() * 20;
+        }
+        
+        let shapeStyle = '';
+        if (shape === 'circle') {
+            shapeStyle = `border-radius: 50%;`;
+        } else if (shape === 'triangle') {
+            shapeStyle = `clip-path: polygon(50% 0%, 0% 100%, 100% 100%);`;
+        }
+        
+        confetti.style.cssText = `
+            position: fixed;
+            width: ${size}px;
+            height: ${size}px;
+            background-color: ${color};
+            ${shapeStyle}
+            left: ${startLeft}%;
+            top: ${startTop}%;
+            pointer-events: none;
+            z-index: 9999;
+            animation: confetti-explosion 2.5s ease-out forwards;
+            animation-delay: ${Math.random() * 0.5}s;
+            --end-left: ${endLeft}%;
+            --end-top: ${endTop}%;
+        `;
+        document.body.appendChild(confetti);
+        
+        setTimeout(() => confetti.remove(), 3000);
     }
 }
-function showPaymentSuccessModalOnDashboard(_0x4974f0) {
-    const _0x328390 = _0x42f9c7;
-    (!_0x4974f0 || typeof _0x4974f0 !== _0x328390(0x153) || _0x4974f0[_0x328390(0x137)] === 0x0) && (console[_0x328390(0x194)](_0x328390(0x13b)), _0x4974f0 = _0x328390(0x16c));
-    const _0x5ef48d = document['getElementById'](_0x328390(0x192));
-    _0x5ef48d && _0x5ef48d[_0x328390(0x15b)]();
-    const _0x221e8c = _0x4974f0[_0x328390(0x135)](0x0)['toUpperCase']() + _0x4974f0[_0x328390(0x189)](0x1), _0x2eace1 = document[_0x328390(0x13f)]('div');
-    _0x2eace1['id'] = _0x328390(0x192), _0x2eace1[_0x328390(0x185)][_0x328390(0x17a)] = _0x328390(0x15d), _0x2eace1[_0x328390(0x158)] = _0x328390(0x175) + _0x221e8c + '\x20Plan</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20style=\x22text-align:\x20left;\x20margin-top:\x2016px;\x20padding-top:\x2016px;\x20border-top:\x202px\x20solid\x20rgba(255,\x20150,\x20113,\x200.2);\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<p\x20style=\x22font-size:\x200.9rem;\x20font-weight:\x20700;\x20margin-bottom:\x2012px;\x22>✨\x20What\x27s\x20Included:</p>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<ul\x20style=\x22\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20font-size:\x200.85rem;\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20line-height:\x201.8;\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20margin-left:\x200;\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20list-style:\x20none;\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20color:\x20#2D3748;\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<li>✓\x20Priority\x20access\x20to\x20new\x20features</li>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<li>✓\x20Enhanced\x20video\x20generation\x20capabilities</li>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<li>✓\x20Premium\x20templates\x20and\x20customization</li>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<li>✓\x20Advanced\x20AI-powered\x20hashtag\x20generation</li>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<li>✓\x20Priority\x20customer\x20support</li>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<li>✓\x20Exclusive\x20automation\x20tools</li>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<li>✓\x20Extended\x20storage\x20capacity</li>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</ul>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<p\x20style=\x22\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20font-size:\x200.9rem;\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20margin-top:\x2016px;\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20padding-top:\x2016px;\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20border-top:\x202px\x20solid\x20rgba(255,\x20150,\x20113,\x200.2);\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20color:\x20#718096;\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20💡\x20Your\x20' + _0x221e8c + _0x328390(0x143), document[_0x328390(0x18f)]['appendChild'](_0x2eace1), console[_0x328390(0x15e)](_0x328390(0x139));
+
+// Show thank you modal on dashboard
+function showPaymentSuccessModalOnDashboard(planName) {
+    // Validate plan name before using
+    if (!planName || typeof planName !== 'string' || planName.length === 0) {
+        console.warn('Invalid plan name for modal');
+        planName = 'your plan';
+    }
+    
+    // Remove existing modal if any
+    const existingModal = document.getElementById('dashboard-payment-success-modal');
+    if (existingModal) {
+        existingModal.remove();
+    }
+    
+    const capitalizedPlan = planName.charAt(0).toUpperCase() + planName.slice(1);
+    
+    const modal = document.createElement('div');
+    modal.id = 'dashboard-payment-success-modal';
+    modal.style.cssText = `
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.85);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 999999;
+        animation: fadeIn 0.3s ease;
+        backdrop-filter: blur(8px);
+    `;
+    
+    modal.innerHTML = `
+        <div style="
+            background: white;
+            border-radius: 24px;
+            padding: 60px 40px;
+            text-align: center;
+            max-width: 550px;
+            max-height: 90vh;
+            overflow-y: auto;
+            animation: slideUp 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+        ">
+            <button style="
+                position: absolute;
+                top: 15px;
+                right: 15px;
+                z-index: 1000;
+                background: none;
+                border: none;
+                font-size: 1.5rem;
+                color: #718096;
+                cursor: pointer;
+            " onclick="document.getElementById('dashboard-payment-success-modal').remove();">
+                <i class="fas fa-times"></i>
+            </button>
+            
+            <div style="
+                width: 100px;
+                height: 100px;
+                border-radius: 50%;
+                background: linear-gradient(135deg, #6DDCCF, #4ECDC4);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                margin: 0 auto 30px;
+                font-size: 3rem;
+                color: white;
+            ">
+                <i class="fas fa-check"></i>
+            </div>
+            
+            <h2 style="
+                font-size: 2rem;
+                font-weight: 900;
+                color: #1A1A2E;
+                margin-bottom: 8px;
+            ">Thank You!</h2>
+            
+            <p style="
+                font-size: 1rem;
+                color: #718096;
+                margin-bottom: 24px;
+            ">Your payment was successful</p>
+            
+            <div style="
+                text-align: left;
+                padding: 24px;
+                background: #f7f7f7;
+                border-radius: 16px;
+                margin: 24px 0;
+            ">
+                <p style="font-size: 0.9rem; margin-bottom: 12px;">🎉 Congratulations!</p>
+                <p style="font-size: 1.1rem; font-weight: 800; margin-bottom: 8px;">You've upgraded to the</p>
+                <div style="font-size: 1.5rem; margin: 8px 0; font-weight: bold; color: #FF9671;">${capitalizedPlan} Plan</div>
+                
+                <div style="text-align: left; margin-top: 16px; padding-top: 16px; border-top: 2px solid rgba(255, 150, 113, 0.2);">
+                    <p style="font-size: 0.9rem; font-weight: 700; margin-bottom: 12px;">✨ What's Included:</p>
+                    <ul style="
+                        font-size: 0.85rem;
+                        line-height: 1.8;
+                        margin-left: 0;
+                        list-style: none;
+                        color: #2D3748;
+                    ">
+                        <li>✓ Priority access to new features</li>
+                        <li>✓ Enhanced video generation capabilities</li>
+                        <li>✓ Premium templates and customization</li>
+                        <li>✓ Advanced AI-powered hashtag generation</li>
+                        <li>✓ Priority customer support</li>
+                        <li>✓ Exclusive automation tools</li>
+                        <li>✓ Extended storage capacity</li>
+                    </ul>
+                </div>
+                
+                <p style="
+                    font-size: 0.9rem;
+                    margin-top: 16px;
+                    padding-top: 16px;
+                    border-top: 2px solid rgba(255, 150, 113, 0.2);
+                    color: #718096;
+                ">
+                    💡 Your ${capitalizedPlan} plan features are now active and ready to use!
+                </p>
+            </div>
+            
+            <button onclick="document.getElementById('dashboard-payment-success-modal').remove();" style="
+                background: linear-gradient(135deg, #FF9671, #FF7A50);
+                color: white;
+                border: none;
+                padding: 14px 32px;
+                border-radius: 12px;
+                font-weight: 700;
+                font-size: 1rem;
+                cursor: pointer;
+                transition: all 0.3s ease;
+                margin-top: 24px;
+            " onmouseover="this.style.background = 'linear-gradient(135deg, #FF7A50, #FF5533)'" onmouseout="this.style.background = 'linear-gradient(135deg, #FF9671, #FF7A50)'">
+                Continue to Dashboard
+            </button>
+        </div>
+    `;
+    
+    document.body.appendChild(modal);
+    console.log('✅ Success modal displayed on dashboard');
 }
-function updateStorageDisplayOnDashboard(_0x2a4c28) {
-    const _0x2d0e29 = _0x42f9c7;
-    if (!_0x2a4c28)
-        return;
-    const _0x41d85d = {
-            'free': {
-                'videosStorage': 0x2,
-                'storage': _0x2d0e29(0x16b),
-                'uploadDuration': 0x1e,
-                'videosPerDay': 0x1
-            },
-            'basic': {
-                'videosStorage': 0xa,
-                'storage': _0x2d0e29(0x197),
-                'uploadDuration': 0x2d,
-                'videosPerDay': 0x3
-            },
-            'prime': {
-                'videosStorage': 0x14,
-                'storage': _0x2d0e29(0x145),
-                'uploadDuration': 0x78,
-                'videosPerDay': 0x5
-            },
-            'elite': {
-                'videosStorage': 0x64,
-                'storage': '50GB',
-                'uploadDuration': 0xf0,
-                'videosPerDay': 0xa
-            }
-        }, _0x3bc18b = _0x2a4c28[_0x2d0e29(0x155)] || _0x2d0e29(0x193), _0x569f61 = _0x41d85d[_0x3bc18b] || _0x41d85d[_0x2d0e29(0x193)], _0x2b01cd = document[_0x2d0e29(0x17d)]('storageUsedBadge'), _0x131d2e = document[_0x2d0e29(0x17d)](_0x2d0e29(0x18c)), _0x1af810 = document['getElementById'](_0x2d0e29(0x134));
-    let _0x4afb3e = 0x0;
-    window[_0x2d0e29(0x15c)] && window['clipsStudio'][_0x2d0e29(0x165)] && (_0x4afb3e = window['clipsStudio']['libraryItems'][_0x2d0e29(0x137)]);
-    const _0x3af42c = _0x2a4c28['video_limit'] || _0x569f61[_0x2d0e29(0x168)], _0xf4677a = _0x2a4c28[_0x2d0e29(0x162)] || _0x3bc18b[_0x2d0e29(0x135)](0x0)[_0x2d0e29(0x161)]() + _0x3bc18b[_0x2d0e29(0x189)](0x1);
-    _0x2b01cd && (_0x2b01cd[_0x2d0e29(0x163)] = _0x4afb3e), _0x131d2e && (_0x131d2e[_0x2d0e29(0x163)] = _0x3af42c), _0x1af810 && (_0x1af810[_0x2d0e29(0x163)] = _0xf4677a), updateDashboardStorageInfo(_0x2a4c28), window[_0x2d0e29(0x15c)] && typeof window[_0x2d0e29(0x15c)][_0x2d0e29(0x14e)] === _0x2d0e29(0x14f) && window['clipsStudio'][_0x2d0e29(0x14e)](), console[_0x2d0e29(0x15e)](_0x2d0e29(0x154), {
-        'used': _0x4afb3e,
-        'total': _0x3af42c,
-        'plan': _0xf4677a
+
+// Update storage display on dashboard
+function updateStorageDisplayOnDashboard(subscription) {
+    if (!subscription) return;
+    
+    // Define plan limits as fallback
+    const planLimits = {
+        free: { videosStorage: 2, storage: '2GB', uploadDuration: 30, videosPerDay: 1 },
+        basic: { videosStorage: 10, storage: '5GB', uploadDuration: 45, videosPerDay: 3 },
+        prime: { videosStorage: 20, storage: '10GB', uploadDuration: 120, videosPerDay: 5 },
+        elite: { videosStorage: 100, storage: '50GB', uploadDuration: 240, videosPerDay: 10 }
+    };
+    
+    const plan = subscription.plan || 'free';
+    const limits = planLimits[plan] || planLimits.free;
+    
+    // Update storage badges if they exist
+    const usedBadge = document.getElementById('storageUsedBadge');
+    const totalBadge = document.getElementById('storageTotalBadge');
+    const planBadge = document.getElementById('storagePlanBadge');
+    
+    // Use local library count since videos are stored in localStorage
+    let videosUsed = 0;
+    if (window.clipsStudio && window.clipsStudio.libraryItems) {
+        videosUsed = window.clipsStudio.libraryItems.length;
+    }
+    const videoLimit = subscription.video_limit || limits.videosStorage;
+    const planName = subscription.plan_name || (plan.charAt(0).toUpperCase() + plan.slice(1));
+    
+    if (usedBadge) {
+        usedBadge.textContent = videosUsed;
+    }
+    if (totalBadge) {
+        totalBadge.textContent = videoLimit;
+    }
+    if (planBadge) {
+        planBadge.textContent = planName;
+    }
+    
+    // Also update any other storage-related displays
+    updateDashboardStorageInfo(subscription);
+    
+    // If ClipsStudio is available, trigger storage update
+    if (window.clipsStudio && typeof window.clipsStudio.loadAndDisplayStorageInfo === 'function') {
+        window.clipsStudio.loadAndDisplayStorageInfo();
+    }
+    
+    console.log('📊 Storage display updated:', {
+        used: videosUsed,
+        total: videoLimit,
+        plan: planName
     });
+
 }
-function updateDashboardStorageInfo(_0x504be4) {
-    const _0x8881d2 = _0x42f9c7;
-    console['log'](_0x8881d2(0x196), _0x504be4);
+
+// Stub function for updateDashboardStorageInfo in case it's not defined elsewhere
+function updateDashboardStorageInfo(subscription) {
+    // This will be overridden if s.js has a better implementation
+    console.log('Dashboard storage info:', subscription);
 }
+
+// Refresh user subscription info from backend
 async function refreshUserSubscriptionInfo() {
-    const _0x2b0cb8 = _0x42f9c7;
     try {
-        const _0x3743e7 = await fetch(window[_0x2b0cb8(0x151)] + _0x2b0cb8(0x186), {
-            'method': _0x2b0cb8(0x179),
-            'credentials': _0x2b0cb8(0x156),
-            'headers': { 'Content-Type': _0x2b0cb8(0x17b) }
-        });
-        if (_0x3743e7['ok']) {
-            const _0x443001 = await _0x3743e7[_0x2b0cb8(0x157)]();
-            if (_0x443001 && _0x443001[_0x2b0cb8(0x169)] && typeof _0x443001[_0x2b0cb8(0x169)][_0x2b0cb8(0x155)] === _0x2b0cb8(0x153)) {
-                const _0x132e3a = JSON[_0x2b0cb8(0x170)](localStorage['getItem']('currentUser') || '{}');
-                _0x132e3a[_0x2b0cb8(0x155)] = _0x443001[_0x2b0cb8(0x169)]['plan'], localStorage[_0x2b0cb8(0x18a)](_0x2b0cb8(0x172), JSON[_0x2b0cb8(0x148)](_0x132e3a));
+        // 🔐 SECURITY: Use httpOnly cookies only via credentials: 'include'
+        // Never read authToken from localStorage - use automatic cookie-based auth
+        const response = await fetch(`${window.API_BASE_URL}/auth/subscription`, {
+            method: 'GET',
+            credentials: 'include',
+            headers: {
+                'Content-Type': 'application/json'
             }
-            return _0x443001[_0x2b0cb8(0x169)];
+        });
+        
+        if (response.ok) {
+            const data = await response.json();
+            // 🔐 SECURITY: Always validate response before trusting it
+            if (data && data.subscription && typeof data.subscription.plan === 'string') {
+                const currentUser = JSON.parse(localStorage.getItem('currentUser') || '{}');
+                currentUser.plan = data.subscription.plan;
+                localStorage.setItem('currentUser', JSON.stringify(currentUser));
+            }
+            return data.subscription;
         }
-    } catch (_0x4bc2c9) {
-        console[_0x2b0cb8(0x173)](_0x2b0cb8(0x138), _0x4bc2c9);
+    } catch (error) {
+        console.error('Error refreshing subscription:', error);
     }
     return null;
 }
-function _0x4ac3(_0x542d2d, _0x2fd803) {
-    _0x542d2d = _0x542d2d - 0x12d;
-    const _0x52dfae = _0x52df();
-    let _0x4ac3f7 = _0x52dfae[_0x542d2d];
-    return _0x4ac3f7;
+
+// Add CSS animations to document
+if (!document.getElementById('premium-logic-styles')) {
+    const style = document.createElement('style');
+    style.id = 'premium-logic-styles';
+    style.textContent = `
+        @keyframes confetti-explosion {
+            0% {
+                transform: translate(0, 0) rotate(0deg) scale(1);
+                opacity: 1;
+            }
+            30% {
+                transform: translate(var(--end-left), var(--end-top)) rotate(180deg) scale(1.2);
+                opacity: 1;
+            }
+            60% {
+                transform: translate(var(--end-left), calc(var(--end-top) + 100px)) rotate(360deg) scale(0.8);
+                opacity: 0.8;
+            }
+            100% {
+                transform: translate(var(--end-left), calc(var(--end-top) + 300px)) rotate(720deg) scale(0.5);
+                opacity: 0;
+            }
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .confetti-particle {
+            animation: confetti-explosion 2.5s ease-out forwards !important;
+        }
+    `;
+    document.head.appendChild(style);
 }
-function _0x52df() {
-    const _0x5481ea = [
-        'your\x20plan',
-        '#6DDCCF',
-        '#FFD4C4',
-        '#B8A9E5',
-        'parse',
-        '%;\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20top:\x20',
-        'currentUser',
-        'error',
-        '❌\x20Error\x20handling\x20payment\x20success:',
-        '\x0a\x20\x20\x20\x20\x20\x20\x20\x20<div\x20style=\x22\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20background:\x20white;\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20border-radius:\x2024px;\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20padding:\x2060px\x2040px;\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20text-align:\x20center;\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20max-width:\x20550px;\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20max-height:\x2090vh;\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20overflow-y:\x20auto;\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20animation:\x20slideUp\x200.5s\x20cubic-bezier(0.34,\x201.56,\x200.64,\x201);\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<button\x20style=\x22\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20position:\x20absolute;\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20top:\x2015px;\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20right:\x2015px;\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20z-index:\x201000;\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20background:\x20none;\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20border:\x20none;\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20font-size:\x201.5rem;\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20color:\x20#718096;\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20cursor:\x20pointer;\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x22\x20onclick=\x22document.getElementById(\x27dashboard-payment-success-modal\x27).remove();\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<i\x20class=\x22fas\x20fa-times\x22></i>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</button>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20style=\x22\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20width:\x20100px;\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20height:\x20100px;\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20border-radius:\x2050%;\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20background:\x20linear-gradient(135deg,\x20#6DDCCF,\x20#4ECDC4);\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20display:\x20flex;\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20align-items:\x20center;\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20justify-content:\x20center;\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20margin:\x200\x20auto\x2030px;\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20font-size:\x203rem;\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20color:\x20white;\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<i\x20class=\x22fas\x20fa-check\x22></i>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<h2\x20style=\x22\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20font-size:\x202rem;\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20font-weight:\x20900;\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20color:\x20#1A1A2E;\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20margin-bottom:\x208px;\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x22>Thank\x20You!</h2>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<p\x20style=\x22\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20font-size:\x201rem;\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20color:\x20#718096;\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20margin-bottom:\x2024px;\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x22>Your\x20payment\x20was\x20successful</p>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20style=\x22\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20text-align:\x20left;\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20padding:\x2024px;\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20background:\x20#f7f7f7;\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20border-radius:\x2016px;\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20margin:\x2024px\x200;\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<p\x20style=\x22font-size:\x200.9rem;\x20margin-bottom:\x2012px;\x22>🎉\x20Congratulations!</p>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<p\x20style=\x22font-size:\x201.1rem;\x20font-weight:\x20800;\x20margin-bottom:\x208px;\x22>You\x27ve\x20upgraded\x20to\x20the</p>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20style=\x22font-size:\x201.5rem;\x20margin:\x208px\x200;\x20font-weight:\x20bold;\x20color:\x20#FF9671;\x22>',
-        '#FF7A50',
-        'head',
-        'triangle',
-        'GET',
-        'cssText',
-        'application/json',
-        'refreshUserSubscriptionInfo',
-        'getElementById',
-        'now',
-        '#FF69B4',
-        'Invalid\x20subscription\x20response',
-        'getItem',
-        'px;\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20background-color:\x20',
-        'floor',
-        'border-radius:\x2050%;',
-        'style',
-        '/auth/subscription',
-        'PAYMENT_SUCCESS',
-        'square',
-        'slice',
-        'setItem',
-        '💳\x20Processing\x20payment\x20success\x20for\x20plan:',
-        'storageTotalBadge',
-        '8339796XYceyy',
-        'premium-logic-styles',
-        'body',
-        '70521vhKLLn',
-        '797100wVdBuq',
-        'dashboard-payment-success-modal',
-        'free',
-        'warn',
-        'appendChild',
-        'Dashboard\x20storage\x20info:',
-        '5GB',
-        '\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20left:\x20',
-        '#FF9671',
-        'handlePaymentSuccessOnDashboard',
-        'className',
-        'object',
-        '#FF6B9D',
-        '2CMbOZV',
-        'storagePlanBadge',
-        'charAt',
-        '#C44569',
-        'length',
-        'Error\x20refreshing\x20subscription:',
-        '✅\x20Success\x20modal\x20displayed\x20on\x20dashboard',
-        'location',
-        'Invalid\x20plan\x20name\x20for\x20modal',
-        '#00CED1',
-        '2199243AZaHow',
-        'data',
-        'createElement',
-        '%;\x0a\x20\x20\x20\x20\x20\x20\x20\x20',
-        '#FFD700',
-        'random',
-        '\x20plan\x20features\x20are\x20now\x20active\x20and\x20ready\x20to\x20use!\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</p>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<button\x20onclick=\x22document.getElementById(\x27dashboard-payment-success-modal\x27).remove();\x22\x20style=\x22\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20background:\x20linear-gradient(135deg,\x20#FF9671,\x20#FF7A50);\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20color:\x20white;\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20border:\x20none;\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20padding:\x2014px\x2032px;\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20border-radius:\x2012px;\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20font-weight:\x20700;\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20font-size:\x201rem;\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20cursor:\x20pointer;\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20transition:\x20all\x200.3s\x20ease;\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20margin-top:\x2024px;\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x22\x20onmouseover=\x22this.style.background\x20=\x20\x27linear-gradient(135deg,\x20#FF7A50,\x20#FF5533)\x27\x22\x20onmouseout=\x22this.style.background\x20=\x20\x27linear-gradient(135deg,\x20#FF9671,\x20#FF7A50)\x27\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20Continue\x20to\x20Dashboard\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</button>\x0a\x20\x20\x20\x20\x20\x20\x20\x20</div>\x0a\x20\x20\x20\x20',
-        'addEventListener',
-        '10GB',
-        'px;\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20height:\x20',
-        '#FF4500',
-        'stringify',
-        '6211904ICbWuN',
-        '9055mnrdTM',
-        'confetti-particle',
-        '📊\x20Updated\x20subscription\x20info:',
-        '%;\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20pointer-events:\x20none;\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20z-index:\x209999;\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20animation:\x20confetti-explosion\x202.5s\x20ease-out\x20forwards;\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20animation-delay:\x20',
-        'loadAndDisplayStorageInfo',
-        'function',
-        '5273520KnpCRl',
-        'API_BASE_URL',
-        '%;\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20--end-top:\x20',
-        'string',
-        '📊\x20Storage\x20display\x20updated:',
-        'plan',
-        'include',
-        'json',
-        'innerHTML',
-        'timestamp',
-        'origin',
-        'remove',
-        'clipsStudio',
-        '\x0a\x20\x20\x20\x20\x20\x20\x20\x20position:\x20fixed;\x0a\x20\x20\x20\x20\x20\x20\x20\x20top:\x200;\x0a\x20\x20\x20\x20\x20\x20\x20\x20left:\x200;\x0a\x20\x20\x20\x20\x20\x20\x20\x20right:\x200;\x0a\x20\x20\x20\x20\x20\x20\x20\x20bottom:\x200;\x0a\x20\x20\x20\x20\x20\x20\x20\x20background:\x20rgba(0,\x200,\x200,\x200.85);\x0a\x20\x20\x20\x20\x20\x20\x20\x20display:\x20flex;\x0a\x20\x20\x20\x20\x20\x20\x20\x20align-items:\x20center;\x0a\x20\x20\x20\x20\x20\x20\x20\x20justify-content:\x20center;\x0a\x20\x20\x20\x20\x20\x20\x20\x20z-index:\x20999999;\x0a\x20\x20\x20\x20\x20\x20\x20\x20animation:\x20fadeIn\x200.3s\x20ease;\x0a\x20\x20\x20\x20\x20\x20\x20\x20backdrop-filter:\x20blur(8px);\x0a\x20\x20\x20\x20',
-        'log',
-        '❌\x20Error\x20in\x20payment\x20success\x20handler:',
-        's;\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20--end-left:\x20',
-        'toUpperCase',
-        'plan_name',
-        'textContent',
-        '996AvtCqd',
-        'libraryItems',
-        'circle',
-        '✅\x20Premium\x20logic\x20loaded',
-        'videosStorage',
-        'subscription',
-        '\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20position:\x20fixed;\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20width:\x20',
-        '2GB'
-    ];
-    _0x52df = function () {
-        return _0x5481ea;
-    };
-    return _0x52df();
-}
-if (!document[_0x42f9c7(0x17d)](_0x42f9c7(0x18e))) {
-    const style = document['createElement']('style');
-    style['id'] = _0x42f9c7(0x18e), style[_0x42f9c7(0x163)] = '\x0a\x20\x20\x20\x20\x20\x20\x20\x20@keyframes\x20confetti-explosion\x20{\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x200%\x20{\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20transform:\x20translate(0,\x200)\x20rotate(0deg)\x20scale(1);\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20opacity:\x201;\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20}\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x2030%\x20{\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20transform:\x20translate(var(--end-left),\x20var(--end-top))\x20rotate(180deg)\x20scale(1.2);\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20opacity:\x201;\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20}\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x2060%\x20{\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20transform:\x20translate(var(--end-left),\x20calc(var(--end-top)\x20+\x20100px))\x20rotate(360deg)\x20scale(0.8);\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20opacity:\x200.8;\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20}\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20100%\x20{\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20transform:\x20translate(var(--end-left),\x20calc(var(--end-top)\x20+\x20300px))\x20rotate(720deg)\x20scale(0.5);\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20opacity:\x200;\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20}\x0a\x20\x20\x20\x20\x20\x20\x20\x20}\x0a\x0a\x20\x20\x20\x20\x20\x20\x20\x20@keyframes\x20fadeIn\x20{\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20from\x20{\x20opacity:\x200;\x20}\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20to\x20{\x20opacity:\x201;\x20}\x0a\x20\x20\x20\x20\x20\x20\x20\x20}\x0a\x0a\x20\x20\x20\x20\x20\x20\x20\x20@keyframes\x20slideUp\x20{\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20from\x20{\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20opacity:\x200;\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20transform:\x20translateY(30px);\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20}\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20to\x20{\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20opacity:\x201;\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20transform:\x20translateY(0);\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20}\x0a\x20\x20\x20\x20\x20\x20\x20\x20}\x0a\x0a\x20\x20\x20\x20\x20\x20\x20\x20.confetti-particle\x20{\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20animation:\x20confetti-explosion\x202.5s\x20ease-out\x20forwards\x20!important;\x0a\x20\x20\x20\x20\x20\x20\x20\x20}\x0a\x20\x20\x20\x20', document[_0x42f9c7(0x177)][_0x42f9c7(0x195)](style);
-}
-window[_0x42f9c7(0x12f)] = handlePaymentSuccessOnDashboard, window[_0x42f9c7(0x17c)] = refreshUserSubscriptionInfo, console[_0x42f9c7(0x15e)](_0x42f9c7(0x167));
+
+// Export functions for global use
+window.handlePaymentSuccessOnDashboard = handlePaymentSuccessOnDashboard;
+window.refreshUserSubscriptionInfo = refreshUserSubscriptionInfo;
+
+console.log('✅ Premium logic loaded');

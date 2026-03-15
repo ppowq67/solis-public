@@ -6,123 +6,58 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="theme-color" content="#ff6b3d">
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://cdn.socket.io http://localhost:5000 http://127.0.0.1:5000 http://localhost:5500 http://127.0.0.1:5500; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.jsdelivr.net https://cdnjs.cloudflare.com; font-src 'self' https://fonts.gstatic.com https://cdn.jsdelivr.net https://cdnjs.cloudflare.com; connect-src 'self' http://localhost:5000 ws://localhost:5000 http://127.0.0.1:5000 ws://127.0.0.1:5000 http://localhost:5500 ws://localhost:5500 http://127.0.0.1:5500 ws://127.0.0.1:5500 https:; img-src 'self' data: https:;">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://cdn.socket.io; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.jsdelivr.net https://cdnjs.cloudflare.com; font-src 'self' https://fonts.gstatic.com https://cdn.jsdelivr.net https://cdnjs.cloudflare.com; connect-src 'self' https:; img-src 'self' data: https:;">
     <meta name="csrf-token" content="">
-    <script>const _0x588083 = _0x5c5a;
-(function (_0x3ea0d3, _0x12651c) {
-    const _0x3957f2 = _0x5c5a, _0x103a21 = _0x3ea0d3();
-    while (!![]) {
-        try {
-            const _0x53191d = parseInt(_0x3957f2(0xea)) / 0x1 + -parseInt(_0x3957f2(0x109)) / 0x2 * (-parseInt(_0x3957f2(0x106)) / 0x3) + -parseInt(_0x3957f2(0xec)) / 0x4 * (parseInt(_0x3957f2(0xed)) / 0x5) + -parseInt(_0x3957f2(0x10a)) / 0x6 * (parseInt(_0x3957f2(0xf8)) / 0x7) + -parseInt(_0x3957f2(0x102)) / 0x8 + -parseInt(_0x3957f2(0xf9)) / 0x9 + -parseInt(_0x3957f2(0xe8)) / 0xa * (-parseInt(_0x3957f2(0xfc)) / 0xb);
-            if (_0x53191d === _0x12651c)
-                break;
-            else
-                _0x103a21['push'](_0x103a21['shift']());
-        } catch (_0x38cea1) {
-            _0x103a21['push'](_0x103a21['shift']());
+    <script src="/js/core/init.js"></script>
+    <script>
+        (async function initializeCsrfToken() {
+            try {
+                const response = await fetch('/api/auth/csrf-token', {
+                    method: 'GET',
+                    credentials: 'include'
+                });
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data.token && typeof data.token === 'string' && data.token.length >= 32) {
+                        document.querySelector('meta[name="csrf-token"]').setAttribute('content', data.token);
+                    }
+                } else {
+                }
+            } catch (error) {
+            }
+        })();
+        function getCSRFToken() {
+            const csrfMeta = document.querySelector('meta[name="csrf-token"]');
+            if (csrfMeta && csrfMeta.content && csrfMeta.content.length >= 32) {
+                return csrfMeta.content;
+            }
+            return null;
         }
-    }
-}(_0x2af5, 0x27172), async function initializeCsrfToken() {
-    const _0x228f58 = _0x5c5a;
-    try {
-        const _0x5b6e8b = await fetch(_0x228f58(0xf4), {
-            'method': _0x228f58(0x10e),
-            'credentials': _0x228f58(0x101)
-        });
-        if (_0x5b6e8b['ok']) {
-            const _0x2363b9 = await _0x5b6e8b[_0x228f58(0x107)]();
-            _0x2363b9['token'] && typeof _0x2363b9[_0x228f58(0x111)] === _0x228f58(0x10c) && _0x2363b9[_0x228f58(0x111)][_0x228f58(0x100)] >= 0x20 && (document['querySelector']('meta[name=\x22csrf-token\x22]')[_0x228f58(0xf0)](_0x228f58(0x105), _0x2363b9[_0x228f58(0x111)]), console[_0x228f58(0xef)](_0x228f58(0xfb)));
-        } else
-            console[_0x228f58(0xfe)]('Failed\x20to\x20fetch\x20CSRF\x20token:', _0x5b6e8b[_0x228f58(0xf7)]);
-    } catch (_0x52903a) {
-        console[_0x228f58(0x10b)](_0x228f58(0x103), _0x52903a);
-    }
-}());
-function getCSRFToken() {
-    const _0xf53f0a = _0x5c5a, _0x2a600f = document[_0xf53f0a(0xeb)](_0xf53f0a(0x10f));
-    if (_0x2a600f && _0x2a600f[_0xf53f0a(0x105)] && _0x2a600f[_0xf53f0a(0x105)]['length'] >= 0x20)
-        return _0x2a600f[_0xf53f0a(0x105)];
-    return null;
-}
-async function secureFetch(_0x47eb25, _0x2c2151 = {}) {
-    const _0x2931c7 = _0x5c5a, _0x3827b7 = {};
-    if (_0x2c2151[_0x2931c7(0xf3)] && [
-            _0x2931c7(0x10d),
-            _0x2931c7(0x104),
-            _0x2931c7(0x110),
-            _0x2931c7(0xf6)
-        ][_0x2931c7(0xee)](_0x2c2151[_0x2931c7(0xf3)][_0x2931c7(0xe9)]())) {
-        const _0x254bf1 = getCSRFToken();
-        if (!_0x254bf1)
-            throw new Error(_0x2931c7(0xfd));
-        _0x3827b7['X-CSRF-Token'] = _0x254bf1;
-    }
-    return fetch(_0x47eb25, {
-        ..._0x2c2151,
-        'credentials': _0x2931c7(0x101),
-        'headers': {
-            ..._0x3827b7,
-            ..._0x2c2151['headers']
+        async function secureFetch(url, options = {}) {
+            const defaultHeaders = { };
+            if (options.method && ['POST', 'PUT', 'DELETE', 'PATCH'].includes(options.method.toUpperCase())) {
+                const csrfToken = getCSRFToken();
+                if (!csrfToken) {
+                    throw new Error('CSRF token not available - cannot make state-changing request');
+                }
+                defaultHeaders['X-CSRF-Token'] = csrfToken;
+            }
+            
+            return fetch(url, {
+                ...options,
+                credentials: 'include',
+                headers: {
+                    ...defaultHeaders,
+                    ...options.headers
+                }
+            });
         }
-    });
-}
-window['location'][_0x588083(0xff)] === _0x588083(0x108) && window[_0x588083(0xf1)][_0x588083(0xf2)] !== _0x588083(0xfa) && window[_0x588083(0xf1)]['hostname'] !== '127.0.0.1' && console[_0x588083(0xfe)](_0x588083(0xf5));
-function _0x5c5a(_0x307477, _0x461f7e) {
-    _0x307477 = _0x307477 - 0xe8;
-    const _0x2af5fe = _0x2af5();
-    let _0x5c5ab1 = _0x2af5fe[_0x307477];
-    return _0x5c5ab1;
-}
-function _0x2af5() {
-    const _0x27597f = [
-        '570spGArL',
-        'toUpperCase',
-        '88378vNpZqa',
-        'querySelector',
-        '32edYmHA',
-        '75995JrUuIL',
-        'includes',
-        'log',
-        'setAttribute',
-        'location',
-        'hostname',
-        'method',
-        '/api/auth/csrf-token',
-        '⚠️\x20Warning:\x20Connection\x20is\x20not\x20secure.\x20Use\x20HTTPS\x20in\x20production.',
-        'PATCH',
-        'status',
-        '2457NiofoE',
-        '2381067JaUgGR',
-        'localhost',
-        '✅\x20CSRF\x20token\x20initialized',
-        '133474qtshqZ',
-        'CSRF\x20token\x20not\x20available\x20-\x20cannot\x20make\x20state-changing\x20request',
-        'warn',
-        'protocol',
-        'length',
-        'include',
-        '1951904wwBFPe',
-        'Error\x20initializing\x20CSRF\x20token:',
-        'PUT',
-        'content',
-        '559329dNkmqo',
-        'json',
-        'http:',
-        '2StKSfO',
-        '3012BVgtND',
-        'error',
-        'string',
-        'POST',
-        'GET',
-        'meta[name=\x22csrf-token\x22]',
-        'DELETE',
-        'token'
-    ];
-    _0x2af5 = function () {
-        return _0x27597f;
-    };
-    return _0x2af5();
-}</script>
+        
+        // 🔐 HTTPS enforcement warning
+        if (window.location.protocol === 'http:' && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
+            console.warn('⚠️ Warning: Connection is not secure. Use HTTPS in production.');
+        }
+    </script>
     <title>Solis AI</title>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -142,7 +77,7 @@ function _0x2af5() {
     <script src="/js/i_dq/profile-notifications.js?v=1"></script>
     <script src="/js/s_new/qwsqa.js?v=1"></script>
     <script src="/js/s_new/qwe.js?v=1"></script>
-    <script src="/js/s_new/stg.js?=v1"></script>
+    <script src="/js/s_new/stg.js?v=1"></script>
     <script src="/js/i_dq/video-generation-hook.js?v=1"></script>
     <script src="/js/ui/progress-ui.js?v=2"></script>
     <script src="/js/ui/generation-progress-spinner.js?v=1"></script>
@@ -1924,148 +1859,30 @@ function _0x2af5() {
     </div>
 </div>
 
-    <script>function _0x1b9b(_0x56b956, _0x244991) {
-    _0x56b956 = _0x56b956 - 0x18e;
-    const _0x3077a4 = _0x3077();
-    let _0x1b9b9c = _0x3077a4[_0x56b956];
-    return _0x1b9b9c;
-}
-function _0x3077() {
-    const _0x48cd78 = [
-        'true',
-        'getElementById',
-        '822432PESeuN',
-        '799328XfzKYQ',
-        '24BTJtId',
-        'remove',
-        '9UwamwE',
-        '2792136YIyrKm',
-        '26hcBntn',
-        'getItem',
-        'loader-hidden',
-        '3539494LVesVg',
-        '826585vPnyjO',
-        'add',
-        '10EvEyVA',
-        '22HAYEcv',
-        'setItem',
-        '3309070cfRnfv',
-        '139960FZJybU',
-        'classList',
-        '9HHfFwa'
-    ];
-    _0x3077 = function () {
-        return _0x48cd78;
-    };
-    return _0x3077();
-}
-(function (_0x449b1c, _0x43fbae) {
-    const _0x1897eb = _0x1b9b, _0x258cde = _0x449b1c();
-    while (!![]) {
-        try {
-            const _0x41b865 = parseInt(_0x1897eb(0x1a0)) / 0x1 * (-parseInt(_0x1897eb(0x18f)) / 0x2) + parseInt(_0x1897eb(0x191)) / 0x3 * (parseInt(_0x1897eb(0x195)) / 0x4) + -parseInt(_0x1897eb(0x19e)) / 0x5 * (-parseInt(_0x1897eb(0x196)) / 0x6) + -parseInt(_0x1897eb(0x19d)) / 0x7 + parseInt(_0x1897eb(0x194)) / 0x8 * (parseInt(_0x1897eb(0x198)) / 0x9) + -parseInt(_0x1897eb(0x18e)) / 0xa * (-parseInt(_0x1897eb(0x1a1)) / 0xb) + parseInt(_0x1897eb(0x199)) / 0xc * (-parseInt(_0x1897eb(0x19a)) / 0xd);
-            if (_0x41b865 === _0x43fbae)
-                break;
-            else
-                _0x258cde['push'](_0x258cde['shift']());
-        } catch (_0x26eeb0) {
-            _0x258cde['push'](_0x258cde['shift']());
-        }
-    }
-}(_0x3077, 0x56918), (function () {
-    const _0xe21c98 = _0x1b9b, _0x5f10f6 = 'solisLoaderShown', _0x1f1b04 = document[_0xe21c98(0x193)]('loader-container'), _0x5e18a8 = sessionStorage[_0xe21c98(0x19b)](_0x5f10f6);
-    _0x5e18a8 ? _0x1f1b04['classList'][_0xe21c98(0x19f)]('loader-hidden') : (_0x1f1b04[_0xe21c98(0x190)][_0xe21c98(0x197)]('loader-hidden'), setTimeout(() => {
-        const _0x4e6f83 = _0xe21c98;
-        _0x1f1b04[_0x4e6f83(0x190)]['add'](_0x4e6f83(0x19c)), sessionStorage[_0x4e6f83(0x1a2)](_0x5f10f6, _0x4e6f83(0x192));
-    }, 0xdac));
-}()));</script>
+    <script>
+        (function() {
+            const LOADER = 'solisLoaderShown';
+            const loaderContainer = document.getElementById('loader-container');
+            
+            const hasShownLoader = sessionStorage.getItem(LOADER);
+            
+            if (hasShownLoader) {
+                loaderContainer.classList.add('loader-hidden');
+            } else {
+                loaderContainer.classList.remove('loader-hidden');
+                setTimeout(() => {
+                    loaderContainer.classList.add('loader-hidden');
+                    sessionStorage.setItem(LOADER, 'true');
+                }, 3500);
+            }
+        })();
+    </script>
 
-    <script>const _0x3cb2e7 = _0x6233;
-function _0x3a32() {
-    const _0x2c4d6e = [
-        '✅\x20Socket.IO\x20loaded\x20from\x20CDN\x20(timeout\x20fallback)',
-        'warn',
-        '127.0.0.1',
-        'onerror',
-        '829788ntyGUF',
-        '2566736AVCyaI',
-        '39486CtsWMZ',
-        '655456YbwQfa',
-        '77kuAAaL',
-        '⚠️\x20Socket.IO\x20still\x20not\x20loaded,\x20forcing\x20CDN\x20fallback...',
-        'head',
-        'undefined',
-        '⚠️\x20Socket.IO\x20failed\x20to\x20load\x20from\x20backend,\x20falling\x20back\x20to\x20CDN...',
-        'src',
-        'createElement',
-        'https://cdn.socket.io/4.7.2/socket.io.min.js',
-        'appendChild',
-        '331398xPWHZG',
-        'onload',
-        '✅\x20Socket.IO\x20loaded\x20from\x20CDN',
-        '/socket.io/socket.io.js',
-        'script',
-        '415URJnPh',
-        '15841692jzPnxb',
-        'log',
-        'error',
-        '971499PZRDpA'
-    ];
-    _0x3a32 = function () {
-        return _0x2c4d6e;
-    };
-    return _0x3a32();
-}
-(function (_0x280ce0, _0x370fa0) {
-    const _0x495942 = _0x6233, _0x120044 = _0x280ce0();
-    while (!![]) {
-        try {
-            const _0x3aa456 = parseInt(_0x495942(0xef)) / 0x1 + parseInt(_0x495942(0xe6)) / 0x2 + -parseInt(_0x495942(0xf4)) / 0x3 + -parseInt(_0x495942(0xf5)) / 0x4 + -parseInt(_0x495942(0xeb)) / 0x5 * (parseInt(_0x495942(0xf6)) / 0x6) + parseInt(_0x495942(0xf8)) / 0x7 * (-parseInt(_0x495942(0xf7)) / 0x8) + parseInt(_0x495942(0xec)) / 0x9;
-            if (_0x3aa456 === _0x370fa0)
-                break;
-            else
-                _0x120044['push'](_0x120044['shift']());
-        } catch (_0x1b2ea2) {
-            _0x120044['push'](_0x120044['shift']());
-        }
-    }
-}(_0x3a32, 0x81caf));
-const backendPort = '5500', backendHost = _0x3cb2e7(0xf2), socketioScript = document[_0x3cb2e7(0xe3)]('script');
-let socketioLoaded = ![];
-function _0x6233(_0x5f53ae, _0x21e3ca) {
-    _0x5f53ae = _0x5f53ae - 0xe3;
-    const _0x3a32b4 = _0x3a32();
-    let _0x6233d7 = _0x3a32b4[_0x5f53ae];
-    return _0x6233d7;
-}
-const socketioUrl = 'http://' + backendHost + ':' + backendPort + _0x3cb2e7(0xe9);
-socketioScript[_0x3cb2e7(0xfd)] = socketioUrl, socketioScript[_0x3cb2e7(0xe7)] = () => {
-    const _0x2ee291 = _0x3cb2e7;
-    socketioLoaded = !![], console[_0x2ee291(0xed)]('✅\x20Socket.IO\x20loaded\x20from\x20backend');
-}, socketioScript[_0x3cb2e7(0xf3)] = () => {
-    const _0x23135d = _0x3cb2e7;
-    if (!socketioLoaded) {
-        console[_0x23135d(0xf1)](_0x23135d(0xfc));
-        const _0x1b569d = document[_0x23135d(0xe3)](_0x23135d(0xea));
-        _0x1b569d[_0x23135d(0xfd)] = _0x23135d(0xe4), _0x1b569d[_0x23135d(0xe7)] = () => {
-            const _0x16a93d = _0x23135d;
-            socketioLoaded = !![], console[_0x16a93d(0xed)](_0x16a93d(0xe8));
-        }, _0x1b569d[_0x23135d(0xf3)] = () => {
-            const _0x2f19fc = _0x23135d;
-            console[_0x2f19fc(0xee)]('❌\x20Failed\x20to\x20load\x20Socket.IO\x20from\x20both\x20backend\x20and\x20CDN');
-        }, document[_0x23135d(0xfa)][_0x23135d(0xe5)](_0x1b569d);
-    }
-}, document[_0x3cb2e7(0xfa)]['appendChild'](socketioScript), setTimeout(() => {
-    const _0xdc8666 = _0x3cb2e7;
-    if (!socketioLoaded && typeof io === _0xdc8666(0xfb)) {
-        console['warn'](_0xdc8666(0xf9));
-        const _0xd10fd = document['createElement'](_0xdc8666(0xea));
-        _0xd10fd['src'] = _0xdc8666(0xe4), _0xd10fd[_0xdc8666(0xe7)] = () => {
-            const _0x4923ae = _0xdc8666;
-            socketioLoaded = !![], console[_0x4923ae(0xed)](_0x4923ae(0xf0));
-        }, document[_0xdc8666(0xfa)][_0xdc8666(0xe5)](_0xd10fd);
-    }
-}, 0xbb8);</script>
+    <script>
+        const socketioScript = document.createElement('script');
+        socketioScript.src = 'https://cdn.socket.io/4.7.2/socket.io.min.js';
+        document.head.appendChild(socketioScript);
+    </script>
 
     <script src="/js/core/websocket-security.js?v=1"></script>
     <script src="/js/core/video-streaming.js?v=1"></script>

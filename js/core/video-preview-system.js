@@ -1,287 +1,437 @@
-function _0xaf20(_0x26d54d, _0x24ce2d) {
-    _0x26d54d = _0x26d54d - 0x149;
-    const _0x7cc2dd = _0x7cc2();
-    let _0xaf20de = _0x7cc2dd[_0x26d54d];
-    return _0xaf20de;
-}
-const _0x3713f1 = _0xaf20;
-(function (_0x165bf5, _0x3adbf1) {
-    const _0x1f5a0b = _0xaf20, _0x38938a = _0x165bf5();
-    while (!![]) {
-        try {
-            const _0x4e5fd1 = parseInt(_0x1f5a0b(0x15e)) / 0x1 * (-parseInt(_0x1f5a0b(0x19f)) / 0x2) + parseInt(_0x1f5a0b(0x17e)) / 0x3 + -parseInt(_0x1f5a0b(0x187)) / 0x4 + -parseInt(_0x1f5a0b(0x15a)) / 0x5 + -parseInt(_0x1f5a0b(0x156)) / 0x6 * (-parseInt(_0x1f5a0b(0x192)) / 0x7) + -parseInt(_0x1f5a0b(0x170)) / 0x8 + parseInt(_0x1f5a0b(0x152)) / 0x9;
-            if (_0x4e5fd1 === _0x3adbf1)
-                break;
-            else
-                _0x38938a['push'](_0x38938a['shift']());
-        } catch (_0x5cb505) {
-            _0x38938a['push'](_0x38938a['shift']());
-        }
-    }
-}(_0x7cc2, 0xbe9c7));
+
+
 class VideoPreviewSystem {
     constructor() {
-        const _0x50c0bb = _0xaf20;
-        this[_0x50c0bb(0x1a7)] = null, this[_0x50c0bb(0x149)] = null, this['chapters'] = [], this['bestMoment'] = null, this[_0x50c0bb(0x189)] = ![], this[_0x50c0bb(0x1a5)] = ![], this['previewMode'] = 'normal', this[_0x50c0bb(0x165)] = ![], this['cropZones'] = [];
+        this.currentVideoId = null;
+        this.videoData = null;
+        this.chapters = [];
+        this.bestMoment = null;
+        this.captionRemovalEnabled = false;
+        this.configMode = false;
+        this.previewMode = 'normal'; // normal, caption-removal, config, podcast, comparison
+        this.isShortMode = false;
+        this.cropZones = [];
     }
-    [_0x3713f1(0x18a)](_0xb6deba, _0x329297 = ![]) {
-        const _0x1b3369 = _0x3713f1;
-        this[_0x1b3369(0x1a7)] = _0xb6deba, this['isShortMode'] = _0x329297;
-        const _0x26f649 = document[_0x1b3369(0x158)](_0x1b3369(0x164));
-        if (!_0x26f649)
-            return;
-        _0x329297 ? _0x26f649[_0x1b3369(0x16b)] = _0x1b3369(0x14f) + _0xb6deba + '?rel=0&modestbranding=1\x22\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20frameborder=\x220\x22\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20allow=\x22accelerometer;\x20autoplay;\x20clipboard-write;\x20encrypted-media;\x20gyroscope;\x20picture-in-picture\x22\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20allowfullscreen\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20style=\x22border-radius:\x204px;\x20display:\x20block;\x22\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20></iframe>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</div>\x0a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<!--\x20RIGHT:\x20Captions\x20removed\x20+\x20custom\x20overlay\x20-->\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20style=\x22flex:\x201;\x20position:\x20relative;\x20display:\x20flex;\x20flex-direction:\x20column;\x20min-height:\x200;\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20style=\x22font-size:\x2011px;\x20color:\x20#fff;\x20padding:\x206px\x208px;\x20background:\x20rgba(0,0,0,0.8);\x20text-align:\x20center;\x20font-weight:\x20600;\x20flex-shrink:\x200;\x22>MODIFIED</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20style=\x22flex:\x201;\x20position:\x20relative;\x20overflow:\x20hidden;\x20border-radius:\x204px;\x20min-height:\x200;\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<iframe\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20width=\x22100%\x22\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20height=\x22100%\x22\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20src=\x22https://www.youtube.com/embed/' + _0xb6deba + _0x1b3369(0x16e) : _0x26f649[_0x1b3369(0x16b)] = '\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20style=\x22position:\x20absolute;\x20top:\x200;\x20left:\x200;\x20width:\x20100%;\x20height:\x20100%;\x20border-radius:\x208px;\x20overflow:\x20hidden;\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<iframe\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20width=\x22100%\x22\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20height=\x22100%\x22\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20src=\x22https://www.youtube.com/embed/' + _0xb6deba + '?rel=0&modestbranding=1\x22\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20frameborder=\x220\x22\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20allow=\x22accelerometer;\x20autoplay;\x20clipboard-write;\x20encrypted-media;\x20gyroscope;\x20picture-in-picture\x22\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20allowfullscreen\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20style=\x22border-radius:\x208px;\x20position:\x20relative;\x20z-index:\x201;\x20display:\x20block;\x22\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20></iframe>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20id=\x22previewOverlay\x22\x20style=\x22position:\x20absolute;\x20top:\x200;\x20left:\x200;\x20width:\x20100%;\x20height:\x20100%;\x20border-radius:\x208px;\x20pointer-events:\x20none;\x20z-index:\x2010;\x22></div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20', this[_0x1b3369(0x175)](_0xb6deba);
+
+    
+    loadYouTubeIframe(videoId, isShort = false) {
+        this.currentVideoId = videoId;
+        this.isShortMode = isShort;
+        const previewEl = document.getElementById('templateVideoPreview');
+        
+        if (!previewEl) return;
+
+        if (isShort) {
+            // Side-by-side comparison for shorts
+            previewEl.innerHTML = `
+                <div style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; gap: 8px; border-radius: 8px; overflow: hidden; background: #000;">
+                    <!-- LEFT: Original with native captions -->
+                    <div style="flex: 1; position: relative; display: flex; flex-direction: column; min-height: 0;">
+                        <div style="font-size: 11px; color: #fff; padding: 6px 8px; background: rgba(0,0,0,0.8); text-align: center; font-weight: 600; flex-shrink: 0;">ORIGINAL</div>
+                        <div style="flex: 1; position: relative; overflow: hidden; border-radius: 4px; min-height: 0;">
+                            <iframe
+                                width="100%"
+                                height="100%"
+                                src="https://www.youtube.com/embed/${videoId}?rel=0&modestbranding=1"
+                                frameborder="0"
+                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                allowfullscreen
+                                style="border-radius: 4px; display: block;"
+                            ></iframe>
+                        </div>
+                    </div>
+
+                    <!-- RIGHT: Captions removed + custom overlay -->
+                    <div style="flex: 1; position: relative; display: flex; flex-direction: column; min-height: 0;">
+                        <div style="font-size: 11px; color: #fff; padding: 6px 8px; background: rgba(0,0,0,0.8); text-align: center; font-weight: 600; flex-shrink: 0;">MODIFIED</div>
+                        <div style="flex: 1; position: relative; overflow: hidden; border-radius: 4px; min-height: 0;">
+                            <iframe
+                                width="100%"
+                                height="100%"
+                                src="https://www.youtube.com/embed/${videoId}?rel=0&modestbranding=1"
+                                frameborder="0"
+                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                allowfullscreen
+                                style="border-radius: 4px; display: block; position: relative; z-index: 1;"
+                            ></iframe>
+                            <div id="previewOverlay" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border-radius: 4px; pointer-events: none; z-index: 10;"></div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        } else {
+            previewEl.innerHTML = `
+                <div style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border-radius: 8px; overflow: hidden;">
+                    <iframe
+                        width="100%"
+                        height="100%"
+                        src="https://www.youtube.com/embed/${videoId}?rel=0&modestbranding=1"
+                        frameborder="0"
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                        allowfullscreen
+                        style="border-radius: 8px; position: relative; z-index: 1; display: block;"
+                    ></iframe>
+                    <div id="previewOverlay" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border-radius: 8px; pointer-events: none; z-index: 10;"></div>
+                </div>
+            `;
+        }
+
+        // Fetch video metadata and chapters
+        this.fetchVideoMetadata(videoId);
     }
-    async ['fetchVideoMetadata'](_0x52a44b) {
-        const _0x20f6d8 = _0x3713f1;
+
+    
+    async fetchVideoMetadata(videoId) {
         try {
-            const _0x55ebc3 = await fetch(_0x20f6d8(0x174), {
-                'method': _0x20f6d8(0x186),
-                'headers': { 'Content-Type': _0x20f6d8(0x1a2) },
-                'body': JSON[_0x20f6d8(0x173)]({ 'video_id': _0x52a44b })
+            const response = await fetch('/api/youtube/metadata', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ video_id: videoId })
             });
-            if (_0x55ebc3['ok']) {
-                const _0x1a9d15 = await _0x55ebc3['json']();
-                this[_0x20f6d8(0x149)] = _0x1a9d15, this[_0x20f6d8(0x153)] = _0x1a9d15[_0x20f6d8(0x153)] || [], this[_0x20f6d8(0x14b)](), this[_0x20f6d8(0x153)][_0x20f6d8(0x18f)] > 0x0 && this[_0x20f6d8(0x19b)]();
+
+            if (response.ok) {
+                const data = await response.json();
+                this.videoData = data;
+                this.chapters = data.chapters || [];
+                
+                // Fetch and initialize captions
+                this.initializeCaption();
+                
+                // Find best moment using Groq AI
+                if (this.chapters.length > 0) {
+                    this.findBestMoment();
+                }
             }
-        } catch (_0x5e38a9) {
-            console[_0x20f6d8(0x154)](_0x20f6d8(0x17b), _0x5e38a9);
+        } catch (error) {
+            console.error('Error fetching video metadata:', error);
         }
     }
-    async ['initializeCaption']() {
-        const _0x1b2a2e = _0x3713f1;
+
+    
+    async initializeCaption() {
         if (typeof captionSystem !== 'undefined') {
-            const _0x5b0b0a = await captionSystem[_0x1b2a2e(0x18b)](this[_0x1b2a2e(0x1a7)]);
-            if (_0x5b0b0a['length'] > 0x0) {
-                this['isShortMode'] && this[_0x1b2a2e(0x199)] === _0x1b2a2e(0x179) ? this[_0x1b2a2e(0x1b3)](_0x5b0b0a) : captionSystem['initializeCaptions'](_0x5b0b0a);
-                const _0x4c4d4d = document['getElementById']('youtubeSubtitleStatus');
-                _0x4c4d4d && (_0x4c4d4d[_0x1b2a2e(0x16b)] = '\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<span\x20style=\x22color:\x20#22c55e;\x22>✓\x20Subtitles\x20Available</span>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<small\x20style=\x22color:\x20#888;\x20display:\x20block;\x20margin-top:\x204px;\x22>' + _0x5b0b0a[_0x1b2a2e(0x18f)] + _0x1b2a2e(0x1aa));
+            const subtitles = await captionSystem.fetchYouTubeSubtitles(this.currentVideoId);
+            if (subtitles.length > 0) {
+                // For comparison mode, apply captions to right panel
+                if (this.isShortMode && this.previewMode === 'comparison') {
+                    this.initializeComparisonCaptions(subtitles);
+                } else {
+                    // Normal caption initialization
+                    captionSystem.initializeCaptions(subtitles);
+                }
+                
+                // Update UI to show that subtitles are available
+                const statusEl = document.getElementById('youtubeSubtitleStatus');
+                if (statusEl) {
+                    statusEl.innerHTML = `
+                        <span style="color: #22c55e;">✓ Subtitles Available</span>
+                        <small style="color: #888; display: block; margin-top: 4px;">${subtitles.length} words detected</small>
+                    `;
+                }
             }
         }
     }
-    ['initializeComparisonCaptions'](_0x5b5972) {
-        const _0x36f97b = _0x3713f1, _0x13ed7c = document[_0x36f97b(0x158)](_0x36f97b(0x164));
-        if (!_0x13ed7c)
-            return;
-        const _0x2d2c53 = _0x13ed7c[_0x36f97b(0x14e)]('[style*=\x22flex:\x201\x22]');
-        if (_0x2d2c53['length'] < 0x2)
-            return;
-        const _0xc4b363 = _0x2d2c53[0x1];
-        let _0x57ef07 = _0xc4b363[_0x36f97b(0x155)]('[id=\x22previewOverlay\x22]') || _0xc4b363[_0x36f97b(0x155)](_0x36f97b(0x177));
-        !_0x57ef07 && (_0x57ef07 = document[_0x36f97b(0x19e)]('div'), _0x57ef07['id'] = _0x36f97b(0x162), _0x57ef07[_0x36f97b(0x1a0)](_0x36f97b(0x16a), _0x36f97b(0x1ba)), _0x57ef07['style'][_0x36f97b(0x17f)] = _0x36f97b(0x157), _0x57ef07[_0x36f97b(0x1ab)][_0x36f97b(0x188)] = '0', _0x57ef07[_0x36f97b(0x1ab)][_0x36f97b(0x184)] = '0', _0x57ef07['style']['width'] = _0x36f97b(0x16f), _0x57ef07[_0x36f97b(0x1ab)][_0x36f97b(0x161)] = _0x36f97b(0x16f), _0x57ef07['style'][_0x36f97b(0x167)] = 'none', _0x57ef07[_0x36f97b(0x1ab)][_0x36f97b(0x1bc)] = '10', _0xc4b363[_0x36f97b(0x151)](_0x57ef07));
-        const _0x3f9b3c = captionSystem[_0x36f97b(0x191)](_0x5b5972);
-        let _0x1d3aaf = _0x57ef07[_0x36f97b(0x155)](_0x36f97b(0x14a));
-        !_0x1d3aaf && (_0x1d3aaf = document[_0x36f97b(0x19e)](_0x36f97b(0x178)), _0x1d3aaf['id'] = 'videoCaptionContent', _0x1d3aaf['className'] = _0x36f97b(0x1a8) + captionSystem[_0x36f97b(0x15d)], _0x1d3aaf['style'][_0x36f97b(0x17f)] = _0x36f97b(0x157), _0x1d3aaf['style']['bottom'] = _0x36f97b(0x1a4), _0x1d3aaf['style'][_0x36f97b(0x176)] = _0x36f97b(0x19a), _0x1d3aaf['style'][_0x36f97b(0x184)] = '5%', _0x1d3aaf[_0x36f97b(0x1ab)][_0x36f97b(0x1ae)] = 'center', _0x1d3aaf[_0x36f97b(0x1ab)]['zIndex'] = '15', _0x57ef07[_0x36f97b(0x151)](_0x1d3aaf)), _0x1d3aaf['innerHTML'] = '', _0x3f9b3c[_0x36f97b(0x160)](_0x52dad5 => {
-            const _0x1186b9 = _0x36f97b, _0x14ca72 = document[_0x1186b9(0x19e)]('span');
-            _0x14ca72[_0x1186b9(0x168)] = _0x1186b9(0x15f), _0x14ca72[_0x1186b9(0x1b7)] = _0x52dad5[_0x1186b9(0x183)], captionSystem[_0x1186b9(0x17c)](_0x52dad5['text']) && _0x14ca72['classList'][_0x1186b9(0x18c)](_0x1186b9(0x1a1)), _0x1d3aaf[_0x1186b9(0x151)](_0x14ca72), _0x1d3aaf['appendChild'](document['createTextNode']('\x20'));
+
+    
+    initializeComparisonCaptions(subtitleData) {
+        // Find the right panel overlay
+        const previewEl = document.getElementById('templateVideoPreview');
+        if (!previewEl) return;
+
+        // Find the right panel (second flex child)
+        const panels = previewEl.querySelectorAll('[style*="flex: 1"]');
+        if (panels.length < 2) return;
+
+        const rightPanel = panels[1];
+        let overlay = rightPanel.querySelector('[id="previewOverlay"]') || rightPanel.querySelector('div[data-overlay="right"]');
+        
+        if (!overlay) {
+            overlay = document.createElement('div');
+            overlay.id = 'previewOverlay';
+            overlay.setAttribute('data-overlay', 'right');
+            overlay.style.position = 'absolute';
+            overlay.style.top = '0';
+            overlay.style.left = '0';
+            overlay.style.width = '100%';
+            overlay.style.height = '100%';
+            overlay.style.pointerEvents = 'none';
+            overlay.style.zIndex = '10';
+            rightPanel.appendChild(overlay);
+        }
+
+        // Parse subtitles
+        const words = captionSystem.parseSubtitles(subtitleData);
+
+        // Create caption content for right panel
+        let captionContent = overlay.querySelector('#videoCaptionContent');
+        if (!captionContent) {
+            captionContent = document.createElement('div');
+            captionContent.id = 'videoCaptionContent';
+            captionContent.className = `video-caption-overlay style-${captionSystem.currentStyle}`;
+            captionContent.style.position = 'absolute';
+            captionContent.style.bottom = '15%';
+            captionContent.style.width = '90%';
+            captionContent.style.left = '5%';
+            captionContent.style.textAlign = 'center';
+            captionContent.style.zIndex = '15';
+            overlay.appendChild(captionContent);
+        }
+
+        // Populate with words
+        captionContent.innerHTML = '';
+        words.forEach(wordObj => {
+            const span = document.createElement('span');
+            span.className = 'caption-word';
+            span.textContent = wordObj.text;
+            
+            if (captionSystem.isHighlightWord(wordObj.text)) {
+                span.classList.add('highlight');
+            }
+            
+            captionContent.appendChild(span);
+            captionContent.appendChild(document.createTextNode(' '));
         });
     }
-    async ['findBestMoment']() {
-        const _0x1fefda = _0x3713f1;
+
+    
+    async findBestMoment() {
         try {
-            const _0x2dee91 = await fetch(_0x1fefda(0x197), {
-                'method': _0x1fefda(0x186),
-                'headers': { 'Content-Type': _0x1fefda(0x1a2) },
-                'body': JSON[_0x1fefda(0x173)]({
-                    'video_id': this[_0x1fefda(0x1a7)],
-                    'chapters': this['chapters'],
-                    'video_data': this[_0x1fefda(0x149)]
+            const response = await fetch('/api/ai/analyze-chapters', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    video_id: this.currentVideoId,
+                    chapters: this.chapters,
+                    video_data: this.videoData
                 })
             });
-            if (_0x2dee91['ok']) {
-                const _0xfa2a75 = await _0x2dee91['json']();
-                this[_0x1fefda(0x14c)] = _0xfa2a75[_0x1fefda(0x15b)];
-                const _0x41b3ca = document[_0x1fefda(0x158)](_0x1fefda(0x169));
-                _0x41b3ca && this[_0x1fefda(0x14c)] && (_0x41b3ca['innerHTML'] = _0x1fefda(0x181) + this[_0x1fefda(0x14c)][_0x1fefda(0x1ad)] + '\x20(' + this[_0x1fefda(0x1bb)](this[_0x1fefda(0x14c)]['start']) + _0x1fefda(0x198) + this[_0x1fefda(0x1bb)](this[_0x1fefda(0x14c)]['end']) + _0x1fefda(0x193));
+
+            if (response.ok) {
+                const result = await response.json();
+                this.bestMoment = result.best_moment;
+                
+                // Update UI with best moment info
+                const momentInfo = document.getElementById('bestMomentInfo');
+                if (momentInfo && this.bestMoment) {
+                    momentInfo.innerHTML = `
+                        <span style="color: #22c55e;">Best Moment:</span> 
+                        ${this.bestMoment.title} (${this.formatTime(this.bestMoment.start)} - ${this.formatTime(this.bestMoment.end)})
+                    `;
+                }
             }
-        } catch (_0x3a6e6c) {
-            console[_0x1fefda(0x154)](_0x1fefda(0x196), _0x3a6e6c);
+        } catch (error) {
+            console.error('Error analyzing chapters:', error);
         }
     }
-    [_0x3713f1(0x166)]() {
-        const _0x278acc = _0x3713f1;
-        this[_0x278acc(0x189)] = !![], this[_0x278acc(0x199)] = _0x278acc(0x185);
-        const _0x4b4146 = document['getElementById']('previewOverlay');
-        _0x4b4146 && (_0x4b4146[_0x278acc(0x16b)] = _0x278acc(0x1a6));
+
+    
+    enableCaptionRemoval() {
+        this.captionRemovalEnabled = true;
+        this.previewMode = 'caption-removal';
+        
+        const overlay = document.getElementById('previewOverlay');
+        if (overlay) {
+            overlay.innerHTML = `
+                <div style="
+                    position: absolute;
+                    bottom: 0;
+                    width: 100%;
+                    height: 40%;
+                    background: linear-gradient(to bottom, rgba(0,0,0,0), rgba(0,0,0,0.9));
+                    display: flex;
+                    align-items: flex-end;
+                    justify-content: center;
+                    padding: 20px;
+                    color: #22c55e;
+                    font-size: 12px;
+                    text-align: center;
+                ">
+                    <span>✓ Captions Removed</span>
+                </div>
+            `;
+        }
     }
-    [_0x3713f1(0x1b9)]() {
-        const _0x20e712 = _0x3713f1;
-        this[_0x20e712(0x199)] = _0x20e712(0x17d), this['configMode'] = !![];
-        const _0x243a2e = document[_0x20e712(0x158)](_0x20e712(0x162));
-        _0x243a2e && (_0x243a2e[_0x20e712(0x16b)] = _0x20e712(0x159)), typeof captionSystem !== _0x20e712(0x1b0) && captionSystem[_0x20e712(0x195)]();
+
+    
+    showConfigOverlay() {
+        this.previewMode = 'config';
+        this.configMode = true;
+        
+        const overlay = document.getElementById('previewOverlay');
+        if (overlay) {
+            overlay.innerHTML = `
+                <div style="
+                    position: absolute;
+                    bottom: 22%;
+                    width: 90%;
+                    left: 5%;
+                    text-align: center;
+                    z-index: 10;
+                ">
+                    <div style="
+                        display: inline-block;
+                        background: rgba(255, 255, 255, 0.95);
+                        color: #000;
+                        padding: 12px 20px;
+                        border-radius: 8px;
+                        font-weight: 800;
+                        font-size: 18px;
+                        text-transform: uppercase;
+                        box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+                        animation: pulse-config 1.5s ease-in-out infinite;
+                    ">
+                        CAPTION DESIGN PREVIEW
+                    </div>
+                </div>
+                <style>
+                    @keyframes pulse-config {
+                        0%, 100% { transform: scale(1); }
+                        50% { transform: scale(1.05); }
+                    }
+                </style>
+            `;
+        }
+
+        // Initialize caption system
+        if (typeof captionSystem !== 'undefined') {
+            captionSystem.playAnimation();
+        }
     }
-    [_0x3713f1(0x1b2)]() {
-        const _0x459bc1 = _0x3713f1;
-        this[_0x459bc1(0x199)] = _0x459bc1(0x1b6);
-        if (!this[_0x459bc1(0x14c)]) {
-            alert('Analyzing\x20video\x20for\x20best\x20moment...');
+
+    
+    enablePodcastMode() {
+        this.previewMode = 'podcast';
+        
+        if (!this.bestMoment) {
+            alert('Analyzing video for best moment...');
             return;
         }
-        const _0x47ab70 = document[_0x459bc1(0x158)](_0x459bc1(0x162));
-        _0x47ab70 && (_0x47ab70[_0x459bc1(0x16b)] = _0x459bc1(0x1b5) + this['bestMoment'][_0x459bc1(0x1ad)] + _0x459bc1(0x18e) + this['formatTime'](this[_0x459bc1(0x14c)][_0x459bc1(0x15c)]) + _0x459bc1(0x198) + this[_0x459bc1(0x1bb)](this[_0x459bc1(0x14c)][_0x459bc1(0x19c)]) + _0x459bc1(0x1af) + this[_0x459bc1(0x1bb)](this[_0x459bc1(0x14c)][_0x459bc1(0x19c)] - this[_0x459bc1(0x14c)][_0x459bc1(0x15c)]) + _0x459bc1(0x16c));
+
+        const overlay = document.getElementById('previewOverlay');
+        if (overlay) {
+            overlay.innerHTML = `
+                <div style="
+                    position: absolute;
+                    top: 50%;
+                    left: 50%;
+                    transform: translate(-50%, -50%);
+                    background: rgba(0, 0, 0, 0.8);
+                    padding: 20px;
+                    border-radius: 12px;
+                    color: white;
+                    text-align: center;
+                    z-index: 10;
+                ">
+                    <div style="font-size: 24px; font-weight: bold; margin-bottom: 10px;">🎙️ Best Moment</div>
+                    <div style="font-size: 14px; margin-bottom: 15px;">${this.bestMoment.title}</div>
+                    <div style="
+                        background: rgba(34, 197, 94, 0.2);
+                        padding: 10px;
+                        border-radius: 8px;
+                        border-left: 3px solid #22c55e;
+                    ">
+                        <div style="font-size: 12px; color: #22c55e;">
+                            ⏱️ ${this.formatTime(this.bestMoment.start)} - ${this.formatTime(this.bestMoment.end)}
+                        </div>
+                        <div style="font-size: 11px; color: #ccc; margin-top: 5px;">
+                            Duration: ${this.formatTime(this.bestMoment.end - this.bestMoment.start)}
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
     }
-    [_0x3713f1(0x1bb)](_0x311d9a) {
-        const _0x31f052 = _0x3713f1;
-        if (!_0x311d9a)
-            return _0x31f052(0x150);
-        const _0x1e94f9 = Math[_0x31f052(0x1a9)](_0x311d9a / 0x3c), _0x452f9e = Math['floor'](_0x311d9a % 0x3c);
-        return _0x1e94f9 + ':' + _0x452f9e['toString']()[_0x31f052(0x19d)](0x2, '0');
+
+    
+    formatTime(seconds) {
+        if (!seconds) return '0:00';
+        const mins = Math.floor(seconds / 60);
+        const secs = Math.floor(seconds % 60);
+        return `${mins}:${secs.toString().padStart(2, '0')}`;
     }
-    [_0x3713f1(0x1be)]() {
-        const _0x14a977 = _0x3713f1;
-        this[_0x14a977(0x199)] = _0x14a977(0x17a), this[_0x14a977(0x189)] = ![], this['configMode'] = ![];
-        const _0x4f4b08 = document[_0x14a977(0x158)](_0x14a977(0x162));
-        _0x4f4b08 && (_0x4f4b08[_0x14a977(0x16b)] = '');
+
+    
+    resetPreview() {
+        this.previewMode = 'normal';
+        this.captionRemovalEnabled = false;
+        this.configMode = false;
+        
+        const overlay = document.getElementById('previewOverlay');
+        if (overlay) {
+            overlay.innerHTML = '';
+        }
     }
-    ['applyCropZones'](_0x2fb887) {
-        const _0x148d42 = _0x3713f1;
-        this[_0x148d42(0x182)] = _0x2fb887;
-        if (_0x2fb887[_0x148d42(0x18f)] === 0x0) {
-            this[_0x148d42(0x18d)]();
+
+    
+    applyCropZones(zones) {
+        this.cropZones = zones;
+        
+        if (zones.length === 0) {
+            this.removeCropOverlay();
             return;
         }
-        let _0x102805 = document[_0x148d42(0x155)](_0x148d42(0x1b4)) || document[_0x148d42(0x158)]('previewOverlay');
-        if (!_0x102805) {
-            const _0x32b38c = document[_0x148d42(0x158)](_0x148d42(0x164));
-            if (!_0x32b38c)
-                return;
-            _0x102805 = document[_0x148d42(0x19e)](_0x148d42(0x178)), _0x102805['id'] = _0x148d42(0x162), _0x102805['style'][_0x148d42(0x17f)] = _0x148d42(0x157), _0x102805[_0x148d42(0x1ab)][_0x148d42(0x188)] = '0', _0x102805['style'][_0x148d42(0x184)] = '0', _0x102805[_0x148d42(0x1ab)][_0x148d42(0x176)] = _0x148d42(0x16f), _0x102805['style'][_0x148d42(0x161)] = _0x148d42(0x16f), _0x102805[_0x148d42(0x1ab)][_0x148d42(0x167)] = _0x148d42(0x180), _0x102805[_0x148d42(0x1ab)]['zIndex'] = '10', _0x32b38c[_0x148d42(0x151)](_0x102805);
+
+        // Get right panel overlay for shorts, or main overlay
+        let overlay = document.querySelector('[data-overlay="right"]') || document.getElementById('previewOverlay');
+        if (!overlay) {
+            const previewEl = document.getElementById('templateVideoPreview');
+            if (!previewEl) return;
+            overlay = document.createElement('div');
+            overlay.id = 'previewOverlay';
+            overlay.style.position = 'absolute';
+            overlay.style.top = '0';
+            overlay.style.left = '0';
+            overlay.style.width = '100%';
+            overlay.style.height = '100%';
+            overlay.style.pointerEvents = 'none';
+            overlay.style.zIndex = '10';
+            previewEl.appendChild(overlay);
         }
-        let _0x2f5fa5 = document['getElementById'](_0x148d42(0x190));
-        !_0x2f5fa5 && (_0x2f5fa5 = document[_0x148d42(0x19e)]('div'), _0x2f5fa5['id'] = 'captionCropMask', _0x102805[_0x148d42(0x151)](_0x2f5fa5));
-        const _0x1b4a81 = _0x148d42(0x1a3) + _0x2fb887['map']((_0x5bde10, _0x2f9a77) => _0x148d42(0x1b1) + _0x5bde10['x'] + _0x148d42(0x171) + _0x5bde10['y'] + '%\x22\x20width=\x22' + _0x5bde10['width'] + _0x148d42(0x16d) + _0x5bde10[_0x148d42(0x161)] + _0x148d42(0x1bd))[_0x148d42(0x14d)]('') + _0x148d42(0x194) + _0x2fb887['map']((_0x520793, _0x688b65) => '\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<rect\x20x=\x22' + _0x520793['x'] + _0x148d42(0x171) + _0x520793['y'] + _0x148d42(0x172) + _0x520793[_0x148d42(0x176)] + _0x148d42(0x16d) + _0x520793[_0x148d42(0x161)] + _0x148d42(0x163))['join']('') + _0x148d42(0x1ac);
-        _0x2f5fa5[_0x148d42(0x16b)] = _0x1b4a81, this[_0x148d42(0x189)] = !![];
+
+        // Create or update crop mask
+        let cropMask = document.getElementById('captionCropMask');
+        if (!cropMask) {
+            cropMask = document.createElement('div');
+            cropMask.id = 'captionCropMask';
+            overlay.appendChild(cropMask);
+        }
+
+        // Create SVG mask for better rendering
+        const maskSvg = `
+            <svg style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none;">
+                <defs>
+                    <mask id="cropMask" x="0%" y="0%" width="100%" height="100%">
+                        <rect width="100%" height="100%" fill="white"/>
+                        ${zones.map((zone, i) => `
+                            <rect x="${zone.x}%" y="${zone.y}%" width="${zone.width}%" height="${zone.height}%" fill="black"/>
+                        `).join('')}
+                    </mask>
+                </defs>
+                ${zones.map((zone, i) => `
+                    <rect x="${zone.x}%" y="${zone.y}%" width="${zone.width}%" height="${zone.height}%" 
+                          fill="rgba(239, 68, 68, 0.2)" stroke="#ef4444" stroke-width="1" stroke-dasharray="4,4"/>
+                `).join('')}
+            </svg>
+        `;
+
+        cropMask.innerHTML = maskSvg;
+        this.captionRemovalEnabled = true;
     }
-    [_0x3713f1(0x18d)]() {
-        const _0x507842 = _0x3713f1, _0x589468 = document['getElementById'](_0x507842(0x190));
-        _0x589468 && _0x589468[_0x507842(0x1b8)](), this[_0x507842(0x182)] = [], this[_0x507842(0x189)] = ![];
+
+    
+    removeCropOverlay() {
+        const cropMask = document.getElementById('captionCropMask');
+        if (cropMask) {
+            cropMask.remove();
+        }
+        this.cropZones = [];
+        this.captionRemovalEnabled = false;
     }
 }
+
+// Global instance
 const videoPreviewSystem = new VideoPreviewSystem();
-typeof module !== _0x3713f1(0x1b0) && module['exports'] && (module['exports'] = VideoPreviewSystem);
-function _0x7cc2() {
-    const _0x494045 = [
-        'showConfigOverlay',
-        'right',
-        'formatTime',
-        'zIndex',
-        '%\x22\x20fill=\x22black\x22/>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20',
-        'resetPreview',
-        'videoData',
-        '#videoCaptionContent',
-        'initializeCaption',
-        'bestMoment',
-        'join',
-        'querySelectorAll',
-        '\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20style=\x22position:\x20absolute;\x20top:\x200;\x20left:\x200;\x20width:\x20100%;\x20height:\x20100%;\x20display:\x20flex;\x20gap:\x208px;\x20border-radius:\x208px;\x20overflow:\x20hidden;\x20background:\x20#000;\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<!--\x20LEFT:\x20Original\x20with\x20native\x20captions\x20-->\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20style=\x22flex:\x201;\x20position:\x20relative;\x20display:\x20flex;\x20flex-direction:\x20column;\x20min-height:\x200;\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20style=\x22font-size:\x2011px;\x20color:\x20#fff;\x20padding:\x206px\x208px;\x20background:\x20rgba(0,0,0,0.8);\x20text-align:\x20center;\x20font-weight:\x20600;\x20flex-shrink:\x200;\x22>ORIGINAL</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20style=\x22flex:\x201;\x20position:\x20relative;\x20overflow:\x20hidden;\x20border-radius:\x204px;\x20min-height:\x200;\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<iframe\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20width=\x22100%\x22\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20height=\x22100%\x22\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20src=\x22https://www.youtube.com/embed/',
-        '0:00',
-        'appendChild',
-        '36284040tYNBsX',
-        'chapters',
-        'error',
-        'querySelector',
-        '42znjGps',
-        'absolute',
-        'getElementById',
-        '\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20style=\x22\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20position:\x20absolute;\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20bottom:\x2022%;\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20width:\x2090%;\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20left:\x205%;\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20text-align:\x20center;\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20z-index:\x2010;\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20style=\x22\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20display:\x20inline-block;\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20background:\x20rgba(255,\x20255,\x20255,\x200.95);\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20color:\x20#000;\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20padding:\x2012px\x2020px;\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20border-radius:\x208px;\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20font-weight:\x20800;\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20font-size:\x2018px;\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20text-transform:\x20uppercase;\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20box-shadow:\x200\x204px\x2012px\x20rgba(0,0,0,0.2);\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20animation:\x20pulse-config\x201.5s\x20ease-in-out\x20infinite;\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20CAPTION\x20DESIGN\x20PREVIEW\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<style>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20@keyframes\x20pulse-config\x20{\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x200%,\x20100%\x20{\x20transform:\x20scale(1);\x20}\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x2050%\x20{\x20transform:\x20scale(1.05);\x20}\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20}\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</style>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20',
-        '3255925bfSbVK',
-        'best_moment',
-        'start',
-        'currentStyle',
-        '1337959UStWyZ',
-        'caption-word',
-        'forEach',
-        'height',
-        'previewOverlay',
-        '%\x22\x20\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20fill=\x22rgba(239,\x2068,\x2068,\x200.2)\x22\x20stroke=\x22#ef4444\x22\x20stroke-width=\x221\x22\x20stroke-dasharray=\x224,4\x22/>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20',
-        'templateVideoPreview',
-        'isShortMode',
-        'enableCaptionRemoval',
-        'pointerEvents',
-        'className',
-        'bestMomentInfo',
-        'data-overlay',
-        'innerHTML',
-        '\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20',
-        '%\x22\x20height=\x22',
-        '?rel=0&modestbranding=1\x22\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20frameborder=\x220\x22\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20allow=\x22accelerometer;\x20autoplay;\x20clipboard-write;\x20encrypted-media;\x20gyroscope;\x20picture-in-picture\x22\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20allowfullscreen\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20style=\x22border-radius:\x204px;\x20display:\x20block;\x20position:\x20relative;\x20z-index:\x201;\x22\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20></iframe>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20id=\x22previewOverlay\x22\x20style=\x22position:\x20absolute;\x20top:\x200;\x20left:\x200;\x20width:\x20100%;\x20height:\x20100%;\x20border-radius:\x204px;\x20pointer-events:\x20none;\x20z-index:\x2010;\x22></div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20',
-        '100%',
-        '10033776MLffIg',
-        '%\x22\x20y=\x22',
-        '%\x22\x20width=\x22',
-        'stringify',
-        '/api/youtube/metadata',
-        'fetchVideoMetadata',
-        'width',
-        'div[data-overlay=\x22right\x22]',
-        'div',
-        'comparison',
-        'normal',
-        'Error\x20fetching\x20video\x20metadata:',
-        'isHighlightWord',
-        'config',
-        '1628274NbgIdz',
-        'position',
-        'none',
-        '\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<span\x20style=\x22color:\x20#22c55e;\x22>Best\x20Moment:</span>\x20\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20',
-        'cropZones',
-        'text',
-        'left',
-        'caption-removal',
-        'POST',
-        '2394372elAiNY',
-        'top',
-        'captionRemovalEnabled',
-        'loadYouTubeIframe',
-        'fetchYouTubeSubtitles',
-        'add',
-        'removeCropOverlay',
-        '</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20style=\x22\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20background:\x20rgba(34,\x20197,\x2094,\x200.2);\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20padding:\x2010px;\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20border-radius:\x208px;\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20border-left:\x203px\x20solid\x20#22c55e;\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20style=\x22font-size:\x2012px;\x20color:\x20#22c55e;\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20⏱️\x20',
-        'length',
-        'captionCropMask',
-        'parseSubtitles',
-        '48384YzIoHc',
-        ')\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20',
-        '\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</mask>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</defs>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20',
-        'playAnimation',
-        'Error\x20analyzing\x20chapters:',
-        '/api/ai/analyze-chapters',
-        '\x20-\x20',
-        'previewMode',
-        '90%',
-        'findBestMoment',
-        'end',
-        'padStart',
-        'createElement',
-        '2lpjBcJ',
-        'setAttribute',
-        'highlight',
-        'application/json',
-        '\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<svg\x20style=\x22position:\x20absolute;\x20top:\x200;\x20left:\x200;\x20width:\x20100%;\x20height:\x20100%;\x20pointer-events:\x20none;\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<defs>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<mask\x20id=\x22cropMask\x22\x20x=\x220%\x22\x20y=\x220%\x22\x20width=\x22100%\x22\x20height=\x22100%\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<rect\x20width=\x22100%\x22\x20height=\x22100%\x22\x20fill=\x22white\x22/>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20',
-        '15%',
-        'configMode',
-        '\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20style=\x22\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20position:\x20absolute;\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20bottom:\x200;\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20width:\x20100%;\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20height:\x2040%;\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20background:\x20linear-gradient(to\x20bottom,\x20rgba(0,0,0,0),\x20rgba(0,0,0,0.9));\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20display:\x20flex;\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20align-items:\x20flex-end;\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20justify-content:\x20center;\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20padding:\x2020px;\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20color:\x20#22c55e;\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20font-size:\x2012px;\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20text-align:\x20center;\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<span>✓\x20Captions\x20Removed</span>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20',
-        'currentVideoId',
-        'video-caption-overlay\x20style-',
-        'floor',
-        '\x20words\x20detected</small>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20',
-        'style',
-        '\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</svg>\x0a\x20\x20\x20\x20\x20\x20\x20\x20',
-        'title',
-        'textAlign',
-        '\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20style=\x22font-size:\x2011px;\x20color:\x20#ccc;\x20margin-top:\x205px;\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20Duration:\x20',
-        'undefined',
-        '\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<rect\x20x=\x22',
-        'enablePodcastMode',
-        'initializeComparisonCaptions',
-        '[data-overlay=\x22right\x22]',
-        '\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20style=\x22\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20position:\x20absolute;\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20top:\x2050%;\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20left:\x2050%;\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20transform:\x20translate(-50%,\x20-50%);\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20background:\x20rgba(0,\x200,\x200,\x200.8);\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20padding:\x2020px;\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20border-radius:\x2012px;\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20color:\x20white;\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20text-align:\x20center;\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20z-index:\x2010;\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20style=\x22font-size:\x2024px;\x20font-weight:\x20bold;\x20margin-bottom:\x2010px;\x22>🎙️\x20Best\x20Moment</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20style=\x22font-size:\x2014px;\x20margin-bottom:\x2015px;\x22>',
-        'podcast',
-        'textContent',
-        'remove'
-    ];
-    _0x7cc2 = function () {
-        return _0x494045;
-    };
-    return _0x7cc2();
+
+if (typeof module !== 'undefined' && module.exports) {
+    module.exports = VideoPreviewSystem;
 }

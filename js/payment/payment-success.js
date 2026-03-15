@@ -1,121 +1,147 @@
-(function (_0x2054ea, _0x55bee1) {
-    const _0x48c601 = _0x2ee0, _0x5d37ac = _0x2054ea();
-    while (!![]) {
-        try {
-            const _0x10a136 = parseInt(_0x48c601(0x1d6)) / 0x1 + parseInt(_0x48c601(0x1bf)) / 0x2 * (-parseInt(_0x48c601(0x1d8)) / 0x3) + -parseInt(_0x48c601(0x1c6)) / 0x4 * (-parseInt(_0x48c601(0x1d1)) / 0x5) + -parseInt(_0x48c601(0x1d7)) / 0x6 * (parseInt(_0x48c601(0x1da)) / 0x7) + -parseInt(_0x48c601(0x1e2)) / 0x8 * (parseInt(_0x48c601(0x1b6)) / 0x9) + -parseInt(_0x48c601(0x1b9)) / 0xa * (-parseInt(_0x48c601(0x1e3)) / 0xb) + -parseInt(_0x48c601(0x1b7)) / 0xc;
-            if (_0x10a136 === _0x55bee1)
-                break;
-            else
-                _0x5d37ac['push'](_0x5d37ac['shift']());
-        } catch (_0x17c8fb) {
-            _0x5d37ac['push'](_0x5d37ac['shift']());
-        }
-    }
-}(_0x1e8e, 0xf082d));
-function _0x1e8e() {
-    const _0x43d1e7 = [
-        'transition',
-        'px)\x20rotate(',
-        '4216648HgXnZS',
-        '\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20position:\x20fixed;\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20width:\x20',
-        '🎊\x20Creating\x20confetti\x20particles...',
-        'head',
-        'body',
-        '#FF6B9D',
-        '99;\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20filter:\x20drop-shadow(0\x200\x203px\x20',
-        '\x0a\x20\x20\x20\x20\x20\x20\x20\x20background:\x20linear-gradient(135deg,\x20#FF9671\x200%,\x20#FF7A50\x2050%,\x20#FF6B9D\x20100%);\x0a\x20\x20\x20\x20\x20\x20\x20\x20border-radius:\x2020px;\x0a\x20\x20\x20\x20\x20\x20\x20\x20padding:\x2040px;\x0a\x20\x20\x20\x20\x20\x20\x20\x20max-width:\x20500px;\x0a\x20\x20\x20\x20\x20\x20\x20\x20text-align:\x20center;\x0a\x20\x20\x20\x20\x20\x20\x20\x20color:\x20white;\x0a\x20\x20\x20\x20\x20\x20\x20\x20font-family:\x20\x27Poppins\x27,\x20sans-serif;\x0a\x20\x20\x20\x20\x20\x20\x20\x20box-shadow:\x200\x200\x2040px\x20rgba(255,\x20107,\x20157,\x200.4),\x200\x2020px\x2060px\x20rgba(0,\x200,\x200,\x200.3);\x0a\x20\x20\x20\x20\x20\x20\x20\x20animation:\x20modalSlideIn\x200.6s\x20ease-out;\x0a\x20\x20\x20\x20\x20\x20\x20\x20border:\x202px\x20solid\x20rgba(255,\x20255,\x20255,\x200.2);\x0a\x20\x20\x20\x20',
-        '\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20@keyframes\x20modalSlideIn\x20{\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20from\x20{\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20opacity:\x200;\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20transform:\x20scale(0.85)\x20translateY(-30px);\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20}\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20to\x20{\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20opacity:\x201;\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20transform:\x20scale(1)\x20translateY(0);\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20}\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20}\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20@keyframes\x20bounce\x20{\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x200%,\x20100%\x20{\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20transform:\x20translateY(0);\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20}\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x2050%\x20{\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20transform:\x20translateY(-20px);\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20}\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20}\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20@keyframes\x20confetti-fall\x20{\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20to\x20{\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20transform:\x20translateY(100vh)\x20rotate(720deg);\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20opacity:\x200;\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20}\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20}\x0a\x20\x20\x20\x20\x20\x20\x20\x20',
-        'opacity\x200.5s\x20ease-out',
-        ',\x200\x200\x20',
-        '5UZnrAJ',
-        'px\x20',
-        's;\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20opacity:\x201;\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20box-shadow:\x200\x200\x20',
-        '#FF7A50',
-        'remove',
-        '554101IQDzjI',
-        '334188uXZhOa',
-        '179532gvEUUa',
-        '\x20{\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x200%\x20{\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20transform:\x20translateY(0)\x20translateX(0)\x20rotate(0deg)\x20scale(1);\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20opacity:\x201;\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20}\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x2050%\x20{\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20opacity:\x201;\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20}\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20100%\x20{\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20transform:\x20translateY(100vh)\x20translateX(',
-        '91oBZacg',
-        ';\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20left:\x20',
-        ');\x0a\x20\x20\x20\x20\x20\x20\x20\x20',
-        'px;\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20height:\x20',
-        'style',
-        'appendChild',
-        'cssText',
-        's\x20cubic-bezier(0.25,\x200.46,\x200.45,\x200.94)\x20forwards;\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20animation-delay:\x20',
-        '542848tLlUUl',
-        '9818798NSFMbq',
-        '#FF8C42',
-        '#FFD4C4',
-        'random',
-        '50%',
-        'log',
-        'innerHTML',
-        '\x0a\x20\x20\x20\x20\x20\x20\x20\x20<div\x20style=\x22font-size:\x2070px;\x20margin-bottom:\x2020px;\x20animation:\x20bounce\x200.6s\x20ease-out;\x22>🎉</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20<h2\x20style=\x22font-size:\x2032px;\x20margin:\x200\x200\x2010px\x200;\x20font-weight:\x20800;\x20text-shadow:\x200\x202px\x2010px\x20rgba(0,\x200,\x200,\x200.2);\x22>Thank\x20You!</h2>\x0a\x20\x20\x20\x20\x20\x20\x20\x20<p\x20style=\x22font-size:\x2016px;\x20margin:\x200\x200\x2020px\x200;\x20opacity:\x200.95;\x20line-height:\x201.6;\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20Your\x20plan\x20has\x20been\x20upgraded\x20successfully.\x20Enjoy\x20unlimited\x20access\x20to\x20all\x20features!\x0a\x20\x20\x20\x20\x20\x20\x20\x20</p>\x0a\x20\x20\x20\x20\x20\x20\x20\x20<div\x20style=\x22font-size:\x2015px;\x20opacity:\x200.9;\x20background:\x20rgba(255,\x20255,\x20255,\x200.1);\x20padding:\x2015px;\x20border-radius:\x2010px;\x20backdrop-filter:\x20blur(10px);\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20📊\x20Your\x20storage\x20and\x20video\x20limits\x20have\x20been\x20updated.\x0a\x20\x20\x20\x20\x20\x20\x20\x20</div>\x0a\x20\x20\x20\x20',
-        'paymentModalStyles',
-        'length',
-        '45ODhQGQ',
-        '11831376fnILYX',
-        'textContent',
-        '20MHhoyo',
-        'floor',
-        'getElementById',
-        'deg)\x20scale(0);\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20opacity:\x200;\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20}\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20}\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20',
-        '%;\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20top:\x20-20px;\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20border-radius:\x20',
-        ';\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20pointer-events:\x20none;\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20z-index:\x209999999;\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20animation:\x20confetti-fall-',
-        '12bIDDiJ',
-        'div',
-        'createElement',
-        'confetti-keyframes-',
-        '#FF9671'
-    ];
-    _0x1e8e = function () {
-        return _0x43d1e7;
-    };
-    return _0x1e8e();
-}
-function _0x2ee0(_0x2f70a1, _0x3a7691) {
-    _0x2f70a1 = _0x2f70a1 - 0x1b6;
-    const _0x1e8e3c = _0x1e8e();
-    let _0x2ee090 = _0x1e8e3c[_0x2f70a1];
-    return _0x2ee090;
-}
+// Payment success modal and confetti effects
 function showPaymentSuccessModal() {
-    const _0x4dd91c = _0x2ee0;
-    console[_0x4dd91c(0x1e8)]('🎨\x20Creating\x20payment\x20success\x20modal...');
-    const _0x2f3bf9 = document[_0x4dd91c(0x1c1)](_0x4dd91c(0x1c0));
-    _0x2f3bf9['style']['cssText'] = '\x0a\x20\x20\x20\x20\x20\x20\x20\x20position:\x20fixed;\x0a\x20\x20\x20\x20\x20\x20\x20\x20top:\x200;\x0a\x20\x20\x20\x20\x20\x20\x20\x20left:\x200;\x0a\x20\x20\x20\x20\x20\x20\x20\x20right:\x200;\x0a\x20\x20\x20\x20\x20\x20\x20\x20bottom:\x200;\x0a\x20\x20\x20\x20\x20\x20\x20\x20background:\x20rgba(0,\x200,\x200,\x200.85);\x0a\x20\x20\x20\x20\x20\x20\x20\x20display:\x20flex;\x0a\x20\x20\x20\x20\x20\x20\x20\x20align-items:\x20center;\x0a\x20\x20\x20\x20\x20\x20\x20\x20justify-content:\x20center;\x0a\x20\x20\x20\x20\x20\x20\x20\x20z-index:\x209999999;\x0a\x20\x20\x20\x20\x20\x20\x20\x20backdrop-filter:\x20blur(8px);\x0a\x20\x20\x20\x20';
-    const _0x5a3efb = document[_0x4dd91c(0x1c1)](_0x4dd91c(0x1c0));
-    _0x5a3efb['style'][_0x4dd91c(0x1e0)] = _0x4dd91c(0x1cd), _0x5a3efb[_0x4dd91c(0x1e9)] = _0x4dd91c(0x1ea), _0x2f3bf9[_0x4dd91c(0x1df)](_0x5a3efb), document[_0x4dd91c(0x1ca)][_0x4dd91c(0x1df)](_0x2f3bf9), console[_0x4dd91c(0x1e8)]('✨\x20Modal\x20appended\x20to\x20DOM');
-    if (!document['getElementById'](_0x4dd91c(0x1eb))) {
-        const _0x333dad = document[_0x4dd91c(0x1c1)]('style');
-        _0x333dad['id'] = _0x4dd91c(0x1eb), _0x333dad['textContent'] = _0x4dd91c(0x1ce), document[_0x4dd91c(0x1c9)][_0x4dd91c(0x1df)](_0x333dad), console[_0x4dd91c(0x1e8)]('✨\x20Added\x20modal\x20CSS\x20animations');
+    console.log('🎨 Creating payment success modal...');
+    
+    const overlay = document.createElement('div');
+    overlay.style.cssText = `
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.85);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 9999999;
+        backdrop-filter: blur(8px);
+    `;
+    
+    const modal = document.createElement('div');
+    modal.style.cssText = `
+        background: linear-gradient(135deg, #FF9671 0%, #FF7A50 50%, #FF6B9D 100%);
+        border-radius: 20px;
+        padding: 40px;
+        max-width: 500px;
+        text-align: center;
+        color: white;
+        font-family: 'Poppins', sans-serif;
+        box-shadow: 0 0 40px rgba(255, 107, 157, 0.4), 0 20px 60px rgba(0, 0, 0, 0.3);
+        animation: modalSlideIn 0.6s ease-out;
+        border: 2px solid rgba(255, 255, 255, 0.2);
+    `;
+    
+    modal.innerHTML = `
+        <div style="font-size: 70px; margin-bottom: 20px; animation: bounce 0.6s ease-out;">🎉</div>
+        <h2 style="font-size: 32px; margin: 0 0 10px 0; font-weight: 800; text-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);">Thank You!</h2>
+        <p style="font-size: 16px; margin: 0 0 20px 0; opacity: 0.95; line-height: 1.6;">
+            Your plan has been upgraded successfully. Enjoy unlimited access to all features!
+        </p>
+        <div style="font-size: 15px; opacity: 0.9; background: rgba(255, 255, 255, 0.1); padding: 15px; border-radius: 10px; backdrop-filter: blur(10px);">
+            📊 Your storage and video limits have been updated.
+        </div>
+    `;
+    
+    overlay.appendChild(modal);
+    document.body.appendChild(overlay);
+    
+    console.log('✨ Modal appended to DOM');
+    
+    if (!document.getElementById('paymentModalStyles')) {
+        const style = document.createElement('style');
+        style.id = 'paymentModalStyles';
+        style.textContent = `
+            @keyframes modalSlideIn {
+                from {
+                    opacity: 0;
+                    transform: scale(0.85) translateY(-30px);
+                }
+                to {
+                    opacity: 1;
+                    transform: scale(1) translateY(0);
+                }
+            }
+            
+            @keyframes bounce {
+                0%, 100% {
+                    transform: translateY(0);
+                }
+                50% {
+                    transform: translateY(-20px);
+                }
+            }
+            
+            @keyframes confetti-fall {
+                to {
+                    transform: translateY(100vh) rotate(720deg);
+                    opacity: 0;
+                }
+            }
+        `;
+        document.head.appendChild(style);
+        console.log('✨ Added modal CSS animations');
     }
+    
     setTimeout(() => {
-        const _0x21bff2 = _0x4dd91c;
-        _0x2f3bf9[_0x21bff2(0x1de)]['opacity'] = '0', _0x2f3bf9[_0x21bff2(0x1de)][_0x21bff2(0x1c4)] = _0x21bff2(0x1cf), setTimeout(() => _0x2f3bf9[_0x21bff2(0x1d5)](), 0x1f4);
-    }, 0xfa0);
+        overlay.style.opacity = '0';
+        overlay.style.transition = 'opacity 0.5s ease-out';
+        setTimeout(() => overlay.remove(), 500);
+    }, 4000);
 }
+
 function createConfetti() {
-    const _0x5c1fbe = _0x2ee0;
-    console[_0x5c1fbe(0x1e8)](_0x5c1fbe(0x1c8));
-    const _0x1d21ab = 0x50, _0x492e99 = [
-            '#FF9671',
-            _0x5c1fbe(0x1e5),
-            _0x5c1fbe(0x1d4),
-            _0x5c1fbe(0x1cb),
-            _0x5c1fbe(0x1e4),
-            '#FF6B35',
-            '#FFB627',
-            _0x5c1fbe(0x1c3)
-        ];
-    for (let _0x6faf85 = 0x0; _0x6faf85 < _0x1d21ab; _0x6faf85++) {
-        const _0x41337f = document[_0x5c1fbe(0x1c1)](_0x5c1fbe(0x1c0)), _0x14d1e3 = _0x492e99[Math[_0x5c1fbe(0x1ba)](Math[_0x5c1fbe(0x1e6)]() * _0x492e99[_0x5c1fbe(0x1ec)])], _0x4931a4 = Math[_0x5c1fbe(0x1e6)]() * 0xf + 0x8, _0x3f0c3e = 2.5 + Math[_0x5c1fbe(0x1e6)]() * 1.5, _0x4d45eb = Math[_0x5c1fbe(0x1e6)]() * 0.8, _0x58ad81 = Math[_0x5c1fbe(0x1e6)]() * 0x2d0, _0x30dfa5 = Math[_0x5c1fbe(0x1e6)]() * 0x64 - 0x32;
-        _0x41337f[_0x5c1fbe(0x1de)][_0x5c1fbe(0x1e0)] = _0x5c1fbe(0x1c7) + _0x4931a4 + _0x5c1fbe(0x1dd) + _0x4931a4 + 'px;\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20background:\x20' + _0x14d1e3 + _0x5c1fbe(0x1db) + Math[_0x5c1fbe(0x1e6)]() * 0x64 + _0x5c1fbe(0x1bd) + (Math['random']() > 0.5 ? _0x5c1fbe(0x1e7) : '3px') + _0x5c1fbe(0x1be) + _0x6faf85 + '\x20' + _0x3f0c3e + _0x5c1fbe(0x1e1) + _0x4d45eb + _0x5c1fbe(0x1d3) + _0x4931a4 * 0.8 + 'px\x20' + _0x14d1e3 + _0x5c1fbe(0x1d0) + _0x4931a4 * 1.2 + _0x5c1fbe(0x1d2) + _0x14d1e3 + _0x5c1fbe(0x1cc) + _0x14d1e3 + _0x5c1fbe(0x1dc), document[_0x5c1fbe(0x1ca)][_0x5c1fbe(0x1df)](_0x41337f);
-        if (!document[_0x5c1fbe(0x1bb)](_0x5c1fbe(0x1c2) + _0x6faf85)) {
-            const _0x5efc41 = document[_0x5c1fbe(0x1c1)]('style');
-            _0x5efc41['id'] = _0x5c1fbe(0x1c2) + _0x6faf85, _0x5efc41[_0x5c1fbe(0x1b8)] = '\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20@keyframes\x20confetti-fall-' + _0x6faf85 + _0x5c1fbe(0x1d9) + _0x30dfa5 + _0x5c1fbe(0x1c5) + _0x58ad81 + _0x5c1fbe(0x1bc), document[_0x5c1fbe(0x1c9)][_0x5c1fbe(0x1df)](_0x5efc41);
+    console.log('🎊 Creating confetti particles...');
+    
+    const confettiCount = 80;
+    const orangeColors = ['#FF9671', '#FFD4C4', '#FF7A50', '#FF6B9D', '#FF8C42', '#FF6B35', '#FFB627', '#FF9671'];
+    
+    for (let i = 0; i < confettiCount; i++) {
+        const confetti = document.createElement('div');
+        const randomColor = orangeColors[Math.floor(Math.random() * orangeColors.length)];
+        const size = Math.random() * 15 + 8;
+        const duration = 2.5 + Math.random() * 1.5;
+        const delay = Math.random() * 0.8;
+        const rotation = Math.random() * 720;
+        const swingAmount = Math.random() * 100 - 50;
+        
+        confetti.style.cssText = `
+            position: fixed;
+            width: ${size}px;
+            height: ${size}px;
+            background: ${randomColor};
+            left: ${Math.random() * 100}%;
+            top: -20px;
+            border-radius: ${Math.random() > 0.5 ? '50%' : '3px'};
+            pointer-events: none;
+            z-index: 9999999;
+            animation: confetti-fall-${i} ${duration}s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+            animation-delay: ${delay}s;
+            opacity: 1;
+            box-shadow: 0 0 ${size * 0.8}px ${randomColor}, 0 0 ${size * 1.2}px ${randomColor}99;
+            filter: drop-shadow(0 0 3px ${randomColor});
+        `;
+        
+        document.body.appendChild(confetti);
+        
+        if (!document.getElementById(`confetti-keyframes-${i}`)) {
+            const style = document.createElement('style');
+            style.id = `confetti-keyframes-${i}`;
+            style.textContent = `
+                @keyframes confetti-fall-${i} {
+                    0% {
+                        transform: translateY(0) translateX(0) rotate(0deg) scale(1);
+                        opacity: 1;
+                    }
+                    50% {
+                        opacity: 1;
+                    }
+                    100% {
+                        transform: translateY(100vh) translateX(${swingAmount}px) rotate(${rotation}deg) scale(0);
+                        opacity: 0;
+                    }
+                }
+            `;
+            document.head.appendChild(style);
         }
     }
 }

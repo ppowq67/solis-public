@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="csrf-token" content="">
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://cdn.tailwindcss.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.tailwindcss.com; font-src https://fonts.gstatic.com; img-src 'self' data: https:; connect-src 'self' ws: http://localhost:5500 ws://localhost:5500 http://127.0.0.1:5500 ws://127.0.0.1:5500 https://cdn.jsdelivr.net https://cdn.socket.io https://cdnjs.cloudflare.com https://cdn.paddle.com https://checkout.paddle.com https://api.paddle.com https://api.solisai.video;">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.tailwindcss.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.tailwindcss.com; font-src https://fonts.gstatic.com; img-src 'self' data: https:; connect-src 'self' https://cdn.jsdelivr.net https://cdn.socket.io https://cdnjs.cloudflare.com https://cdn.paddle.com https://checkout.paddle.com https://api.paddle.com https://api.solisai.video https://api.solisaivideo.vercel.app https://solisai.video https://solisaivideo.vercel.app;">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta http-equiv="X-Content-Type-Options" content="nosniff">
     <meta http-equiv="X-XSS-Protection" content="1; mode=block">
@@ -26,11 +26,9 @@
             padding: 0;
             width: 100%;
             height: 100%;
-            overflow: hidden; /* Strict no-scroll */
-            position: fixed; /* Prevents bounce scroll on iOS */
+            overflow: hidden;
+            position: fixed;
         }
-
-        /* Explosion Container */
         .icon-cloud-area {
             position: relative;
             width: 100%;
@@ -109,11 +107,7 @@
     </style>
 </head>
 <body class="h-screen w-screen flex flex-col">
-
-    <!-- Background Decoration -->
     <div class="fixed top-0 right-0 w-[70vw] h-[70vw] bg-gradient-to-bl from-orange-100/20 via-blue-50/20 to-transparent rounded-full blur-[150px] -z-10"></div>
-
-    <!-- Navigation -->
     <nav class="w-full max-w-7xl mx-auto px-6 lg:px-8 py-6 flex justify-between items-center relative z-50 shrink-0">
         <div class="flex items-center gap-3">
             <div class="w-8 h-8 lg:w-10 lg:h-10 text-[#FF8A5B]">
@@ -182,7 +176,6 @@
 
         <div class="relative w-full h-full min-h-[300px] lg:min-h-0" id="icon-container">
             <div class="icon-cloud-area" id="cloud-area">
-                <!-- Central Logo -->
                 <div class="icon-instance z-40" style="width: clamp(100px, 12vw, 160px); color: #1e293b; top: 50%; left: 50%; --final-transform: translate(-50%, -50%); animation-delay: 0s;">
                     <svg viewBox="0 0 100 100" fill="none" stroke="currentColor">
                         <circle cx="50" cy="50" r="14" fill="currentColor"></circle>
@@ -194,217 +187,182 @@
         </div>
     </main>
 
-    <script>function _0x445e(_0x5c1925, _0x2795e2) {
-    _0x5c1925 = _0x5c1925 - 0x1d4;
-    const _0x23e731 = _0x23e7();
-    let _0x445e57 = _0x23e731[_0x5c1925];
-    return _0x445e57;
-}
-function _0x23e7() {
-    const _0x3c0572 = [
-        '<svg\x20viewBox=\x220\x200\x20100\x20100\x22\x20fill=\x22currentColor\x22><circle\x20cx=\x2250\x22\x20cy=\x2250\x22\x20r=\x2250\x22/></svg>',
-        'authenticated',
-        'POST',
-        'content',
-        'innerHTML',
-        '1048509otVRFV',
-        'launchStudioBtn',
-        'appendChild',
-        'log',
-        'location',
-        'meta[name=\x22csrf-token\x22]',
-        'random',
-        '[WARNING]\x20Failed\x20to\x20fetch\x20CSRF\x20token',
-        'email',
-        '⚠️\x20Warning:\x20Connection\x20is\x20not\x20secure.\x20Use\x20HTTPS\x20in\x20production.',
-        'DELETE',
-        'setProperty',
-        'json',
-        'warn',
-        '27304jqSeZa',
-        '--final-transform',
-        'method',
-        '4352300zlkDvM',
-        'API_BASE_URL',
-        '📍\x20Welcome\x20page\x20ready\x20for\x20new\x20user\x20onboarding',
-        'PUT',
-        'error',
-        '1281KoOufh',
-        'length',
-        'translate(-50%,\x20-50%)\x20rotate(',
-        '/auth/check',
-        'user',
-        'top',
-        'floor',
-        'getElementById',
-        'innerWidth',
-        '\x22\x20transform=\x22rotate(45\x2050\x2050)\x22></ellipse>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<ellipse\x20rx=\x2244\x22\x20ry=\x2218\x22\x20cx=\x2250\x22\x20cy=\x2250\x22\x20stroke-width=\x22',
-        'include',
-        '[OK]\x20CSRF\x20token\x20initialized',
-        'deg)',
-        '\x22\x20transform=\x22rotate(-45\x2050\x2050)\x22></ellipse>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</svg>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20',
-        'hostname',
-        'cloud-area',
-        'GET',
-        'href',
-        '\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<svg\x20viewBox=\x220\x200\x20100\x20100\x22\x20fill=\x22none\x22\x20stroke=\x22currentColor\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<circle\x20cx=\x2250\x22\x20cy=\x2250\x22\x20r=\x2212\x22\x20fill=\x22currentColor\x22></circle>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<ellipse\x20rx=\x2244\x22\x20ry=\x2218\x22\x20cx=\x2250\x22\x20cy=\x2250\x22\x20stroke-width=\x22',
-        '1502156VpidMu',
-        'http:',
-        '#64748b',
-        '\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20class=\x22icon-instance\x20z-40\x22\x20style=\x22width:\x20clamp(100px,\x2012vw,\x20160px);\x20color:\x20#1e293b;\x20top:\x2050%;\x20left:\x2050%;\x20--final-transform:\x20translate(-50%,\x20-50%);\x20animation-delay:\x200s;\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<svg\x20viewBox=\x220\x200\x20100\x20100\x22\x20fill=\x22none\x22\x20stroke=\x22currentColor\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<circle\x20cx=\x2250\x22\x20cy=\x2250\x22\x20r=\x2214\x22\x20fill=\x22currentColor\x22></circle>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<ellipse\x20rx=\x2244\x22\x20ry=\x2218\x22\x20cx=\x2250\x22\x20cy=\x2250\x22\x20stroke-width=\x225\x22\x20transform=\x22rotate(45\x2050\x2050)\x22></ellipse>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<ellipse\x20rx=\x2244\x22\x20ry=\x2218\x22\x20cx=\x2250\x22\x20cy=\x2250\x22\x20stroke-width=\x225\x22\x20transform=\x22rotate(-45\x2050\x2050)\x22></ellipse>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</svg>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20',
-        'DOMContentLoaded',
-        '--final-opacity',
-        '6pdjCJA',
-        '9460701gjHglh',
-        '2304909wYhitg',
-        '❌\x20Auth\x20check\x20error:',
-        'click',
-        'width',
-        'style',
-        '/dashboard.html',
-        '10JcNhPn',
-        '127.0.0.1',
-        'createElement',
-        'protocol',
-        'querySelector',
-        'includes',
-        '#cbd5e1',
-        'localhost',
-        '🔐\x20Checking\x20authentication\x20status...',
-        '[WARNING]\x20CSRF\x20token\x20fetch\x20error:',
-        'toUpperCase',
-        'addEventListener',
-        'token',
-        '✅\x20User\x20already\x20authenticated:',
-        'PATCH',
-        'headers',
-        'setAttribute',
-        '2SOriBL',
-        '#94a3b8',
-        'animationDelay',
-        'className',
-        'CSRF\x20token\x20not\x20available\x20-\x20cannot\x20make\x20state-changing\x20request',
-        '903877cZtuKZ'
-    ];
-    _0x23e7 = function () {
-        return _0x3c0572;
-    };
-    return _0x23e7();
-}
-const _0x153a0d = _0x445e;
-(function (_0x1f4d47, _0x5ca3f7) {
-    const _0x59f9d6 = _0x445e, _0x23a471 = _0x1f4d47();
-    while (!![]) {
-        try {
-            const _0x5339f6 = parseInt(_0x59f9d6(0x1fa)) / 0x1 * (-parseInt(_0x59f9d6(0x1f5)) / 0x2) + -parseInt(_0x59f9d6(0x1de)) / 0x3 + -parseInt(_0x59f9d6(0x1d6)) / 0x4 + parseInt(_0x59f9d6(0x211)) / 0x5 * (parseInt(_0x59f9d6(0x1dc)) / 0x6) + -parseInt(_0x59f9d6(0x216)) / 0x7 * (-parseInt(_0x59f9d6(0x20e)) / 0x8) + -parseInt(_0x59f9d6(0x1dd)) / 0x9 * (-parseInt(_0x59f9d6(0x1e4)) / 0xa) + parseInt(_0x59f9d6(0x200)) / 0xb;
-            if (_0x5339f6 === _0x5ca3f7)
-                break;
-            else
-                _0x23a471['push'](_0x23a471['shift']());
-        } catch (_0x321a1b) {
-            _0x23a471['push'](_0x23a471['shift']());
-        }
-    }
-}(_0x23e7, 0x90fa4));
-async function initializeCSRFToken() {
-    const _0x3d4181 = _0x445e;
-    try {
-        const _0x2770f5 = await fetch(window[_0x3d4181(0x212)] + '/auth/csrf-token', {
-            'method': _0x3d4181(0x226),
-            'credentials': _0x3d4181(0x220)
-        });
-        if (_0x2770f5['ok']) {
-            const _0x2f0094 = await _0x2770f5[_0x3d4181(0x20c)]();
-            if (_0x2f0094[_0x3d4181(0x1f0)]) {
-                const _0x3d300f = document[_0x3d4181(0x1e8)](_0x3d4181(0x205));
-                _0x3d300f && (_0x3d300f[_0x3d4181(0x1f4)]('content', _0x2f0094[_0x3d4181(0x1f0)]), console[_0x3d4181(0x203)](_0x3d4181(0x221)));
+    <script>
+        async function initializeCSRFToken() {
+            try {
+                const response = await fetch(`${window.API_BASE_URL}/auth/csrf-token`, {
+                    method: 'GET',
+                    credentials: 'include'
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data.token) {
+                        const csrfMeta = document.querySelector('meta[name="csrf-token"]');
+                        if (csrfMeta) {
+                            csrfMeta.setAttribute('content', data.token);
+                            console.log('[OK] CSRF token initialized');
+                        }
+                    }
+                } else {
+                    console.warn('[WARNING] Failed to fetch CSRF token');
+                }
+            } catch (error) {
+                console.warn('[WARNING] CSRF token fetch error:', error);
             }
-        } else
-            console['warn'](_0x3d4181(0x207));
-    } catch (_0x489f89) {
-        console[_0x3d4181(0x20d)](_0x3d4181(0x1ed), _0x489f89);
-    }
-}
-function getCSRFToken() {
-    const _0x3df740 = _0x445e, _0x47aaf2 = document['querySelector']('meta[name=\x22csrf-token\x22]');
-    if (_0x47aaf2 && _0x47aaf2[_0x3df740(0x1fe)] && _0x47aaf2[_0x3df740(0x1fe)]['length'] >= 0x20)
-        return _0x47aaf2[_0x3df740(0x1fe)];
-    return null;
-}
-async function secureFetch(_0x43d0e0, _0xc4bc00 = {}) {
-    const _0x2470dd = _0x445e, _0x32aecb = {};
-    if (_0xc4bc00[_0x2470dd(0x210)] && [
-            _0x2470dd(0x1fd),
-            _0x2470dd(0x214),
-            _0x2470dd(0x20a),
-            _0x2470dd(0x1f2)
-        ][_0x2470dd(0x1e9)](_0xc4bc00[_0x2470dd(0x210)][_0x2470dd(0x1ee)]())) {
-        const _0x4a4a19 = getCSRFToken();
-        if (!_0x4a4a19)
-            throw new Error(_0x2470dd(0x1f9));
-        _0x32aecb['X-CSRF-Token'] = _0x4a4a19;
-    }
-    return fetch(_0x43d0e0, {
-        ..._0xc4bc00,
-        'credentials': 'include',
-        'headers': {
-            ..._0x32aecb,
-            ..._0xc4bc00[_0x2470dd(0x1f3)]
         }
-    });
-}
-window[_0x153a0d(0x204)][_0x153a0d(0x1e7)] === _0x153a0d(0x1d7) && window[_0x153a0d(0x204)][_0x153a0d(0x224)] !== _0x153a0d(0x1eb) && window['location'][_0x153a0d(0x224)] !== _0x153a0d(0x1e5) && console[_0x153a0d(0x20d)](_0x153a0d(0x209));
-document[_0x153a0d(0x1ef)](_0x153a0d(0x1da), async () => {
-    const _0x1e757b = _0x153a0d;
-    await initializeCSRFToken();
-    const _0x59486e = document[_0x1e757b(0x21d)](_0x1e757b(0x201));
-    _0x59486e && _0x59486e[_0x1e757b(0x1ef)](_0x1e757b(0x1e0), () => {
-        const _0x14bef6 = _0x1e757b;
-        window[_0x14bef6(0x204)][_0x14bef6(0x1d4)] = _0x14bef6(0x1e3);
-    }), await checkAuthenticationAndInit();
-}, { 'once': !![] });
-async function checkAuthenticationAndInit() {
-    const _0x53bc56 = _0x153a0d;
-    try {
-        console[_0x53bc56(0x203)](_0x53bc56(0x1ec));
-        const _0x1ef87c = await secureFetch(window[_0x53bc56(0x212)] + _0x53bc56(0x219), { 'method': _0x53bc56(0x226) }), _0x559882 = await _0x1ef87c[_0x53bc56(0x20c)]();
-        if (_0x1ef87c['ok'] && _0x559882[_0x53bc56(0x1fc)] && _0x559882[_0x53bc56(0x21a)]) {
-            console[_0x53bc56(0x203)](_0x53bc56(0x1f1), _0x559882[_0x53bc56(0x21a)][_0x53bc56(0x208)]), console[_0x53bc56(0x203)]('➡️\x20\x20Skipping\x20welcome,\x20redirecting\x20to\x20dashboard...'), window[_0x53bc56(0x204)]['href'] = _0x53bc56(0x1e3);
-            return;
+        
+        function getCSRFToken() {
+            const csrfMeta = document.querySelector('meta[name="csrf-token"]');
+            if (csrfMeta && csrfMeta.content && csrfMeta.content.length >= 32) {
+                return csrfMeta.content;
+            }
+            return null;
         }
-        console[_0x53bc56(0x203)]('👤\x20No\x20existing\x20session,\x20showing\x20welcome\x20onboarding'), showWelcomePage();
-    } catch (_0x5947e7) {
-        console[_0x53bc56(0x215)](_0x53bc56(0x1df), _0x5947e7), showWelcomePage();
-    }
-}
-function showWelcomePage() {
-    const _0x365e5a = _0x153a0d;
-    console[_0x365e5a(0x203)](_0x365e5a(0x213));
-}
-function generateCloud() {
-    const _0x1c0f9f = _0x153a0d, _0x5c2908 = document[_0x1c0f9f(0x21d)](_0x1c0f9f(0x225));
-    if (!_0x5c2908)
-        return;
-    _0x5c2908[_0x1c0f9f(0x1ff)] = _0x1c0f9f(0x1d9);
-    const _0x25e068 = window['innerWidth'] < 0x400 ? 0x28 : 0x46, _0xb42e69 = (_0x1c1cad = 0x4) => _0x1c0f9f(0x1d5) + _0x1c1cad + _0x1c0f9f(0x21f) + _0x1c1cad + _0x1c0f9f(0x223);
-    for (let _0x3ed94a = 0x0; _0x3ed94a < _0x25e068; _0x3ed94a++) {
-        const _0x535160 = document[_0x1c0f9f(0x1e6)]('div');
-        _0x535160[_0x1c0f9f(0x1f8)] = 'icon-instance';
-        const _0x5bef59 = Math['random']() * 0x50 + 0xa, _0x2c1512 = Math[_0x1c0f9f(0x206)]() * 0x50 + 0xa, _0x5eaaac = Math[_0x1c0f9f(0x206)]() * (window[_0x1c0f9f(0x21e)] < 0x400 ? 0x28 : 0x46) + 0xf, _0x1e82f6 = Math['random']() * 0.3 + 0.1, _0x4bc8d2 = Math[_0x1c0f9f(0x206)]() * 0x168, _0xc02d77 = Math[_0x1c0f9f(0x206)]() * 1.2, _0x16276c = [
-                _0x1c0f9f(0x1ea),
-                _0x1c0f9f(0x1f6),
-                _0x1c0f9f(0x1d8),
-                '#e2e8f0',
-                '#f1f5f9'
-            ], _0x1cc9ab = _0x16276c[Math[_0x1c0f9f(0x21c)](Math['random']() * _0x16276c[_0x1c0f9f(0x217)])];
-        _0x535160[_0x1c0f9f(0x1e2)][_0x1c0f9f(0x1e1)] = _0x5eaaac + 'px', _0x535160[_0x1c0f9f(0x1e2)]['color'] = _0x1cc9ab, _0x535160['style'][_0x1c0f9f(0x21b)] = _0x5bef59 + '%', _0x535160[_0x1c0f9f(0x1e2)]['left'] = _0x2c1512 + '%', _0x535160[_0x1c0f9f(0x1e2)][_0x1c0f9f(0x20b)](_0x1c0f9f(0x1db), _0x1e82f6), _0x535160[_0x1c0f9f(0x1e2)][_0x1c0f9f(0x20b)](_0x1c0f9f(0x20f), _0x1c0f9f(0x218) + _0x4bc8d2 + _0x1c0f9f(0x222)), _0x535160[_0x1c0f9f(0x1e2)][_0x1c0f9f(0x1f7)] = _0xc02d77 + 's', Math[_0x1c0f9f(0x206)]() > 0.8 ? (_0x535160[_0x1c0f9f(0x1ff)] = _0x1c0f9f(0x1fb), _0x535160['style'][_0x1c0f9f(0x1e1)] = Math[_0x1c0f9f(0x206)]() * 0x6 + 0x2 + 'px') : _0x535160[_0x1c0f9f(0x1ff)] = _0xb42e69(Math[_0x1c0f9f(0x206)]() * 0x5 + 0x2), _0x5c2908[_0x1c0f9f(0x202)](_0x535160);
-    }
-}
-window[_0x153a0d(0x1ef)]('load', generateCloud);
-let resizeTimer;
-window[_0x153a0d(0x1ef)]('resize', () => {
-    clearTimeout(resizeTimer), resizeTimer = setTimeout(generateCloud, 0xfa);
-});</script>
+        
+        async function secureFetch(url, options = {}) {
+            const defaultHeaders = { };
+            
+            if (options.method && ['POST', 'PUT', 'DELETE', 'PATCH'].includes(options.method.toUpperCase())) {
+                const csrfToken = getCSRFToken();
+                if (!csrfToken) {
+                    throw new Error('CSRF token not available - cannot make state-changing request');
+                }
+                defaultHeaders['X-CSRF-Token'] = csrfToken;
+            }
+            
+            return fetch(url, {
+                ...options,
+                credentials: 'include',
+                headers: {
+                    ...defaultHeaders,
+                    ...options.headers
+                }
+            });
+        }
+        
+        if (window.location.protocol === 'http:' && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
+            console.warn('⚠️ Warning: Connection is not secure. Use HTTPS in production.');
+        }
+        
+        // Initialize CSRF token and authentication check on page load
+        document.addEventListener('DOMContentLoaded', async () => {
+            // Initialize CSRF token
+            await initializeCSRFToken();
+            
+            // Set up launch studio button
+            const launchBtn = document.getElementById('launchStudioBtn');
+            if (launchBtn) {
+                launchBtn.addEventListener('click', () => {
+                    window.location.href = '/dashboard.html';
+                });
+            }
+            
+            // Check authentication status
+            await checkAuthenticationAndInit();
+        }, { once: true });
+        
+        // Keep the old separate DOMContentLoaded listener removed
+        async function checkAuthenticationAndInit() {
+            try {
+                console.log('🔐 Checking authentication status...');
+                
+                const response = await secureFetch(`${window.API_BASE_URL}/auth/check`, {
+                    method: 'GET'
+                });
+                
+                const data = await response.json();
+                
+                // If user is already authenticated, skip welcome and go to dashboard
+                if (response.ok && data.authenticated && data.user) {
+                    console.log('✅ User already authenticated:', data.user.email);
+                    console.log('➡️  Skipping welcome, redirecting to dashboard...');
+                    window.location.href = '/dashboard.html';
+                    return;
+                }
+                
+                // User not authenticated - show welcome onboarding
+                console.log('👤 No existing session, showing welcome onboarding');
+                showWelcomePage();
+                
+            } catch (error) {
+                console.error('❌ Auth check error:', error);
+                // On error, show welcome (don't block new users)
+                showWelcomePage();
+            }
+        }
+        
+        // Show the welcome onboarding page
+        function showWelcomePage() {
+            console.log('📍 Welcome page ready for new user onboarding');
+            // Welcome page content is already rendered, just set up interactions
+        }
+
+        function generateCloud() {
+            const container = document.getElementById('cloud-area');
+            if (!container) return;
+            
+            container.innerHTML = `
+                <div class="icon-instance z-40" style="width: clamp(100px, 12vw, 160px); color: #1e293b; top: 50%; left: 50%; --final-transform: translate(-50%, -50%); animation-delay: 0s;">
+                    <svg viewBox="0 0 100 100" fill="none" stroke="currentColor">
+                        <circle cx="50" cy="50" r="14" fill="currentColor"></circle>
+                        <ellipse rx="44" ry="18" cx="50" cy="50" stroke-width="5" transform="rotate(45 50 50)"></ellipse>
+                        <ellipse rx="44" ry="18" cx="50" cy="50" stroke-width="5" transform="rotate(-45 50 50)"></ellipse>
+                    </svg>
+                </div>
+            `;
+
+            const iconCount = window.innerWidth < 1024 ? 40 : 70; 
+            
+            const getIconSVG = (strokeWidth = 4) => `
+                <svg viewBox="0 0 100 100" fill="none" stroke="currentColor">
+                    <circle cx="50" cy="50" r="12" fill="currentColor"></circle>
+                    <ellipse rx="44" ry="18" cx="50" cy="50" stroke-width="${strokeWidth}" transform="rotate(45 50 50)"></ellipse>
+                    <ellipse rx="44" ry="18" cx="50" cy="50" stroke-width="${strokeWidth}" transform="rotate(-45 50 50)"></ellipse>
+                </svg>
+            `;
+
+            for (let i = 0; i < iconCount; i++) {
+                const el = document.createElement('div');
+                el.className = 'icon-instance';
+                
+                const top = Math.random() * 80 + 10;
+                const left = Math.random() * 80 + 10;
+                
+                const size = Math.random() * (window.innerWidth < 1024 ? 40 : 70) + 15; 
+                const opacity = Math.random() * 0.3 + 0.1;
+                const rot = Math.random() * 360;
+                const delay = Math.random() * 1.2;
+                
+                const colors = ['#cbd5e1', '#94a3b8', '#64748b', '#e2e8f0', '#f1f5f9'];
+                const color = colors[Math.floor(Math.random() * colors.length)];
+
+                el.style.width = `${size}px`;
+                el.style.color = color;
+                el.style.top = `${top}%`;
+                el.style.left = `${left}%`;
+                el.style.setProperty('--final-opacity', opacity);
+                el.style.setProperty('--final-transform', `translate(-50%, -50%) rotate(${rot}deg)`);
+                el.style.animationDelay = `${delay}s`;
+
+                if (Math.random() > 0.8) {
+                    el.innerHTML = `<svg viewBox="0 0 100 100" fill="currentColor"><circle cx="50" cy="50" r="50"/></svg>`;
+                    el.style.width = `${Math.random() * 6 + 2}px`;
+                } else {
+                    el.innerHTML = getIconSVG(Math.random() * 5 + 2);
+                }
+
+                container.appendChild(el);
+            }
+        }
+
+        window.addEventListener('load', generateCloud);
+        let resizeTimer;
+        window.addEventListener('resize', () => {
+            clearTimeout(resizeTimer);
+            resizeTimer = setTimeout(generateCloud, 250);
+        });
+    </script>
 
 </body>
 </html>

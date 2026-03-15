@@ -1,22 +1,4 @@
-# Sensitive & Test Files
-premium(sandbox).html
-*.backup
-*.bak
-
-# IDE
+backend/
 .vscode/
-.idea/
-*.swp
-*.swo
-*~
-
-# OS
-.DS_Store
-Thumbs.db
-
-# Dependencies & Build
-node_modules/
-obfuscate.js
-package.json
-package-lock.json
-
+database/
+frontend/
