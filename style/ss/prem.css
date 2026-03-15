@@ -1,5 +1,4 @@
 
-
 .nav-item-text.premium-badge {
     font-size: 0.7rem;
     font-weight: 600;
@@ -14,7 +13,6 @@
     font-family: "Inter", sans-serif; 
     border: 1px solid rgba(255, 255, 255, 0.1); 
 }
-
 .nav-item.tokens {
     display: flex;
     align-items: center;
@@ -22,7 +20,6 @@
     gap: 8px;
     padding: 8px 12px;
     border-radius: 4px; 
-    
     background: rgba(79, 70, 229, 0.1); 
     border: 1px solid rgba(79, 70, 229, 0.2); 
     color: var(--text-primary);
@@ -31,12 +28,10 @@
     cursor: default;
     font-family: "Inter", sans-serif;
 }
-
 .nav-item.tokens i {
     color: var(--accent-light); 
     font-size: 1rem;
 }
-
 .nav-item-text.token-count {
     font-weight: 700;
     background-color: var(--accent-light); 
@@ -46,7 +41,6 @@
     font-size: 0.75rem;
     letter-spacing: 0.5px;
 }
-
 .premium-modal {
     display: none; 
 }
@@ -94,12 +88,10 @@
     background: transparent;
     padding: 8px 0 0 0;
 }
-
 @keyframes premiumModalFade {
     from { opacity: 0; transform: translate(-50%, -46%); }
     to   { opacity: 1; transform: translate(-50%, -50%); }
 }
-
 @media (max-width: 600px) {
     .premium-modal__dialog {
         width: 96vw;
@@ -109,7 +101,6 @@
     }
     .premium-modal__close { right: 8px; top: 8px; }
 }
-
 .modal-open {
     overflow: hidden !important;
 }

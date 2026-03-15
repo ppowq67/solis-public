@@ -11,11 +11,9 @@
     align-items: center;
     justify-content: center;
 }
-
 .disconnect-confirmation-modal.show {
     display: flex !important;
 }
-
 .disconnect-modal-content {
     background: white;
     border-radius: 12px;
@@ -24,7 +22,6 @@
     box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
     animation: slideUp 0.3s ease;
 }
-
 .disconnect-modal-header {
     padding: 24px;
     border-bottom: 1px solid #f0f0f0;
@@ -32,14 +29,12 @@
     justify-content: space-between;
     align-items: center;
 }
-
 .disconnect-modal-header h2 {
     margin: 0;
     font-size: 18px;
     font-weight: 600;
     color: #1a1a1a;
 }
-
 .disconnect-modal-close {
     background: none;
     border: none;
@@ -55,37 +50,31 @@
     border-radius: 6px;
     transition: all 0.2s;
 }
-
 .disconnect-modal-close:hover {
     background: #f5f5f5;
     color: #1a1a1a;
 }
-
 .disconnect-modal-body {
     padding: 32px 24px;
     text-align: center;
 }
-
 .disconnect-modal-icon {
     font-size: 48px;
     color: #ff6b35;
     margin-bottom: 16px;
     display: block;
 }
-
 .disconnect-modal-body p {
     margin: 0 0 12px 0;
     font-size: 14px;
     color: #666;
     line-height: 1.5;
 }
-
 .disconnect-modal-warning {
     font-size: 13px;
     color: #999;
     margin: 12px 0 0 0 !important;
 }
-
 .disconnect-modal-footer {
     padding: 20px 24px;
     border-top: 1px solid #f0f0f0;
@@ -93,7 +82,6 @@
     gap: 12px;
     justify-content: flex-end;
 }
-
 .disconnect-modal-btn {
     padding: 10px 20px;
     border: none;
@@ -105,26 +93,21 @@
     flex: 1;
     max-width: 150px;
 }
-
 .disconnect-modal-btn.cancel-btn {
     background: #f5f5f5;
     color: #1a1a1a;
 }
-
 .disconnect-modal-btn.cancel-btn:hover {
     background: #e8e8e8;
 }
-
 .disconnect-modal-btn.disconnect-btn {
     background: #ff6b35;
     color: white;
 }
-
 .disconnect-modal-btn.disconnect-btn:hover {
     background: #ff5a1f;
     box-shadow: 0 4px 12px rgba(255, 107, 53, 0.3);
 }
-
 @keyframes slideUp {
     from {
         opacity: 0;

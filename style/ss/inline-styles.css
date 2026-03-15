@@ -1,9 +1,8 @@
-/* Font Awesome Icon Styling */
+
 i.fas {
     color: inherit;
     display: inline-block;
 }
-
 .empty-state {
     display: flex;
     flex-direction: column;
@@ -13,7 +12,6 @@ i.fas {
     padding: 40px;
     min-height: 200px; 
 }
-
 @keyframes float {
     0%, 100% {
         transform: translateY(0px);
@@ -22,7 +20,6 @@ i.fas {
         transform: translateY(-15px);
     }
 }
-
 @keyframes modalSlideIn {
     from {
         opacity: 0;

@@ -1,30 +1,24 @@
         :root {
-            
             --ios-glass: rgba(255, 255, 255, 0.75);
             --ios-blur: blur(30px) saturate(190%) brightness(105%);
             --ios-border: 0.5px solid rgba(255, 255, 255, 0.9);
             --ios-shadow: 0 15px 45px rgba(0, 0, 0, 0.08);
-            
             --active-fill: rgba(255, 157, 66, 0.08); 
             --text-primary: #1c1c1e;
             --text-secondary: rgba(60, 60, 67, 0.45);
             --accent: #ff9d42; 
-            
             --glow-active: rgba(255, 157, 66, 0.2);
-
             --nav-item-h: 80px; 
             --nav-item-w: 94px; 
             --nav-padding-v: 8px;
             --nav-gap: 2px;
         }
-
         * {
             box-sizing: border-box;
             -webkit-tap-highlight-color: transparent;
             user-select: none;
             -webkit-user-select: none;
         }
-
         body {
             margin: 0;
             padding: 0;
@@ -38,7 +32,6 @@
             align-items: center; 
             perspective: 1200px;
         }
-
         .profile-btn {
             position: fixed;
             bottom: 32px;
@@ -61,30 +54,25 @@
             transition: all 0.35s cubic-bezier(0.35, 0.63, 0.4, 1);
             will-change: transform, background, box-shadow;
         }
-
         .profile-btn:active { 
             transform: scale(0.95);
             box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
         }
-
         .profile-btn:hover {
             background: rgba(255, 255, 255, 0.85);
             color: var(--accent);
             box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
             transform: scale(1.02);
         }
-
         .profile-btn svg {
             width: 32px;
             height: 32px;
             pointer-events: none;
         }
-
         .ui-wrapper {
             padding-left: 32px;
             transform-style: preserve-3d;
         }
-
         .pill-nav {
             background: var(--ios-glass);
             backdrop-filter: var(--ios-blur);
@@ -102,7 +90,6 @@
             transform-style: preserve-3d;
             width: var(--nav-item-w);
         }
-
         .fluid-indicator {
             position: absolute;
             top: var(--nav-padding-v);
@@ -119,14 +106,11 @@
                 0 4px 12px rgba(255, 157, 66, 0.05);
             will-change: transform;
         }
-
         .pill-nav[data-direction="down"] .fluid-indicator { transform-origin: center top; }
         .pill-nav[data-direction="up"] .fluid-indicator { transform-origin: center bottom; }
-        
         .pill-nav[data-moving="true"] .fluid-indicator {
             background: rgba(255, 157, 66, 0.15);
         }
-
         .nav-item {
             width: 100%; 
             height: var(--nav-item-h);
@@ -141,24 +125,19 @@
             transition: color 0.3s ease, transform 0.15s ease;
             transform-style: preserve-3d;
         }
-
         .nav-item:active { transform: scale(0.96); }
         .nav-item.active { color: var(--text-primary); }
-
         .nav-item svg, .nav-item span { pointer-events: none; }
-
         .nav-item svg {
             width: 32px; 
             height: 32px;
             margin-bottom: 2px;
             transition: transform 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         }
-
         .nav-item.active svg {
             transform: scale(1.1) translateZ(15px);
             color: var(--accent);
         }
-
         .nav-item span {
             font-size: 11px;
             font-weight: 600;

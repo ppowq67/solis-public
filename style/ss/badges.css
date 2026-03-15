@@ -27,7 +27,6 @@
     position: relative;
     overflow: hidden;
 }
-
 .pro-badge-premium::before {
     content: '';
     position: absolute;
@@ -36,7 +35,6 @@
     width: 200%;
     height: 200%;
 }
-
 @keyframes goldShimmer {
     0%, 100% { 
         background-position: 0% 50%;
