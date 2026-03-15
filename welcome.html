@@ -240,25 +240,14 @@
                 }
             });
         }
-        
-        if (window.location.protocol === 'http:' && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
-            console.warn('⚠️ Warning: Connection is not secure. Use HTTPS in production.');
-        }
-        
-        // Initialize CSRF token and authentication check on page load
         document.addEventListener('DOMContentLoaded', async () => {
-            // Initialize CSRF token
             await initializeCSRFToken();
-            
-            // Set up launch studio button
             const launchBtn = document.getElementById('launchStudioBtn');
             if (launchBtn) {
                 launchBtn.addEventListener('click', () => {
                     window.location.href = '/dashboard.html';
                 });
             }
-            
-            // Check authentication status
             await checkAuthenticationAndInit();
         }, { once: true });
         
