@@ -744,7 +744,8 @@ if (document.readyState !== 'loading') {
 window.addEventListener('visibilitychange', () => {
     if (!document.hidden) {
         setTimeout(() => {
-            handleUpgradeCardVisibility();\n            const inputSection = document.querySelector('.input-section');
+            handleUpgradeCardVisibility();
+            const inputSection = document.querySelector('.input-section');
             if (inputSection) {
                 inputSection.style.display = 'none';
                 setTimeout(() => {
@@ -848,6 +849,7 @@ function handleUpgradeCardVisibility() {
                     const cardContent = premiumCard.querySelector('.card-content');
                     if (cardContent && cardContent.querySelector('h2')) {
                         cardContent.querySelector('h2').textContent = 'Reveal Your Earning Potential';
+                    }
                 }
                 upgradeUnlockCards.forEach((card, idx) => {
                     card.style.display = 'flex';
