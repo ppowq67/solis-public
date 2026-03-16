@@ -1,37 +1,27 @@
-// Setup Onboarding Modal - YouTube OAuth Integration with Connection Management
-// SECURITY: OAuth token handling, CSRF protection, input validation, request signing
-
-// Global API Base URL - Use value set by init.js (set from hostname detection)
 window.getApiBase = function() {
     return window.API_BASE_URL || 'https://powq21-solisai-backend.hf.space';
 };
 
-// ===== SECURITY UTILITIES =====
-// HTML entity escaping for XSS prevention
 function escapeHtml(text) {
     if (typeof text !== 'string') return '';
     const map = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#x27;', '/': '&#x2F;' };
     return text.replace(/[&<>"'\/]/g, char => map[char] || char);
 }
 
-// Extract CSRF token from meta tag
 function getCsrfToken() {
     const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
     if (!token || typeof token !== 'string' || token.length < 10) {
-        console.warn('CSRF token not found or invalid');
         return '';
     }
     return token.trim();
 }
 
-// Validate user_id format
 function validateUserId(userId) {
     if (typeof userId !== 'string' || userId.length === 0) return false;
     if (userId.length > 100) return false;
     return /^[a-zA-Z0-9_-]+$/.test(userId);
 }
 
-// Validate OAuth auth_url format
 function validateAuthUrl(url) {
     if (typeof url !== 'string') return false;
     try {
@@ -42,7 +32,6 @@ function validateAuthUrl(url) {
     }
 }
 
-// Validate API response structure
 function validateAuthResponse(data) {
     if (!data || typeof data !== 'object') return { valid: false };
     if (data.error) {
@@ -53,7 +42,6 @@ function validateAuthResponse(data) {
     return { valid: true };
 }
 
-// Request signing with Web Crypto
 async function _signRequest(path, method = 'POST', body = '') {
     try {
         const timestamp = Math.floor(Date.now() / 1000).toString();
@@ -74,7 +62,6 @@ async function _signRequest(path, method = 'POST', body = '') {
         
         return { timestamp, nonce, signature: signatureHex };
     } catch (error) {
-        console.error('Request signing error:', error);
         return {};
     }
 }
@@ -82,11 +69,9 @@ async function _signRequest(path, method = 'POST', body = '') {
 class SetupModal {
     constructor() {
         this.isConnecting = false;
-        // 🔐 SECURITY: REMOVED loading from localStorage - connections must be fetched fresh from backend
-        // Avoid spoofing attacks by not trusting stale offline data
         this.setupComplete = false;
         this.apiBase = window.getApiBase();
-        this.userId = this.generateUserId();  // Generate temporarily, will fetch from backend
+        this.userId = this.generateUserId();
         this.connections = {};
         this.initBanner();
         this.loadConnectionStatus();
@@ -94,10 +79,6 @@ class SetupModal {
 
     async loadConnectionStatus() {
         try {
-            // 🔐 SECURITY: REMOVED token from localStorage and URL params
-            // Never accept tokens via URL parameters (exposed in history/logs)
-            // Never read tokens from localStorage (XSS vulnerable)
-            // Use credentials: 'include' to send httpOnly cookies automatically
             const response = await fetch(`${this.apiBase}/analytics/status`, {
                 method: 'GET',
                 credentials: 'include'
@@ -107,17 +88,13 @@ class SetupModal {
             localStorage.setItem('platform_connections', JSON.stringify(status));
             window.platformConnections = status;
         } catch (error) {
-            console.error('Error loading connection status:', error);
         }
     }
 
     initBanner() {
-        // Show banner if setup not complete
         const banner = document.getElementById('setupBanner');
         if (banner) {
             banner.addEventListener('click', () => this.openModal());
-            if (this.setupComplete) {
-            }
         }
     }
 
@@ -131,18 +108,15 @@ class SetupModal {
         }
 
         try {
-            // Validate user ID
             const userId = this.generateUserId();
             if (!validateUserId(userId)) {
                 throw new Error('Invalid user ID format');
             }
             localStorage.setItem('youtube_user_id', userId);
 
-            // Get CSRF token and sign request
             const csrfToken = getCsrfToken();
             const signData = await _signRequest('/analytics/youtube/auth', 'POST', JSON.stringify({ user_id: userId }));
 
-            // Request OAuth URL from backend with security headers
             const response = await fetch(`${this.apiBase}/analytics/youtube/auth`, {
                 method: 'POST',
                 headers: {
@@ -161,7 +135,6 @@ class SetupModal {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
 
-            // Validate response size (max 50KB for auth response)
             const contentLength = response.headers.get('content-length');
             if (contentLength && parseInt(contentLength) > 50000) {
                 throw new Error('Response too large');
@@ -182,21 +155,18 @@ class SetupModal {
                 throw new Error('Invalid JSON response');
             }
 
-            // Validate response structure
             const validation = validateAuthResponse(data);
             if (!validation.valid) {
                 throw new Error(`Failed to initialize YouTube authentication: ${validation.error || 'No auth URL'}`);
             }
 
             if (data.auth_url && validateAuthUrl(data.auth_url)) {
-                // Open OAuth flow in new window
                 const authWindow = window.open(
                     data.auth_url,
                     'YouTubeAuth',
                     'width=600,height=700,left=100,top=100'
                 );
 
-                // Wait for auth to complete
                 this.waitForAuth(authWindow);
             } else {
                 this.showError('Failed to initialize YouTube authentication: invalid auth URL');
@@ -207,7 +177,6 @@ class SetupModal {
                 }
             }
         } catch (error) {
-            console.error('Auth error:', error);
             this.showError('Connection failed: ' + error.message);
             this.isConnecting = false;
             if (connectBtn) {
@@ -218,12 +187,9 @@ class SetupModal {
     }
 
     waitForAuth(authWindow) {
-        // Check if auth window is closed
         const checkInterval = setInterval(() => {
             if (authWindow.closed) {
                 clearInterval(checkInterval);
-                
-                // Check if YouTube was connected
                 setTimeout(() => {
                     if (localStorage.getItem('youtube_connected') === 'true') {
                         this.onAuthSuccess();
@@ -245,19 +211,13 @@ class SetupModal {
         this.connections.youtube = { connected: true, name: 'YouTube' };
         localStorage.setItem('platform_connections', JSON.stringify(this.connections));
         this.showSuccess('YouTube connected successfully!');
-        
-        // Hide setup banner
         const banner = document.getElementById('setupBanner');
         if (banner) {
             banner.style.display = 'none';
         }
-
-        // Close modal
         setTimeout(() => {
             const modal = document.getElementById('setupModal');
             if (modal) modal.remove();
-            
-            // Reload analytics data
             if (window.analyticsManager) {
                 window.analyticsManager.isConnected = true;
                 window.analyticsManager.userId = localStorage.getItem('youtube_user_id');
@@ -269,16 +229,13 @@ class SetupModal {
     async unlinkPlatform(platform) {
         if (platform === 'youtube') {
             try {
-                // Validate user ID before sending
                 if (!validateUserId(this.userId)) {
                     throw new Error('Invalid user ID format');
                 }
 
-                // Get CSRF token and sign request
                 const csrfToken = getCsrfToken();
                 const signData = await _signRequest('/analytics/disconnect', 'POST', JSON.stringify({ user_id: this.userId }));
 
-                // Disconnect with security headers
                 const response = await fetch(`${this.apiBase}/analytics/disconnect`, {
                     method: 'POST',
                     headers: {
@@ -297,32 +254,22 @@ class SetupModal {
                     throw new Error(`Disconnect failed: ${response.status}`);
                 }
 
-                // Clear sensitive tokens
                 localStorage.removeItem('youtube_connected');
                 localStorage.removeItem('youtube_token_time');
                 localStorage.removeItem('youtube_token');
-                
                 this.setupComplete = false;
                 this.connections.youtube = { connected: false, name: 'YouTube' };
-                
-                // Validate before saving
                 if (typeof this.connections === 'object') {
                     localStorage.setItem('platform_connections', JSON.stringify(this.connections));
                 }
-                
-                // Show banner again
                 const banner = document.getElementById('setupBanner');
                 if (banner) banner.style.display = 'block';
-
-                // Reload analytics
                 if (window.analyticsManager) {
                     window.analyticsManager.isConnected = false;
                     window.analyticsManager.loadAnalyticsData();
                 }
 
                 this.showSuccess('YouTube disconnected');
-                
-                // Refresh modal if open
                 setTimeout(() => {
                     const modal = document.getElementById('setupModal');
                     if (modal) {
@@ -674,11 +621,8 @@ class SetupModal {
 
         document.body.appendChild(modal);
 
-
-        // Populate platforms list
         this.populatePlatformsList();
 
-        // Setup event listeners
         document.getElementById('closeSetupModal').addEventListener('click', () => {
             const container = modal.querySelector('.onboarding-container');
             if(container) container.classList.add('closing');
@@ -776,47 +720,31 @@ class SetupModal {
         }
     }
 }
-
-// Initialize setup modal when DOM is ready
 document.addEventListener('DOMContentLoaded', () => {
     window.setupModal = new SetupModal();
-    
-    // Handle tier-based card visibility
     setTimeout(() => {
         handleUpgradeCardVisibility();
     }, 500);
-    
-    // Also run after a longer delay for safety
     setTimeout(() => {
         handleUpgradeCardVisibility();
     }, 1500);
 });
-
-// Also try initializing immediately if DOM is already loaded
 if (document.readyState !== 'loading') {
     if (!window.setupModal) {
         window.setupModal = new SetupModal();
     }
-    // Handle tier-based card visibility
     setTimeout(() => {
         handleUpgradeCardVisibility();
     }, 500);
-    
-    // Also run after a longer delay for safety
     setTimeout(() => {
         handleUpgradeCardVisibility();
     }, 1500);
 }
 
-// Force re-check visibility when tab comes back into focus (fixes tab-switch squishing)
 window.addEventListener('visibilitychange', () => {
     if (!document.hidden) {
-        // Page is now visible - force layout recalculation
-        console.log('📱 Page became visible - refreshing upgrade card visibility');
         setTimeout(() => {
-            handleUpgradeCardVisibility();
-            // Force browser to recalculate layout
-            const inputSection = document.querySelector('.input-section');
+            handleUpgradeCardVisibility();\n            const inputSection = document.querySelector('.input-section');
             if (inputSection) {
                 inputSection.style.display = 'none';
                 setTimeout(() => {
@@ -827,34 +755,23 @@ window.addEventListener('visibilitychange', () => {
     }
 }, false);
 
-// Also listen for focus events
 window.addEventListener('focus', () => {
-    console.log('🔄 Window focused - checking upgrade card visibility');
     setTimeout(() => {
         handleUpgradeCardVisibility();
     }, 100);
 }, false);
 
-// Manage upgrade card visibility based on user tier
 function handleUpgradeCardVisibility() {
-    // Get tier from multiple sources to ensure we catch it
     let userTier = window.tier || localStorage.getItem('userTier') || localStorage.getItem('tier');
-    
-    // If not found, try to get it from currentUser object
     if (!userTier) {
         try {
             const currentUser = JSON.parse(localStorage.getItem('currentUser') || '{}');
             userTier = currentUser.plan;
         } catch (e) {
-            // If parsing fails, userTier stays undefined
         }
     }
-    
-    // ===== FETCH USER PLAN FROM BACKEND (NOT localStorage) =====
-    // This is the secure way to determine if user can see upgrade cards
     async function fetchAndManageUpgradeCards() {
         try {
-            console.log('🔄 Fetching user plan from backend for card management...');
             const response = await fetch('/api/user/profile', {
                 method: 'GET',
                 credentials: 'include'  // Uses httpOnly cookie
@@ -868,25 +785,14 @@ function handleUpgradeCardVisibility() {
             if (!data || typeof data !== 'object' || !data.plan) {
                 throw new Error('Invalid response structure');
             }
-            
-            // Validate plan is allowed
             const allowedPlans = ['free', 'prime', 'elite', 'basic'];
             const userTier = (typeof data.plan === 'string' && allowedPlans.includes(data.plan.toLowerCase())) 
                 ? data.plan.toLowerCase() 
                 : 'free';
-            
-            console.log('✅ [TIER CHECK] User plan from backend:', userTier);
-            
-            // Elements to manage
             const premiumCard = document.querySelector('.premium-card');
             const upgradeUnlockCards = document.querySelectorAll('.upgrade-unlock-card');
             const upgradeContainer = document.querySelector('.upgrade-container');
-            
-            console.log('🎯 [ELEMENTS FOUND] premiumCard:', !!premiumCard, 'upgradeUnlockCards:', upgradeUnlockCards.length, 'upgradeContainer:', !!upgradeContainer);
-            
-            // Hide ALL upgrade cards for Elite/Prime users
             if (userTier === 'elite' || userTier === 'prime') {
-                console.log('✅ [HIDING] Elite/Prime user - hiding all upgrade cards');
                 if (upgradeContainer) {
                     upgradeContainer.style.display = 'none !important';
                     upgradeContainer.style.visibility = 'hidden';
@@ -895,7 +801,6 @@ function handleUpgradeCardVisibility() {
                     upgradeContainer.style.padding = '0';
                     upgradeContainer.style.margin = '0';
                     upgradeContainer.classList.add('hidden-permanently');
-                    console.log('✅ [HIDDEN] upgradeContainer');
                 }
                 if (premiumCard) {
                     premiumCard.style.display = 'none';
@@ -905,19 +810,14 @@ function handleUpgradeCardVisibility() {
                     premiumCard.style.margin = '0';
                     premiumCard.style.overflow = 'hidden';
                     premiumCard.style.pointerEvents = 'none';
-                    console.log('✅ [HIDDEN] premiumCard');
                 }
                 upgradeUnlockCards.forEach((card, idx) => {
                     card.style.display = 'none';
                     card.style.visibility = 'hidden';
                     card.style.height = '0';
                     card.style.overflow = 'hidden';
-                    console.log('✅ [HIDDEN] upgradeUnlockCard', idx);
                 });
-            }
-            // Show upgrade cards for Free/Basic users with different messaging
-            else if (userTier === 'free' || userTier === 'basic') {
-                console.log('✅ [SHOWING] Free/Basic user - showing upgrade cards');
+            } else if (userTier === 'free' || userTier === 'basic') {
                 if (upgradeContainer) {
                     upgradeContainer.classList.remove('hidden-permanently');
                     upgradeContainer.style.visibility = 'visible';
@@ -925,12 +825,8 @@ function handleUpgradeCardVisibility() {
                     upgradeContainer.style.overflow = 'visible';
                     upgradeContainer.style.padding = '20px';
                     upgradeContainer.style.margin = '40px 0 0 0';
-                    console.log('✅ [SHOWN] upgradeContainer');
                 }
-                
-                // Update messaging for Basic tier
                 if (userTier === 'basic' && premiumCard) {
-                    console.log('✅ [UPDATING] Basic tier card messaging');
                     premiumCard.style.display = 'flex';
                     premiumCard.style.visibility = 'visible';
                     const cardContent = premiumCard.querySelector('.card-content');
@@ -946,29 +842,21 @@ function handleUpgradeCardVisibility() {
                         subtitle.textContent = 'Upgrade to Prime or Elite for unlimited access, advanced automation, and exclusive features.';
                     }
                 }
-                // Default messaging for Free tier
                 else if (userTier === 'free' && premiumCard) {
-                    console.log('✅ [UPDATING] Free tier card messaging');
                     premiumCard.style.display = 'flex';
                     premiumCard.style.visibility = 'visible';
                     const cardContent = premiumCard.querySelector('.card-content');
                     if (cardContent && cardContent.querySelector('h2')) {
                         cardContent.querySelector('h2').textContent = 'Reveal Your Earning Potential';
-                    }
                 }
-                
-                // Update unlock cards for both Free and Basic
                 upgradeUnlockCards.forEach((card, idx) => {
                     card.style.display = 'flex';
                     card.style.visibility = 'visible';
                     card.style.height = 'auto';
                     card.style.overflow = 'visible';
-                    console.log('✅ [SHOWN] upgradeUnlockCard', idx);
                 });
             }
         } catch (error) {
-            console.error('❌ Error fetching user plan for card management:', error);
-            // Default to showing upgrade cards if fetch fails (graceful degradation)
             const upgradeUnlockCards = document.querySelectorAll('.upgrade-unlock-card');
             upgradeUnlockCards.forEach((card) => {
                 card.style.display = 'flex';
@@ -976,11 +864,7 @@ function handleUpgradeCardVisibility() {
             });
         }
     }
-    
-    // Call this on page load
     document.addEventListener('DOMContentLoaded', fetchAndManageUpgradeCards);
-    
-    // Also call immediately in case DOMContentLoaded has already fired
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', fetchAndManageUpgradeCards);
     } else {
