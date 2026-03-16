@@ -15,24 +15,32 @@ async function _0x5f5564() {
 let _0x1beee6, _0x33b63e;
 async function _0x566dbc() {
     try {
-        const _0x4793a7 = await fetch(window['API_BASE_URL'] + '/auth/csrf-token', {
+        const _0x8a0c1d = window['API_BASE_URL'] + '/auth/csrf-token';
+        console.log(`[CSRF] Fetching from: ${_0x8a0c1d}`);
+        const _0x4793a7 = await fetch(_0x8a0c1d, {
             'method': 'GET',
             'credentials': 'include'
         });
+        console.log(`[CSRF] Response status: ${_0x4793a7.status}`);
         if (_0x4793a7['ok']) {
             const _0x19b820 = await _0x4793a7['json']();
+            console.log(`[CSRF] Token received: ${_0x19b820['token']?.substring(0, 20)}...`);
             if (_0x19b820['token']) {
                 const _0x7f885f = document['querySelector']('meta[name=\x22csrf-token\x22]');
                 if (_0x7f885f)
                     _0x7f885f['setAttribute']('content', _0x19b820['token']);
             }
         }
-    } catch (_0x199661) {}
+    } catch (_0x199661) { console.error(`[CSRF] Error: ${_0x199661.message}`); }
 }
 async function _0xcc685c() {
+    console.log('[Login] Initializing...');
     await _0x5f5564(), _0x1beee6 = document['getElementById']('googleLoginBtn'), _0x33b63e = document['getElementById']('googleBtnText');
-    if (!_0x1beee6 || !_0x33b63e)
+    if (!_0x1beee6 || !_0x33b63e) {
+        console.warn('[Login] Missing login button elements');
         return;
+    }
+    console.log('[Login] Fetching CSRF token...');
     await _0x566dbc();
     const _0x2c8d90 = new URLSearchParams(window['location']['search']);
     if (_0x2c8d90['has']('logout')) {
@@ -79,14 +87,17 @@ function _0x460d29() {
 }
 async function _0x351a2c() {
     try {
+        console.log('[Login] Click handler triggered - starting authentication...');
         _0x33b63e['textContent'] = 'Connecting…', _0x1beee6['disabled'] = !![];
         const _0x4f06e4 = await fetch(window['API_BASE_URL'] + '/auth/google', {
             'method': 'GET',
             'credentials': 'include'
         });
+        console.log(`[Login] /auth/google response: ${_0x4f06e4.status}`);
         if (!_0x4f06e4['ok'])
             throw new Error('Server\x20error:\x20' + _0x4f06e4['status']);
         const _0x505ecf = await _0x4f06e4['json']();
+        console.log(`[Login] Got auth URL: ${_0x505ecf['auth_url']?.substring(0, 50)}...`);
         if (_0x505ecf['auth_url'])
             window['location']['href'] = _0x505ecf['auth_url'];
         else
