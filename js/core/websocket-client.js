@@ -21,11 +21,11 @@ class _0x275d2e {
         }
     ['_detectServerUrl']() {
             try {
-                const _0x4b223c = new URL(window['API_BASE_URL'] || 'https://api.solisai.video/api'),
+                const _0x4b223c = new URL(window['API_BASE_URL'] || 'https://powq21-solisai-backend.hf.space'),
                     _0x47f286 = _0x4b223c['protocol'] === 'https:' ? 'wss:' : 'ws:';
                 return _0x47f286 + '//' + _0x4b223c['host'];
             } catch (_0x22c22d) {
-                return console['error']('Invalid\x20API_BASE_URL:', _0x22c22d), 'wss://api.solisai.video';
+                return console['error']('Invalid\x20API_BASE_URL:', _0x22c22d), 'wss://powq21-solisai-backend.hf.space';
             }
         }
     ['connect'](_0x523798, _0x2318c4 = null) {

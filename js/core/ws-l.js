@@ -87,7 +87,7 @@ function _0x65d44f() {
             console['warn']('⚠️\x20Socket.IO\x20not\x20loaded\x20yet,\x20retrying...'), setTimeout(_0x65d44f, 0x1f4);
             return;
         }
-        const _0x4893d0 = new URL(window['API_BASE_URL'] || 'https://api.solisai.video/api'),
+        const _0x4893d0 = new URL(window['API_BASE_URL'] || 'https://powq21-solisai-backend.hf.space'),
             _0xad3ad3 = _0x4893d0['protocol'] === 'https:' ? 'wss:' : 'ws:',
             _0x4e453f = _0xad3ad3 + '//' + _0x4893d0['host'],
             _0xfac466 = io(_0x4e453f, {

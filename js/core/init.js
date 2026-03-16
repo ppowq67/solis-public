@@ -27,9 +27,9 @@
             
             window.API_BASE_URL = `http://${hostname}:${apiPort}/api`;
         } else {
-            // Production: use primary domain with fallback to vercel
-            window.API_BASE_URL = 'https://api.solisai.video/api';
-            window.API_FALLBACK_URL = 'https://api.solisai.video/api';
+            // Production: use HF Spaces backend
+            window.API_BASE_URL = 'https://powq21-solisai-backend.hf.space';
+            window.API_FALLBACK_URL = 'https://powq21-solisai-backend.hf.space';
         }
         
         console.log('✅ API_BASE_URL configured:', window.API_BASE_URL);

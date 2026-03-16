@@ -3,7 +3,7 @@
 
 // Global API Base URL - Use value set by init.js (set from hostname detection)
 window.getApiBase = function() {
-    return window.API_BASE_URL || 'https://api.solisai.video/api';
+    return window.API_BASE_URL || 'https://powq21-solisai-backend.hf.space';
 };
 
 // ===== SECURITY UTILITIES =====

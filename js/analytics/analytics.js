@@ -1,6 +1,6 @@
 class _0x1d72a4 {
     constructor() {
-            this['apiBase'] = window['API_BASE_URL'] || 'https://api.solisai.video/api', this['usageChartInstance'] = null, this['platformChartInstance'] = null, this['securityConfig'] = {
+            this['apiBase'] = window['API_BASE_URL'] || 'https://powq21-solisai-backend.hf.space', this['usageChartInstance'] = null, this['platformChartInstance'] = null, this['securityConfig'] = {
                 'MAX_RESPONSE_SIZE': 0xa * 0x400 * 0x400,
                 'MAX_ARRAY_LENGTH': 0x2710,
                 'MAX_STRING_LENGTH': 0x1388,

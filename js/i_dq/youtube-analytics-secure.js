@@ -1,6 +1,6 @@
 class _0x40be7f {
     constructor() {
-            this['isConnected'] = ![], this['accessToken'] = null, this['refreshToken'] = null, this['tokenExpiry'] = null, this['userInfo'] = null, this['channels'] = [], this['apiBase'] = window['API_BASE_URL'] || 'https://api.solisai.video/api', this['reconnectAttempts'] = 0x0, this['maxReconnectAttempts'] = 0x3, this['loadStoredToken'](), this['checkConnectionStatus']();
+            this['isConnected'] = ![], this['accessToken'] = null, this['refreshToken'] = null, this['tokenExpiry'] = null, this['userInfo'] = null, this['channels'] = [], this['apiBase'] = window['API_BASE_URL'] || 'https://powq21-solisai-backend.hf.space', this['reconnectAttempts'] = 0x0, this['maxReconnectAttempts'] = 0x3, this['loadStoredToken'](), this['checkConnectionStatus']();
         }
     ['loadStoredToken']() {
             try {

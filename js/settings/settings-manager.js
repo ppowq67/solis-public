@@ -70,7 +70,7 @@ function _0x35c74(_0x3191e8, _0x191c7a) {
 }
 class _0x1993f2 {
     constructor() {
-            this['apiBase'] = window['API_BASE_URL'] || 'https://api.solisai.video/api', this['userId'] = localStorage['getItem']('youtube_user_id') || this['generateUserId'](), this['connections'] = JSON['parse'](localStorage['getItem']('platform_connections') || '{}'), this['init']();
+            this['apiBase'] = window['API_BASE_URL'] || 'https://powq21-solisai-backend.hf.space', this['userId'] = localStorage['getItem']('youtube_user_id') || this['generateUserId'](), this['connections'] = JSON['parse'](localStorage['getItem']('platform_connections') || '{}'), this['init']();
         }
     ['init']() {
             window['addEventListener']('storage', _0x11dee1 => {
