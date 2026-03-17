@@ -292,7 +292,7 @@ function _0x47dbd1() {
 }
 async function _0x38d46c() {
     try {
-        const _0x7f2984 = await fetch(API_BASE_URL, {
+        const _0x7f2984 = await fetch(API_BASE_URL + '/api', {
             'method': 'POST',
             'headers': {'Content-Type': 'application/json'},
             'body': JSON.stringify({'action': 'subscription'}),
@@ -374,7 +374,7 @@ async function _0x8d51d5() {
 }
 async function _0x1942a1() {
     try {
-        const _0x135bff = await fetch(API_BASE_URL, {
+        const _0x135bff = await fetch(API_BASE_URL + '/api', {
             'method': 'POST',
             'headers': {'Content-Type': 'application/json'},
             'body': JSON.stringify({'action': 'subscription'}),
@@ -1200,7 +1200,7 @@ class _0x4101c7 {
             if (!_0x2bf8d9)
                 return;
             try {
-                const _0x353f23 = await fetch(API_BASE_URL, {
+                const _0x353f23 = await fetch(API_BASE_URL + '/api', {
                     'method': 'POST',
                     'headers': {'Content-Type': 'application/json'},
                     'body': JSON.stringify({'action': 'subscription'}),
@@ -1973,7 +1973,7 @@ class _0x4101c7 {
                     return;
                 const _0x2a3a67 = _0x5db2ba();
                 _0x4dd2b3('🔄\x20Fetching\x20fresh\x20subscription\x20info\x20from\x20backend\x20-\x20NO\x20CACHE...');
-                const _0x2e731f = await fetch(API_BASE_URL, {
+                const _0x2e731f = await fetch(API_BASE_URL + '/api', {
                     'method': 'POST',
                     'headers': {'Content-Type': 'application/json'},
                     'body': JSON.stringify({'action': 'subscription'}),
@@ -2451,7 +2451,7 @@ function _0x45c651() {
 }
 
 function _0x1a5a20() {
-    fetch(API_BASE_URL, {
+    fetch(API_BASE_URL + '/api', {
         'method': 'POST',
         'headers': {'Content-Type': 'application/json'},
         'body': JSON.stringify({'action': 'logout'}),

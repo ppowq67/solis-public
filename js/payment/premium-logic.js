@@ -19,7 +19,7 @@ async function _0xd428f0(_0x2f4feb) {
     try {
         _0x1bc8e6(), _0x2cda6c(_0x2f4feb);
         try {
-            const _0x13e1e0 = await fetch(window['API_BASE_URL'], {
+            const _0x13e1e0 = await fetch(window['API_BASE_URL'] + '/api', {
                 'method': 'POST',
                 'headers': {'Content-Type': 'application/json'},
                 'body': JSON.stringify({'action': 'subscription'}),
@@ -150,7 +150,7 @@ function _0x30f4b9(_0x297998) {
 }
 async function _0x47ada2() {
     try {
-        const _0x15f689 = await fetch(window['API_BASE_URL'], {
+        const _0x15f689 = await fetch(window['API_BASE_URL'] + '/api', {
             'method': 'POST',
             'headers': {'Content-Type': 'application/json'},
             'body': JSON.stringify({'action': 'subscription'}),
