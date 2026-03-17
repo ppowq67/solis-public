@@ -197,7 +197,7 @@ class _0x40be7f {
 window['youtubeAnalyticsManager'] = new _0x40be7f(), window['connectYouTube'] = () => window['youtubeAnalyticsManager']['startOAuthFlow'](), window['disconnectYouTube'] = () => window['youtubeAnalyticsManager']['disconnect'](), setInterval(() => {
     window['youtubeAnalyticsManager'] && window['youtubeAnalyticsManager']['checkTokenExpiry']();
 }, 0x5 * 0x3c * 0x3e8), window['addEventListener']('message', _0x2d6ead => {
-    const _0xc54c90 = window['API_BASE_URL'] || 'https://api.solisai.video/api',
+    const _0xc54c90 = window['API_BASE_URL'] || 'https://powq21-solisai-backend.hf.space',
         _0x318691 = _0xc54c90['split']('/api')[0x0];
     if (_0x2d6ead['origin'] !== _0x318691)
         return;
