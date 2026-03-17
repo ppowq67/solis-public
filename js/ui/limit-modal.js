@@ -1,4 +1,4 @@
-const _0x4b08b6 = window['API_BASE_URL'] || 'https://powq21-solisai-backend.hf.space/api',
+const _0x4b08b6 = window['API_BASE_URL'] || 'https://powq21-solisai-backend.hf.space',
     _0x45d6db = {
         'selectedPlanType': 'prime'
     },

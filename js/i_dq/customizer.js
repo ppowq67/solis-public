@@ -574,7 +574,7 @@ class _0x2786d3 {
                 const _0x5568bb = this['collectCustomizations']();
                 if (Object['keys'](_0x5568bb)['length'] === 0x0)
                     return console['log']('[Customizer]\x20No\x20customizations\x20to\x20save'), null;
-                const _0x5abd4a = window['API_BASE_URL'] || 'https://powq21-solisai-backend.hf.space/api',
+                const _0x5abd4a = window['API_BASE_URL'] || 'https://powq21-solisai-backend.hf.space',
                     _0x2d16fd = getAuthHeaders();
                 console['log']('[Customizer]\x20Sending\x20customizations\x20to\x20backend...', {
                     'template_id': _0x2b3ffd,

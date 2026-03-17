@@ -4,7 +4,7 @@ document['addEventListener']('DOMContentLoaded', function() {
         _0x261082 = document['getElementById']('connectFirstPlatformBtn');
 
     function _0x32130c() {
-        return window['API_BASE_URL'] || 'https://powq21-solisai-backend.hf.space/api';
+        return window['API_BASE_URL'] || 'https://powq21-solisai-backend.hf.space';
     }
     const _0x570d44 = _0x32130c();
     console['log']('🎯\x20[platform-connections.js]\x20Initialized\x20with\x20API_BASE:', _0x570d44);

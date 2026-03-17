@@ -15,10 +15,10 @@
                 apiPort = '5000';
             }
             
-            window.API_BASE_URL = `http://${hostname}:${apiPort}/api`;
+            window.API_BASE_URL = `http://${hostname}:${apiPort}`;
         } else {
-            window.API_BASE_URL = 'https://powq21-solisai-backend.hf.space/api';
-            window.API_FALLBACK_URL = 'https://powq21-solisai-backend.hf.space/api';
+            window.API_BASE_URL = 'https://powq21-solisai-backend.hf.space';
+            window.API_FALLBACK_URL = 'https://powq21-solisai-backend.hf.space';
         }
         if (!isLocal) {
             Object.defineProperty(window, 'API_BASE_URL', {
