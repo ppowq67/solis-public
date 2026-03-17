@@ -15,7 +15,7 @@ async function _0x5f5564() {
 let _0x1beee6, _0x33b63e;
 async function _0x566dbc() {
     try {
-        const _0x8a0c1d = window['API_BASE_URL'] + '/auth/csrf-token';
+        const _0x8a0c1d = window['API_BASE_URL'] + '/api/csrf-token';
         console.log(`[CSRF] Fetching from: ${_0x8a0c1d}`);
         const _0x4793a7 = await fetch(_0x8a0c1d, {
             'method': 'GET',
@@ -45,7 +45,7 @@ async function _0xcc685c() {
     const _0x2c8d90 = new URLSearchParams(window['location']['search']);
     if (_0x2c8d90['has']('logout')) {
         try {
-            const _0x187b1a = await fetch(window['API_BASE_URL'] + '/auth/logout', {
+            const _0x187b1a = await fetch(window['API_BASE_URL'] + '/api/logout', {
                 'method': 'POST',
                 'credentials': 'include'
             });
@@ -54,7 +54,7 @@ async function _0xcc685c() {
         window['history']['replaceState']({}, document['title'], '/login.html');
     }
     try {
-        const _0x41d8cb = await fetch(window['API_BASE_URL'] + '/auth/check', {
+        const _0x41d8cb = await fetch(window['API_BASE_URL'] + '/api/check', {
             'method': 'GET',
             'credentials': 'include'
         });
@@ -89,7 +89,7 @@ async function _0x351a2c() {
     try {
         console.log('[Login] Click handler triggered - starting authentication...');
         _0x33b63e['textContent'] = 'Connecting…', _0x1beee6['disabled'] = !![];
-        const _0x4f06e4 = await fetch(window['API_BASE_URL'] + '/auth/google', {
+        const _0x4f06e4 = await fetch(window['API_BASE_URL'] + '/api/google', {
             'method': 'GET',
             'credentials': 'include'
         });

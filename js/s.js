@@ -292,7 +292,7 @@ function _0x47dbd1() {
 }
 async function _0x38d46c() {
     try {
-        const _0x7f2984 = await fetch(API_BASE_URL + '/auth/subscription?t=' + Date['now'](), {
+        const _0x7f2984 = await fetch(API_BASE_URL + '/api/subscription?t=' + Date['now'](), {
             'method': 'GET',
             'headers': _0x5db2ba(),
             'credentials': 'include',
@@ -371,7 +371,7 @@ async function _0x8d51d5() {
 }
 async function _0x1942a1() {
     try {
-        const _0x135bff = await fetch(API_BASE_URL + '/auth/subscription', {
+        const _0x135bff = await fetch(API_BASE_URL + '/api/subscription', {
             'method': 'GET',
             'headers': {
                 'Content-Type': 'application/json'
@@ -851,7 +851,7 @@ class _0x4101c7 {
                 const _0x2ad5e2 = window['API_BASE_URL'] || 'https://api.solisai.video/api',
                     _0x2b5436 = _0x5db2ba();
                 try {
-                    const _0x5e4109 = await fetch(_0x2ad5e2 + '/auth/subscription', {
+                    const _0x5e4109 = await fetch(_0x2ad5e2 + '/api/subscription', {
                         'method': 'GET',
                         'headers': _0x2b5436,
                         'credentials': 'include'
@@ -1191,7 +1191,7 @@ class _0x4101c7 {
             if (!_0x2bf8d9)
                 return;
             try {
-                const _0x353f23 = await fetch(API_BASE_URL + '/auth/subscription?t=' + Date['now'](), {
+                const _0x353f23 = await fetch(API_BASE_URL + '/api/subscription?t=' + Date['now'](), {
                     'headers': _0x5db2ba(),
                     'credentials': 'include',
                     'cache': 'no-store'
@@ -1961,7 +1961,7 @@ class _0x4101c7 {
                     return;
                 const _0x2a3a67 = _0x5db2ba();
                 _0x4dd2b3('🔄\x20Fetching\x20fresh\x20subscription\x20info\x20from\x20backend\x20-\x20NO\x20CACHE...');
-                const _0x2e731f = await fetch(API_BASE_URL + '/auth/subscription', {
+                const _0x2e731f = await fetch(API_BASE_URL + '/api/subscription', {
                     'method': 'GET',
                     'headers': _0x2a3a67,
                     'credentials': 'include'
@@ -2436,7 +2436,7 @@ function _0x45c651() {
 }
 
 function _0x1a5a20() {
-    fetch(API_BASE_URL + '/auth/logout', {
+    fetch(API_BASE_URL + '/api/logout', {
         'method': 'POST',
         'credentials': 'include'
     })['then'](_0x44de38 => {

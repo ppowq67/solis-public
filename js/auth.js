@@ -40,7 +40,7 @@ async function _0x419871() {
             clearTimeout(_0x578bdf);
         if (_0x25aa72)
             clearInterval(_0x25aa72);
-        await fetch(_0x167efd['API_BASE'] + '/auth/logout', {
+        await fetch(_0x167efd['API_BASE'] + '/api/logout', {
             'method': 'POST',
             'credentials': 'include'
         }), console['log']('[Auth]\x20User\x20logged\x20out'), _0x1defef();
