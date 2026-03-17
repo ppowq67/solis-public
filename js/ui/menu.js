@@ -351,7 +351,7 @@ function _0x11a40e() {
             const _0x1939b7 = Object['keys'](localStorage);
             _0x1939b7['forEach'](_0xd69a23 => {
                 (_0xd69a23['includes']('solisai_') || _0xd69a23['includes']('auth') || _0xd69a23['includes']('user')) && localStorage['removeItem'](_0xd69a23);
-            }), sessionStorage['clear'](), window['API_BASE_URL'] && await fetch(window['API_BASE_URL'] + '/', {
+            }), sessionStorage['clear'](), window['API_BASE_URL'] && await fetch(window['API_BASE_URL'], {
                 'method': 'POST',
                 'headers': {'Content-Type': 'application/json'},
                 'body': JSON.stringify({'action': 'logout'}),
