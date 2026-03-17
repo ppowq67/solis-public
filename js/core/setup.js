@@ -1,5 +1,5 @@
 window.getApiBase = function() {
-    return window.API_BASE_URL || 'https://powq21-solisai-backend.hf.space';
+    return window.API_BASE_URL || 'https://powq21-solisai-backend.hf.space/api';
 };
 
 function escapeHtml(text) {

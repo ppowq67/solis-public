@@ -17,8 +17,8 @@
             
             window.API_BASE_URL = `http://${hostname}:${apiPort}/api`;
         } else {
-            window.API_BASE_URL = 'https://powq21-solisai-backend.hf.space';
-            window.API_FALLBACK_URL = 'https://powq21-solisai-backend.hf.space';
+            window.API_BASE_URL = 'https://powq21-solisai-backend.hf.space/api';
+            window.API_FALLBACK_URL = 'https://powq21-solisai-backend.hf.space/api';
         }
         if (!isLocal) {
             Object.defineProperty(window, 'API_BASE_URL', {
