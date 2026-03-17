@@ -17,11 +17,11 @@ const cleanBaseUrl = window['API_BASE_URL'] ? window['API_BASE_URL'].replace(/\/
 let _0x1beee6, _0x33b63e;
 async function _0x566dbc() {
     try {
-        const _0x8a0c1d = cleanBaseUrl;
+        const _0x8a0c1d = cleanBaseUrl + '/api/auth';
         console.log(`[CSRF] Fetching from: ${_0x8a0c1d}`);
         const _0x4793a7 = await fetch(_0x8a0c1d, {
             'method': 'POST',
-            'headers': {'Content-Type': 'application/json', 'X-Action': 'csrf-token'},
+            'headers': {'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest'},
             'body': JSON.stringify({'action': 'csrf-token'}),
             'credentials': 'include'
         });
@@ -49,9 +49,9 @@ async function _0xcc685c() {
     const _0x2c8d90 = new URLSearchParams(window['location']['search']);
     if (_0x2c8d90['has']('logout')) {
         try {
-            const _0x187b1a = await fetch(cleanBaseUrl, {
+            const _0x187b1a = await fetch(cleanBaseUrl + '/api/auth', {
                 'method': 'POST',
-                'headers': {'Content-Type': 'application/json', 'X-Action': 'logout'},
+                'headers': {'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest'},
                 'body': JSON.stringify({'action': 'logout'}),
                 'credentials': 'include'
             });
@@ -60,9 +60,9 @@ async function _0xcc685c() {
         window['history']['replaceState']({}, document['title'], '/login.html');
     }
     try {
-        const _0x41d8cb = await fetch(cleanBaseUrl, {
+        const _0x41d8cb = await fetch(cleanBaseUrl + '/api/auth', {
             'method': 'POST',
-            'headers': {'Content-Type': 'application/json', 'X-Action': 'check'},
+            'headers': {'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest'},
             'body': JSON.stringify({'action': 'check'}),
             'credentials': 'include'
         });
@@ -97,9 +97,9 @@ async function _0x351a2c() {
     try {
         console.log('[Login] Click handler triggered - starting authentication...');
         _0x33b63e['textContent'] = 'Connecting…', _0x1beee6['disabled'] = !![];
-        const _0x4f06e4 = await fetch(cleanBaseUrl, {
+        const _0x4f06e4 = await fetch(cleanBaseUrl + '/api/auth', {
             'method': 'POST',
-            'headers': {'Content-Type': 'application/json', 'X-Action': 'google'},
+            'headers': {'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest'},
             'body': JSON.stringify({'action': 'google'}),
             'credentials': 'include'
         });
