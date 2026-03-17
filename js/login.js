@@ -15,10 +15,12 @@ async function _0x5f5564() {
 let _0x1beee6, _0x33b63e;
 async function _0x566dbc() {
     try {
-        const _0x8a0c1d = window['API_BASE_URL'] + '/?action=csrf-token';
+        const _0x8a0c1d = window['API_BASE_URL'] + '/';
         console.log(`[CSRF] Fetching from: ${_0x8a0c1d}`);
         const _0x4793a7 = await fetch(_0x8a0c1d, {
-            'method': 'GET',
+            'method': 'POST',
+            'headers': {'Content-Type': 'application/json'},
+            'body': JSON.stringify({'action': 'csrf-token'}),
             'credentials': 'include'
         });
         console.log(`[CSRF] Response status: ${_0x4793a7.status}`);
@@ -45,8 +47,10 @@ async function _0xcc685c() {
     const _0x2c8d90 = new URLSearchParams(window['location']['search']);
     if (_0x2c8d90['has']('logout')) {
         try {
-            const _0x187b1a = await fetch(window['API_BASE_URL'] + '/?action=logout', {
+            const _0x187b1a = await fetch(window['API_BASE_URL'] + '/', {
                 'method': 'POST',
+                'headers': {'Content-Type': 'application/json'},
+                'body': JSON.stringify({'action': 'logout'}),
                 'credentials': 'include'
             });
             sessionStorage['clear'](), localStorage['removeItem']('user');
@@ -54,8 +58,10 @@ async function _0xcc685c() {
         window['history']['replaceState']({}, document['title'], '/login.html');
     }
     try {
-        const _0x41d8cb = await fetch(window['API_BASE_URL'] + '/?action=check', {
-            'method': 'GET',
+        const _0x41d8cb = await fetch(window['API_BASE_URL'] + '/', {
+            'method': 'POST',
+            'headers': {'Content-Type': 'application/json'},
+            'body': JSON.stringify({'action': 'check'}),
             'credentials': 'include'
         });
         if (_0x41d8cb['ok']) {
@@ -89,8 +95,10 @@ async function _0x351a2c() {
     try {
         console.log('[Login] Click handler triggered - starting authentication...');
         _0x33b63e['textContent'] = 'Connecting…', _0x1beee6['disabled'] = !![];
-        const _0x4f06e4 = await fetch(window['API_BASE_URL'] + '/?action=google', {
-            'method': 'GET',
+        const _0x4f06e4 = await fetch(window['API_BASE_URL'] + '/', {
+            'method': 'POST',
+            'headers': {'Content-Type': 'application/json'},
+            'body': JSON.stringify({'action': 'google'}),
             'credentials': 'include'
         });
         console.log(`[Login] /auth/google response: ${_0x4f06e4.status}`);
