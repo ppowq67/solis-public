@@ -10,1242 +10,1531 @@
     <meta http-equiv="Referrer-Policy" content="strict-origin-when-cross-origin">
     <script src="/js/core/init.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
-    <style>
-
-        ::-webkit-scrollbar {
-            width: 14px;
+     <style>
+        :root {
+            --orange: #f97316;
+            --orange-deep: #ea580c;
+            --orange-light: #fed7aa;
+            --orange-xlight: #fff7ed;
+            --ink: #0c0a09;
+            --ink-2: #1c1917;
+            --slate: #475569;
+            --muted: #94a3b8;
+            --border: #f1f5f9;
+            --white: #ffffff;
         }
 
-        ::-webkit-scrollbar-track {
-            background: transparent;
-        }
-
-        ::-webkit-scrollbar-thumb {
-            background: rgba(249, 115, 22, 0.6);
-            border-radius: 10px;
-            border: 3px solid transparent;
-            background-clip: content-box;
-            backdrop-filter: blur(10px);
-        }
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        html {
-            scroll-behavior: smooth;
-        }
-
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        html { scroll-behavior: smooth; }
         body {
             font-family: 'Plus Jakarta Sans', sans-serif;
-            background-color: #ffffff;
-            color: #0f172a;
+            background: #fafaf9;
+            color: var(--ink);
+            -webkit-font-smoothing: antialiased;
+            overflow-x: hidden;
         }
-
-        ::selection {
-            background-color: #fed7aa;
+        ::selection { background: #fed7aa; }
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: rgba(249,115,22,0.4); border-radius: 10px; }
+        @keyframes fadeUp {
+            from { opacity: 0; transform: translateY(18px); }
+            to   { opacity: 1; transform: translateY(0); }
         }
-
-        .max-w-7xl {
-            max-width: 80rem;
-            margin-left: auto;
-            margin-right: auto;
+        @keyframes fadeIn {
+            from { opacity: 0; } to { opacity: 1; }
         }
-
-        .max-w-5xl {
-            max-width: 64rem;
-            margin-left: auto;
-            margin-right: auto;
+        @keyframes scaleIn {
+            from { opacity: 0; transform: scale(0.96); }
+            to   { opacity: 1; transform: scale(1); }
         }
-
-        .max-w-4xl {
-            max-width: 56rem;
-            margin-left: auto;
-            margin-right: auto;
+        @keyframes shimmer {
+            0%   { background-position: -400px 0; }
+            100% { background-position: 400px 0; }
         }
-
-        .max-w-3xl {
-            max-width: 48rem;
-            margin-left: auto;
-            margin-right: auto;
+        @keyframes waveAnim {
+            0%, 100% { scaleY: 1; }
+            50%       { scaleY: 0.5; }
         }
-
-        .max-w-2xl {
-            max-width: 42rem;
-            margin-left: auto;
-            margin-right: auto;
+        @keyframes pulse-dot {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(249,115,22,0.4); }
+            50%       { box-shadow: 0 0 0 6px rgba(249,115,22,0); }
         }
+        @keyframes float-badge {
+            0%, 100% { transform: translateY(0px); }
+            50%       { transform: translateY(-6px); }
+        }
+        @keyframes spin-slow {
+            from { transform: rotate(0deg); } to { transform: rotate(360deg); }
+        }
+        @keyframes bar-grow {
+            from { transform: scaleY(0.2); opacity: 0.3; }
+            to   { transform: scaleY(1); opacity: 1; }
+        }
+        @keyframes progress-fill {
+            from { width: 0%; } to { width: var(--target-w); }
+        }
+        @keyframes cursor-blink {
+            0%, 100% { opacity: 1; } 50% { opacity: 0; }
+        }
+        @keyframes badge-pop {
+            0%   { transform: scale(0.85); opacity: 0; }
+            60%  { transform: scale(1.05); }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        @keyframes scanline {
+            0%   { top: 0%; } 100% { top: 100%; }
+        }
+        @keyframes check-draw {
+            from { stroke-dashoffset: 30; } to { stroke-dashoffset: 0; }
+        }
+        @keyframes platform-slide {
+            0%, 100% { transform: none; opacity: 1; }
+            48%       { transform: none; opacity: 1; }
+            50%       { opacity: 0; }
+            52%       { opacity: 0; }
+            54%       { opacity: 1; }
+        }
+        @keyframes gradient-shift {
+            0%   { background-position: 0% 50%; }
+            50%  { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+        @keyframes typewriter {
+            from { width: 0; } to { width: 100%; }
+        }
+        @keyframes swatch-in {
+            from { transform: scale(0); opacity: 0; }
+            to   { transform: scale(1); opacity: 1; }
+        }
+        @keyframes orbit {
+            from { transform: rotate(0deg) translateX(38px) rotate(0deg); }
+            to   { transform: rotate(360deg) translateX(38px) rotate(-360deg); }
+        }
+        @keyframes count-up {
+            from { opacity: 0; transform: scale(0.8); }
+            to   { opacity: 1; transform: scale(1); }
+        }
+        .nav {
+            position: fixed; top: 0; left: 0; right: 0;
+            z-index: 200;
+            padding: 0 32px;
+            height: 68px;
+            display: flex; align-items: center; justify-content: space-between;
+            background: rgba(250,250,249,0.75);
+            backdrop-filter: blur(20px) saturate(180%);
+            border-bottom: 1px solid rgba(0,0,0,0.06);
+            animation: fadeIn 0.5s ease both;
+        }
+        .nav-brand { display: flex; align-items: center; gap: 10px; text-decoration: none; }
+        .nav-brand svg { width: 28px; height: 28px; }
+        .nav-brand-name { font-size: 17px; font-weight: 800; color: var(--ink); letter-spacing: -0.03em; }
+        .nav-center {
+            display: flex; align-items: center; gap: 36px;
+            position: absolute; left: 50%; transform: translateX(-50%);
+        }
+        .nav-center a {
+            font-size: 14px; font-weight: 600; color: var(--slate);
+            text-decoration: none; transition: color 0.2s;
+        }
+        .nav-center a:hover { color: var(--orange-deep); }
+        .nav-right { display: flex; align-items: center; gap: 14px; }
+        .nav-login {
+            font-size: 14px; font-weight: 600; color: var(--slate); text-decoration: none;
+            transition: color 0.2s;
+        }
+        .nav-login:hover { color: var(--orange-deep); }
+        .btn-pill {
+            background: var(--ink); color: #fff;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            font-size: 13.5px; font-weight: 700;
+            padding: 10px 22px; border-radius: 100px; border: none; cursor: pointer;
+            text-decoration: none; display: inline-flex; align-items: center; gap: 7px;
+            transition: background 0.25s, box-shadow 0.25s;
+        }
+        .btn-pill:hover { background: var(--orange-deep); box-shadow: 0 8px 24px rgba(234,88,12,0.3); }
+        .btn-pill svg { width: 14px; height: 14px; }
+        @media (max-width: 900px) { .nav-center { display: none; } }
 
-        .gradient-text {
-            background: linear-gradient(90deg, #6366f1, #a855f7, #ec4899);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
+        .hero {
+            padding-top: 148px; padding-bottom: 0;
+            padding-left: 24px; padding-right: 24px;
+            text-align: center; position: relative; overflow: hidden;
+        }
+        .hero-glow {
+            position: absolute; top: 40px; left: 50%; transform: translateX(-50%);
+            width: 900px; height: 500px;
+            background: radial-gradient(ellipse at 50% 40%,
+                rgba(251,191,36,0.18) 0%, rgba(249,115,22,0.12) 35%, transparent 70%);
+            pointer-events: none; z-index: 0;
+            animation: fadeIn 1.2s ease both;
+        }
+        .hero-grid {
+            position: absolute; inset: 0; z-index: 0; pointer-events: none;
+            background-image: linear-gradient(rgba(0,0,0,0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0,0,0,0.03) 1px, transparent 1px);
+            background-size: 60px 60px;
+            mask-image: radial-gradient(ellipse at 50% 0%, black 20%, transparent 75%);
+        }
+        .hero-inner { position: relative; z-index: 10; max-width: 860px; margin: 0 auto; }
+        .hero-badge {
+            display: inline-flex; align-items: center; gap: 8px;
+            background: rgba(249,115,22,0.08); border: 1px solid rgba(249,115,22,0.2);
+            color: var(--orange-deep);
+            font-size: 11px; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase;
+            padding: 5px 14px 5px 8px; border-radius: 100px;
+            margin-bottom: 28px;
+            animation: fadeUp 0.6s 0.1s ease both;
+        }
+        .hero-badge-dot {
+            width: 6px; height: 6px; border-radius: 50%; background: var(--orange);
+            animation: pulse-dot 2s infinite;
+        }
+        .hero-h1 {
+            font-size: clamp(48px, 7vw, 96px);
+            font-weight: 800; letter-spacing: 0.04em; line-height: 0.9;
+            color: var(--ink); margin-bottom: 24px;
+            animation: fadeUp 0.6s 0.2s ease both;
+        }
+        .hero-h1 em {
+            background: linear-gradient(90deg, #f97316, #dc2626, #f97316);
+            background-size: 200% auto;
+            animation: shimmer 3s linear infinite;
+            background-size: 200% 200%;
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
             background-clip: text;
+            animation: gradient-shift 4s ease infinite;
         }
 
-        .gradient-premium {
-            background: linear-gradient(90deg, #8b5cf6, #d946ef, #fb7185, #fde047);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
+        @keyframes shimmer {
+            0%   { background-position: -300% center; }
+            100% { background-position:  300% center; }
             }
-            
-            .gradient-pro {
-            background: linear-gradient(135deg, #ff6b3d, #ff4500, #ff8c00);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-            }
-
-        .btn-primary {
-            background: #000000;
-            color: white;
-            border: none;
-            cursor: pointer;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            padding: 10px 24px;
-            border-radius: 9999px;
-            font-size: 14px;
-            font-weight: bold;
-            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
-            text-decoration: none;
+        .hero-sub {
+            font-size: 18px; font-weight: 500; color: var(--slate);
+            max-width: 500px; margin: 0 auto 40px; line-height: 1.7;
+            animation: fadeUp 0.6s 0.3s ease both;
         }
-
-        .btn-primary:hover {
-            background: #f97316;
-            box-shadow: 0 10px 25px -5px rgba(249, 115, 22, 0.4);
+        .hero-input-wrap {
+            max-width: 580px; margin: 0 auto 20px;
+            background: #fff; border: 1.5px solid #e2e8f0; border-radius: 18px;
+            display: flex; align-items: center;
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.04), 0 20px 40px -10px rgba(0,0,0,0.08);
+            padding: 6px 6px 6px 18px;
+            transition: border-color 0.25s, box-shadow 0.25s;
+            animation: fadeUp 0.6s 0.4s ease both;
         }
-
-        .paddle-btn {
-            background-color: #000;
-            color: #fff;
-            transition: all 0.2s ease;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-            border: none;
-            cursor: pointer;
-            padding: 16px 24px;
-            border-radius: 16px;
-            font-weight: bold;
-            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
-            width: 100%;
+        .hero-input-wrap:focus-within {
+            border-color: rgba(249,115,22,0.4);
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.04), 0 20px 40px -10px rgba(0,0,0,0.08), 0 0 0 4px rgba(249,115,22,0.08);
         }
-
-        .paddle-btn:hover {
-            background-color: #333;
+        .hero-input-icon { color: #cbd5e1; display: flex; align-items: center; margin-right: 10px; }
+        .hero-input-icon svg { width: 18px; height: 18px; }
+        .hero-input {
+            flex: 1; border: none; outline: none; background: transparent;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            font-size: 14px; font-weight: 600; color: var(--ink);
         }
-
-        .feature-card {
-            border: 1px solid #f1f5f9;
-            transition: all 0.3s ease;
-            padding: 40px;
-            border-radius: 40px;
-            background-color: #ffffff;
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
+        .hero-input::placeholder { color: #c4cdd8; }
+        .hero-submit {
+            background: var(--orange-deep); color: #fff; border: none; cursor: pointer;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            font-size: 13.5px; font-weight: 800;
+            padding: 12px 22px; border-radius: 12px;
+            display: flex; align-items: center; gap: 6px;
+            transition: background 0.2s, box-shadow 0.2s;
+            flex-shrink: 0;
         }
-
-        .feature-card:hover {
-            border-color: #ffedd5;
-            background-color: #fffaf5;
+        .hero-submit:hover { background: #c2410c; box-shadow: 0 6px 20px rgba(234,88,12,0.35); }
+        .hero-submit svg { width: 16px; height: 16px; }
+        .hero-chips {
+            display: flex; align-items: center; justify-content: center; gap: 20px;
+            flex-wrap: wrap;
+            font-size: 11px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase;
+            color: #a3aebc; margin-bottom: 72px;
+            animation: fadeUp 0.6s 0.5s ease both;
         }
-
-
-       .pricing-card-highlight {
-            border: 2px solid #f97316;
-            position: relative;
-            padding: 40px;
-            border-radius: 40px;
-            background-color: #ffffff;
-            box-shadow: 0 20px 25px -5px rgba(249, 115, 22, 0.1);
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-            height: 100%;
+        .hero-chips span { display: flex; align-items: center; gap: 6px; }
+        .chip-dot { width: 5px; height: 5px; border-radius: 50%; background: var(--orange); }
+        .hero-mockup-wrap { max-width: 1000px; margin: 0 auto; position: relative; animation: scaleIn 0.8s 0.6s ease both; }
+        .hero-mockup-wrap::after {
+            content: '';
+            position: absolute; left: 0; right: 0; bottom: 0; height: 180px;
+            background: linear-gradient(to top, #fafaf9, transparent);
+            z-index: 20; pointer-events: none;
+        }
+        .hero-mockup {
+            background: #fff; border: 1px solid rgba(0,0,0,0.08);
+            border-radius: 20px 20px 0 0;
+            box-shadow: 0 0 0 1px rgba(255,255,255,0.8), 0 -4px 0 rgba(0,0,0,0.04),
+                0 20px 60px rgba(0,0,0,0.08), 0 60px 120px rgba(249,115,22,0.06);
             overflow: hidden;
         }
+        .mockup-bar {
+            background: #f8f8f7; border-bottom: 1px solid #ebebeb;
+            padding: 12px 18px; display: flex; align-items: center; gap: 12px;
+        }
+        .mockup-dots { display: flex; gap: 6px; }
+        .mockup-dot { width: 11px; height: 11px; border-radius: 50%; }
+        .mockup-dot:nth-child(1) { background: #ff5f57; }
+        .mockup-dot:nth-child(2) { background: #ffbd2e; }
+        .mockup-dot:nth-child(3) { background: #28c840; }
+        .mockup-url {
+            flex: 1; background: #ebebeb; border-radius: 7px; padding: 5px 14px;
+            font-size: 12px; color: #888; font-weight: 600;
+            text-align: center; max-width: 300px; margin: 0 auto;
+        }
+        .mockup-app { display: grid; grid-template-columns: 220px 1fr; height: 420px; }
+        .mock-sidebar {
+            background: #fafaf9; border-right: 1px solid #f1f0ef;
+            padding: 20px 14px; display: flex; flex-direction: column; gap: 4px;
+        }
+        .mock-sidebar-logo { display: flex; align-items: center; gap: 8px; padding: 8px 10px; margin-bottom: 16px; }
+        .mock-sidebar-logo-icon { width: 22px; height: 22px; }
+        .mock-sidebar-logo-text { font-size: 13px; font-weight: 800; color: var(--ink); letter-spacing: -0.02em; }
+        .mock-nav-item {
+            display: flex; align-items: center; gap: 10px;
+            padding: 9px 12px; border-radius: 10px;
+            font-size: 12px; font-weight: 600; color: #888; cursor: default;
+            transition: background 0.2s, color 0.2s;
+        }
+        .mock-nav-item.active { background: rgba(249,115,22,0.08); color: var(--orange-deep); }
+        .mock-nav-item svg { width: 15px; height: 15px; flex-shrink: 0; }
+        @media (max-width: 480px) {
+            .mock-sidebar { padding: 12px 8px; width: 60px; }
+            .mock-sidebar-logo { padding: 8px 6px; margin-bottom: 12px; }
+            .mock-sidebar-logo-icon { width: 18px; height: 18px; }
+            .mock-sidebar-logo-text { display: none; }
+            .mock-nav-item { padding: 8px 6px; justify-content: center; font-size: 0; gap: 0; }
+            .mock-nav-item svg { width: 18px; height: 18px; }
+        }
+        .mock-main { padding: 24px 28px; overflow: hidden; }
+        .mock-topbar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 22px; }
+        .mock-title { font-size: 16px; font-weight: 800; color: var(--ink); letter-spacing: -0.02em; }
+        .mock-btn-sm { background: var(--orange-deep); color: #fff; font-size: 11px; font-weight: 800; padding: 7px 14px; border-radius: 8px; }
+        .mock-clips { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 18px; }
+        .mock-clip { border-radius: 12px; overflow: hidden; border: 1px solid #f1f0ef; background: #fff; }
+        .mock-clip-thumb { height: 110px; position: relative; overflow: hidden; }
+        .mock-clip-thumb-inner { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; }
+        .mock-clip-play {
+            width: 28px; height: 28px; border-radius: 50%;
+            background: rgba(255,255,255,0.9);
+            display: flex; align-items: center; justify-content: center;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+        }
+        .mock-clip-play svg { width: 11px; height: 11px; color: var(--orange-deep); }
+        .mock-clip-meta { padding: 10px 12px; }
+        .mock-clip-title { font-size: 10.5px; font-weight: 700; color: var(--ink); margin-bottom: 5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .mock-clip-row { display: flex; align-items: center; justify-content: space-between; }
+        .mock-clip-dur { font-size: 10px; font-weight: 600; color: var(--muted); }
+        .mock-clip-score { font-size: 9.5px; font-weight: 800; color: var(--orange-deep); background: rgba(249,115,22,0.1); padding: 2px 7px; border-radius: 100px; }
+        .mock-stats-row { display: flex; gap: 10px; }
+        .mock-stat-chip {
+            flex: 1; background: #fafaf9; border: 1px solid #f1f0ef;
+            border-radius: 10px; padding: 10px 14px;
+            display: flex; align-items: center; gap: 10px;
+        }
+        .mock-stat-icon { width: 28px; height: 28px; border-radius: 8px; background: rgba(249,115,22,0.1); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+        .mock-stat-icon svg { width: 13px; height: 13px; color: var(--orange-deep); }
+        .mock-stat-label { font-size: 10px; font-weight: 600; color: var(--muted); }
+        .mock-stat-val { font-size: 14px; font-weight: 800; color: var(--ink); letter-spacing: -0.03em; }
+        .mock-float {
+            position: absolute; z-index: 30; background: #fff;
+            border: 1px solid rgba(0,0,0,0.08); border-radius: 14px;
+            padding: 10px 16px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+            display: flex; align-items: center; gap: 10px; white-space: nowrap;
+        }
+        .mock-float-1 { top: 80px; left: -60px; animation: float-badge 3s ease-in-out infinite; }
+        .mock-float-2 { top: 200px; right: -60px; animation: float-badge 3s 1.5s ease-in-out infinite; }
+        .mock-float-icon { width: 32px; height: 32px; border-radius: 9px; background: rgba(249,115,22,0.1); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+        .mock-float-icon svg { width: 16px; height: 16px; color: var(--orange-deep); }
+        .mock-float-label { font-size: 10px; font-weight: 600; color: var(--muted); }
+        .mock-float-val { font-size: 13px; font-weight: 800; color: var(--ink); }
+        @media (max-width: 768px) {
+            .mock-main { padding: 16px 20px; }
+            .mock-clips { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+            .mock-title { font-size: 14px; }
+            .mock-btn-sm { font-size: 10px; padding: 6px 12px; }
+        }
+        @media (max-width: 480px) {
+            .mock-main { padding: 12px 16px; }
+            .mock-clips { grid-template-columns: 1fr; }
+            .mock-topbar { flex-direction: column; gap: 12px; align-items: flex-start; }
+            .mock-clip-thumb { height: 140px; }
+            .mock-title { font-size: 13px; }
+            .mock-btn-sm { width: 100%; text-align: center; }
+            .mock-stats-row { flex-direction: column; }
+        }
+        .proof-strip {
+            padding: 32px 24px;
+            border-top: 1px solid var(--border); border-bottom: 1px solid var(--border);
+            background: #fff; text-align: center;
+        }
+        .proof-label { font-size: 11px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); margin-bottom: 20px; }
+        .proof-logos { display: flex; align-items: center; justify-content: center; gap: 40px; flex-wrap: wrap; }
+        .proof-logo { font-size: 16px; font-weight: 800; color: #cbd5e1; letter-spacing: -0.02em; transition: color 0.2s; }
+        .proof-logo:hover { color: #94a3b8; }
+        .section { padding: 120px 24px; background: #fafaf9; }
+        .section-white { background: #fff; }
+        .section-label { display: inline-flex; align-items: center; gap: 8px; font-size: 11px; font-weight: 800; letter-spacing: 0.12em; text-transform: uppercase; color: var(--orange-deep); margin-bottom: 16px; }
+        .section-label-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--orange); }
+        .section-h2 { font-size: clamp(32px, 4vw, 52px); font-weight: 800; letter-spacing: -0.04em; color: var(--ink); line-height: 1.05; margin-bottom: 14px; }
+        .section-sub { font-size: 17px; font-weight: 500; color: var(--slate); line-height: 1.7; max-width: 520px; }
+        .section-header { margin-bottom: 64px; }
+        .section-header-center { text-align: center; }
+        .section-header-center .section-sub { margin: 0 auto; }
+        .mx-auto { margin-left: auto; margin-right: auto; }
+        .text-center { text-align: center; }
+        .mw-1100 { max-width: 1100px; margin: 0 auto; }
+        .reveal {
+            opacity: 0; transform: translateY(24px);
+            transition: opacity 0.6s ease, transform 0.6s ease;
+        }
+        .reveal.visible { opacity: 1; transform: none; }
+        .reveal-delay-1 { transition-delay: 0.1s; }
+        .reveal-delay-2 { transition-delay: 0.2s; }
+        .reveal-delay-3 { transition-delay: 0.3s; }
+        .bento {
+            max-width: 1100px; margin: 0 auto;
+            display: grid;
+            grid-template-columns: repeat(12, 1fr);
+            grid-template-rows: auto auto;
+            gap: 16px;
+        }
+        .bento-card {
+            background: #fff; border: 1px solid #edecea; border-radius: 28px;
+            overflow: hidden; display: flex; flex-direction: column;
+            transition: border-color 0.3s, box-shadow 0.3s;
+        }
+        .bento-card:hover { border-color: #fdba74; box-shadow: 0 16px 48px rgba(249,115,22,0.07); }
+        .bc-a { grid-column: span 7; min-height: 380px; }
+        .bc-b { grid-column: span 5; min-height: 380px; }
+        .bc-c { grid-column: span 5; min-height: 320px; }
+        .bc-d { grid-column: span 7; min-height: 320px; }
+        @media (max-width: 860px) { .bc-a, .bc-b, .bc-c, .bc-d { grid-column: span 12; min-height: 300px; } }
+        @media (max-width: 480px) { .bento { grid-template-columns: 1fr !important; } }
+        @import url('https://fonts.googleapis.com/css2?family=Syne:wght@700;800&display=swap');
 
-        @media (min-width: 768px) {
-            .pricing-card-highlight {
-                transform: scale(1.05);
+            @keyframes shimmer {
+            0%   { background-position: -300% center; }
+            100% { background-position: 300% center; }
             }
-        }
 
-        .pricing-card-highlight::before {
-            content: 'Most Popular';
-            position: absolute;
-            top: 0;
-            right: 0;
-            background: #f97316;
-            color: white;
-            font-size: 10px;
-            font-weight: 900;
-            padding: 8px 24px;
-            border-radius: 0 40px 0 16px;
-            text-transform: uppercase;
-            letter-spacing: 0.1em;
-        }
+            .bento-body { padding: 36px 40px 20px; }
 
-        .badge-orange {
-            background: rgba(249, 115, 22, 0.1);
-            color: #ea580c;
-            padding: 6px 16px;
-            border-radius: 9999px;
-            font-size: 12px;
-            font-weight: bold;
-            text-transform: uppercase;
-            letter-spacing: 0.15em;
+            .bento-body .title-row {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+            margin-bottom: 10px;
+            }
+
+            .bento-body h3 {
+            font-size: 22px;
+            font-weight: 800;
+            color: var(--ink);
+            letter-spacing: -0.03em;
+            margin: 0;
+            }
+
+            .atlas-badge {
             display: inline-flex;
             align-items: center;
-            gap: 8px;
-        }
-
-        .pricing-title {
-            font-size: 36px;
-            font-weight: 800;
-            margin-bottom: 16px;
-        }
-
-        @media (min-width: 768px) {
-            .pricing-title {
-                font-size: 48px;
-            }
-        }
-        .header {
-            background: rgba(255, 255, 255, 0.8);
-            backdrop-filter: blur(12px);
-            border-bottom: 1px solid #f1f5f9;
-            position: fixed;
-            top: 0;
-            width: 100%;
-            z-index: 100;
-        }
-
-        .card {
-            background: rgba(255, 255, 255, 0.9);
-            backdrop-filter: blur(8px);
-            border: 1px solid rgba(255, 255, 255, 0.4);
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
-            padding: 16px;
-            border-radius: 16px;
-        }
-
-        @keyframes float {
-            0% { transform: translateY(0px); }
-            50% { transform: translateY(-10px); }
-            100% { transform: translateY(0px); }
-        }
-
-        .animate-float {
-            animation: float 4s ease-in-out infinite;
-        }
-
-        .animate-float-delayed {
-            animation: float 4s ease-in-out infinite;
-            animation-delay: 2s;
-        }
-        nav {
-            height: 80px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 0 24px;
-        }
-
-        .nav-container {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            width: 100%;
-            max-width: 80rem;
-            margin: 0 auto;
-        }
-
-        .nav-left {
-            display: flex;
-            align-items: center;
-            gap: 40px;
-        }
-
-        .nav-brand {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .nav-brand svg {
-            width: 32px;
-            height: 32px;
-        }
-
-        .nav-brand span {
-            font-size: 20px;
-            font-weight: 800;
-            letter-spacing: -0.025em;
-        }
-
-        .nav-links {
-            display: none;
-            align-items: center;
-            gap: 32px;
-            font-size: 15px;
-            font-weight: 600;
-            color: #475569;
-        }
-
-        .nav-links a {
-            text-decoration: none;
-            color: #475569;
-            transition: color 0.3s ease;
-        }
-
-        .nav-links a:hover {
-            color: #ea580c;
-        }
-
-        .nav-right {
-            display: flex;
-            align-items: center;
-            gap: 16px;
-        }
-
-        .nav-login {
-            display: none;
-            font-size: 15px;
-            font-weight: 600;
-            color: #475569;
-            text-decoration: none;
-            padding: 0 16px;
-        }
-
-        .nav-login:hover {
-            color: #ea580c;
-        }
-
-        @media (min-width: 992px) {
-            .nav-links {
-                display: flex;
-            }
-            .nav-login {
-                display: block;
-            }
-        }
-        header {
-            padding-top: 160px;
-            padding-bottom: 96px;
-            padding-left: 24px;
-            padding-right: 24px;
+            padding: 3px 9px;
+            border-radius: 6px;
+            background: linear-gradient(90deg, #f97316, #ef4444, #fb923c, #f97316);
+            background-size: 250% auto;
+            animation: shimmer 3s linear infinite;
             position: relative;
-            overflow: hidden;
-            margin-top: 80px;
-        }
+            top: 1px;
+            }
 
-        header::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 100%;
-            max-width: 56rem;
-            height: 384px;
-            background: #fef3c7;
-            filter: blur(120px);
-            border-radius: 50%;
-            z-index: -10;
-            opacity: 0.6;
-        }
-
-        .hero-content {
-            text-align: center;
-        }
-
-        h1 {
-            font-size: 48px;
+            .atlas-badge span {
+            font-family: 'Syne', sans-serif;
+            font-size: 9px;
             font-weight: 800;
-            letter-spacing: -0.025em;
-            margin-bottom: 32px;
-            line-height: 1.05;
-        }
-
-        @media (min-width: 768px) {
-            h1 {
-                font-size: 84px;
-            }
-        }
-
-        .hero-subtitle {
-            font-size: 18px;
-            color: #64748b;
-            max-width: 42rem;
-            margin: 0 auto 40px;
-            font-weight: 500;
-        }
-
-        @media (min-width: 768px) {
-            .hero-subtitle {
-                font-size: 20px;
-            }
-        }
-
-        .input-container {
-            background: white;
-            padding: 8px 24px;
-            border-radius: 24px;
-            border: 2px solid #e2e8f0;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
-            transition: all 0.3s ease;
-            flex-wrap: nowrap;
-        }
-
-        .input-container-icon {
-            padding-left: 12px;
-            color: #cbd5e1;
-            display: flex;
-            align-items: center;
-        }
-
-        .input-container-icon svg {
-            width: 20px;
-            height: 20px;
-        }
-
-        .input-container input {
-            flex-grow: 1;
-            padding: 12px;
-            outline: none;
-            font-weight: 600;
-            color: #475569;
-            background: transparent;
-            border: none;
-            font-size: 14px;
-            font-family: 'Plus Jakarta Sans', sans-serif;
-        }
-
-        .input-container input::placeholder {
-            color: #cbd5e1;
-        }
-
-        .input-container button {
-            background: #ea580c;
-            color: white;
-            padding: 12px 24px;
-            border-radius: 16px;
-            font-weight: 900;
-            border: none;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            transition: all 0.3s ease;
-            box-shadow: 0 10px 15px -3px rgba(249, 115, 22, 0.2);
-            font-family: 'Plus Jakarta Sans', sans-serif;
-            font-size: 14px;
-        }
-
-        .input-container button:hover {
-            background: #d97706;
-        }
-
-        .input-container button svg {
-            width: 18px;
-            height: 18px;
-        }
-
-        @media (max-width: 480px) {
-            .input-container {
-                flex-direction: column;
-                align-items: stretch;
-                padding: 8px;
-                gap: 6px;
-            }
-
-            .input-container input {
-                padding: 10px;
-                font-size: 14px;
-            }
-
-            .input-container button {
-                padding: 10px;
-                font-size: 14px;
-                gap: 4px;
-                justify-content: center;
-            }
-
-            .input-container-icon {
-                padding-left: 8px;
-            }
-
-            .input-container-icon svg {
-                width: 18px;
-                height: 18px;
-            }
-        }
-
-        .hero-features {
-            display: flex;
-            justify-content: center;
-            gap: 24px;
-            margin-top: 16px;
-            font-size: 12px;
-            font-weight: bold;
-            color: #94a3b8;
+            letter-spacing: 0.12em;
+            color: #fff;
             text-transform: uppercase;
-            letter-spacing: 0.15em;
-            flex-wrap: wrap;
-        }
+            }
 
-        .hero-features span {
-            display: flex;
-            align-items: center;
-            gap: 6px;
+            .bento-body p {
+            font-size: 14.5px;
+            color: var(--slate);
+            line-height: 1.65;
+            max-width: 380px;
+            }
+        .bento-visual {
+            flex: 1; margin: 0 24px 24px; border-radius: 18px;
+            background: #fafaf9; border: 1px solid #f1f0ef;
+            overflow: hidden; display: flex; align-items: center; justify-content: center;
+            position: relative; min-height: 160px;
         }
-
-        .hero-features .dot {
-            width: 6px;
-            height: 6px;
-            background: #f97316;
-            border-radius: 50%;
+        .vis-waveform { display: flex; align-items: center; gap: 4px; padding: 0 32px; }
+        .wv {
+            width: 4px; border-radius: 3px;
+            background: linear-gradient(180deg, var(--orange), var(--orange-deep));
+            transform-origin: bottom;
+            animation: bar-grow 0.6s ease both;
         }
-        .hero-image-wrapper {
+        .wv:nth-child(1)  { height: 20px; animation-delay: 0.05s; }
+        .wv:nth-child(2)  { height: 40px; animation-delay: 0.10s; }
+        .wv:nth-child(3)  { height: 28px; animation-delay: 0.15s; }
+        .wv:nth-child(4)  { height: 55px; animation-delay: 0.20s; }
+        .wv:nth-child(5)  { height: 35px; animation-delay: 0.25s; }
+        .wv:nth-child(6)  { height: 62px; animation-delay: 0.30s; }
+        .wv:nth-child(7)  { height: 30px; animation-delay: 0.35s; }
+        .wv:nth-child(8)  { height: 48px; animation-delay: 0.40s; }
+        .wv:nth-child(9)  { height: 22px; animation-delay: 0.45s; }
+        .wv:nth-child(10) { height: 38px; animation-delay: 0.50s; }
+        .wv:nth-child(11) { height: 54px; animation-delay: 0.55s; }
+        .wv:nth-child(12) { height: 26px; animation-delay: 0.60s; }
+        .wv:nth-child(13) { height: 44px; animation-delay: 0.65s; }
+        .wv:nth-child(14) { height: 32px; animation-delay: 0.70s; }
+        .wv:nth-child(15) { height: 50px; animation-delay: 0.75s; }
+        .wv:nth-child(16) { height: 18px; animation-delay: 0.80s; }
+        .wv:nth-child(17) { height: 42px; animation-delay: 0.85s; }
+        .wv:nth-child(18) { height: 29px; animation-delay: 0.90s; }
+        .bc-a:hover .wv { animation: wave-dance 0.8s ease-in-out infinite alternate; }
+        @keyframes wave-dance {
+            from { transform: scaleY(0.6); } to { transform: scaleY(1.15); }
+        }
+        .bc-a:hover .wv:nth-child(odd)  { animation-delay: 0s; }
+        .bc-a:hover .wv:nth-child(even) { animation-delay: 0.15s; }
+        .vis-templates {
+            display: flex; gap: 12px; padding: 20px;
+            width: 100%; overflow: hidden;
+        }
+        .tpl-card {
+            flex: 1; background: #fff; border-radius: 16px;
+            border: 1px solid #f0eeec;
+            padding: 0 0 14px; overflow: hidden;
             position: relative;
-            max-width: 64rem;
-            margin: 0 auto;
-            margin-top: 48px;
+            transition: border-color 0.25s, box-shadow 0.25s;
         }
-
-        .hero-floating {
-            position: absolute;
-            z-index: 20;
+        .tpl-card:hover { border-color: #fdba74; box-shadow: 0 8px 24px rgba(249,115,22,0.08); }
+        .tpl-thumb {
+            height: 90px; background: #f5f4f2;
+            display: flex; align-items: center; justify-content: center;
+            margin-bottom: 12px; position: relative; overflow: hidden;
         }
-
-        .hero-floating-1 {
-            top: -24px;
-            left: -16px;
+        .tpl-thumb svg { width: 40px; height: 40px; color: #c4bfba; }
+        .tpl-pro-badge {
+            position: absolute; top: 8px; right: 8px;
+            background: var(--orange); color: #fff;
+            font-size: 8px; font-weight: 900; letter-spacing: 0.08em; text-transform: uppercase;
+            padding: 3px 8px; border-radius: 100px;
         }
-
-        @media (min-width: 768px) {
-            .hero-floating-1 {
-                left: -48px;
-            }
+        .tpl-name { font-size: 11.5px; font-weight: 800; color: var(--ink); padding: 0 14px; margin-bottom: 3px; }
+        .tpl-desc { font-size: 10px; font-weight: 500; color: var(--muted); padding: 0 14px; margin-bottom: 10px; }
+        .tpl-tags { display: flex; gap: 5px; padding: 0 14px; flex-wrap: wrap; }
+        .tpl-tag {
+            display: flex; align-items: center; gap: 4px;
+            font-size: 9px; font-weight: 700; color: var(--slate);
+            background: #f5f4f2; border-radius: 100px;
+            padding: 3px 8px;
         }
-
-        .hero-floating-2 {
-            top: 50%;
-            right: -16px;
+        .tpl-tag svg { width: 9px; height: 9px; color: var(--orange); }
+        .vis-overpurpose {
+            width: 100%; padding: 20px;
+            display: flex; flex-direction: column; gap: 0;
         }
-
-        @media (min-width: 768px) {
-            .hero-floating-2 {
-                right: -48px;
-            }
+        .op-phone-wrap {
+            display: flex; align-items: center; justify-content: center;
+            gap: 16px; margin-bottom: 14px;
         }
-
-        .hero-floating-3 {
-            bottom: 48px;
-            left: -8px;
+        .op-phone {
+            width: 64px; height: 104px; border-radius: 14px;
+            border: 2px solid #e8e5e2;
+            background: #fff; overflow: hidden;
+            position: relative;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.07);
+            flex-shrink: 0;
         }
-
-        @media (min-width: 768px) {
-            .hero-floating-3 {
-                left: -32px;
-            }
+        .op-phone-screen {
+            position: absolute; inset: 0;
+            display: flex; flex-direction: column;
         }
-
-        .virality-card {
-            display: flex;
+        .op-before-bg {
+            flex: 1; background: linear-gradient(160deg, #fed7aa 0%, #f97316 100%);
+            position: relative; overflow: hidden;
+        }
+        .op-wm {
+            position: absolute; inset: 0;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .op-wm-text {
+            font-size: 7px; font-weight: 900; color: rgba(255,255,255,0.5);
+            letter-spacing: 0.05em; text-transform: uppercase;
+            border: 1px solid rgba(255,255,255,0.4);
+            padding: 2px 5px; border-radius: 3px;
+            transform: rotate(-15deg);
+        }
+        .op-before-bar { height: 18px; background: rgba(0,0,0,0.08); display: flex; align-items: center; padding: 0 6px; }
+        .op-before-bar-text { font-size: 6px; font-weight: 700; color: rgba(0,0,0,0.3); }
+        .op-after-bg {
+            flex: 1; background: linear-gradient(160deg, #1c1917 0%, #292524 100%);
+            position: relative; overflow: hidden;
+        }
+        .op-caption-lines { position: absolute; bottom: 8px; left: 6px; right: 6px; display: flex; flex-direction: column; gap: 2px; }
+        .op-cap-line { font-size: 6.5px; font-weight: 900; color: #fff; background: var(--orange-deep); padding: 1px 4px; display: inline-block; width: fit-content; }
+        .op-logo-badge {
+            position: absolute; top: 6px; right: 5px;
+            width: 12px; height: 12px; border-radius: 50%;
+            background: var(--orange); border: 1.5px solid #fff;
+        }
+        .op-after-bar { height: 18px; background: var(--orange-deep); display: flex; align-items: center; justify-content: center; gap: 3px; padding: 0 6px; }
+        .op-after-bar-dot { width: 3px; height: 3px; border-radius: 50%; background: rgba(255,255,255,0.7); }
+        .op-arrow {
+            width: 32px; height: 32px; border-radius: 50%;
+            background: rgba(249,115,22,0.1); border: 1px solid rgba(249,115,22,0.2);
+            display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+        }
+        .op-arrow svg { width: 14px; height: 14px; color: var(--orange-deep); }
+        .op-label { font-size: 9px; font-weight: 700; color: var(--muted); text-align: center; letter-spacing: 0.06em; text-transform: uppercase; }
+        .op-label-row { display: flex; justify-content: space-around; }
+        .vis-platforms { display: flex; flex-direction: column; gap: 8px; padding: 20px; width: 100%; }
+        .platform-row {
+            display: flex; align-items: center; justify-content: space-between;
+            background: #fff; border: 1px solid #f1f0ef; border-radius: 12px;
+            padding: 9px 14px;
+            transition: border-color 0.25s, box-shadow 0.2s;
+        }
+        .platform-row:hover { border-color: #fdba74; box-shadow: 0 4px 12px rgba(249,115,22,0.06); }
+        .platform-name { font-size: 12px; font-weight: 700; color: var(--ink); display: flex; align-items: center; gap: 8px; }
+        .platform-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+        .platform-status {
+            font-size: 11px; font-weight: 700; color: #16a34a;
+            display: flex; align-items: center; gap: 4px;
+        }
+        .platform-status svg { width: 12px; height: 12px; stroke-dasharray: 30; stroke-dashoffset: 0; animation: check-draw 0.5s ease both; }
+        .vis-customizer { width: 100%; padding: 18px; display: flex; flex-direction: column; gap: 10px; }
+        .cust-row { display: flex; align-items: center; gap: 10px; }
+        .cust-label { font-size: 10px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; width: 56px; flex-shrink: 0; }
+        .cust-font-pills { display: flex; gap: 6px; }
+        .cust-font-pill {
+            padding: 4px 10px; border-radius: 100px; font-size: 11px; font-weight: 700;
+            border: 1.5px solid #e8e5e2; background: #fff; color: var(--slate);
+            cursor: default; transition: all 0.2s;
+        }
+        .cust-font-pill.active { border-color: var(--orange); background: rgba(249,115,22,0.07); color: var(--orange-deep); }
+        .cust-font-pill:hover:not(.active) { border-color: #d0ccc8; }
+        .cust-swatches { display: flex; gap: 6px; }
+        .cust-swatch {
+            width: 22px; height: 22px; border-radius: 50%; cursor: default;
+            border: 2px solid transparent; transition: border-color 0.2s, transform 0.2s;
+            animation: swatch-in 0.4s ease both;
+        }
+        .cust-swatch:nth-child(1) { animation-delay: 0.05s; }
+        .cust-swatch:nth-child(2) { animation-delay: 0.10s; }
+        .cust-swatch:nth-child(3) { animation-delay: 0.15s; }
+        .cust-swatch:nth-child(4) { animation-delay: 0.20s; }
+        .cust-swatch:nth-child(5) { animation-delay: 0.25s; }
+        .cust-swatch.active { border-color: var(--ink); }
+        .cust-slider-wrap { flex: 1; }
+        .cust-slider { width: 100%; height: 4px; background: #e8e5e2; border-radius: 4px; position: relative; }
+        .cust-slider-fill { height: 100%; border-radius: 4px; background: linear-gradient(90deg, var(--orange), var(--orange-deep)); width: 60%; transition: width 0.3s; }
+        .cust-slider-thumb { width: 14px; height: 14px; border-radius: 50%; background: #fff; border: 2px solid var(--orange-deep); position: absolute; top: 50%; left: 60%; transform: translate(-50%, -50%); box-shadow: 0 2px 6px rgba(234,88,12,0.2); }
+        .cust-style-pills { display: flex; gap: 6px; flex-wrap: wrap; }
+        .cust-style-pill {
+            padding: 4px 10px; border-radius: 8px; font-size: 10px; font-weight: 800;
+            border: 1.5px solid #e8e5e2; background: #fff; color: var(--slate);
+            cursor: default; transition: all 0.2s;
+        }
+        .cust-style-pill.active { border-color: var(--orange); background: rgba(249,115,22,0.07); color: var(--orange-deep); }
+        .cust-preview {
+            background: #1c1917; border-radius: 12px; padding: 14px 16px;
+            display: flex; flex-direction: column; gap: 4px; align-items: flex-start;
+        }
+        .cust-prev-line {
+            font-size: 13px; font-weight: 900; letter-spacing: -0.01em;
+            padding: 2px 8px; display: inline-block;
+        }
+        .vis-stats { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; padding: 24px; width: 100%; }
+        .vis-stat { background: #fff; border: 1px solid #f1f0ef; border-radius: 14px; padding: 16px 18px; }
+        .vis-stat-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); margin-bottom: 4px; }
+        .vis-stat-val { font-size: 28px; font-weight: 800; color: var(--ink); letter-spacing: -0.04em; }
+        .vis-stat-change { font-size: 11px; font-weight: 700; color: #22c55e; margin-top: 2px; }
+        .vis-score-wrap { display: flex; align-items: center; justify-content: center; gap: 20px; padding: 20px 24px; width: 100%; }
+        .score-ring { position: relative; width: 80px; height: 80px; flex-shrink: 0; }
+        .score-ring svg { width: 80px; height: 80px; transform: rotate(-90deg); }
+        .score-ring-bg { stroke: #f1f0ef; stroke-width: 6; fill: none; }
+        .score-ring-fill {
+            stroke: var(--orange-deep); stroke-width: 6; fill: none;
+            stroke-linecap: round;
+            stroke-dasharray: 220; stroke-dashoffset: 220;
+            transition: stroke-dashoffset 1.4s cubic-bezier(0.4,0,0.2,1);
+        }
+        .score-ring-fill.animated { stroke-dashoffset: 13; } /* ~94% */
+        .score-ring-label {
+            position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center;
+        }
+        .score-ring-num { font-size: 20px; font-weight: 800; color: var(--ink); letter-spacing: -0.04em; }
+        .score-ring-sub { font-size: 8px; font-weight: 700; color: var(--muted); text-transform: uppercase; }
+        .score-metrics { flex: 1; display: flex; flex-direction: column; gap: 8px; }
+        .score-metric-row { display: flex; flex-direction: column; gap: 3px; }
+        .score-metric-label { display: flex; justify-content: space-between; }
+        .score-metric-name { font-size: 10px; font-weight: 700; color: var(--slate); }
+        .score-metric-pct { font-size: 10px; font-weight: 800; color: var(--ink); }
+        .score-metric-bar { height: 4px; background: #f1f0ef; border-radius: 4px; overflow: hidden; }
+        .score-metric-fill {
+            height: 100%; border-radius: 4px;
+            background: linear-gradient(90deg, var(--orange), var(--orange-deep));
+            width: 0%;
+            transition: width 1.2s cubic-bezier(0.4,0,0.2,1);
+        }
+        .steps {
+            max-width: 900px; margin: 0 auto;
+            display: flex; flex-direction: column;
+            position: relative;
+        }
+        .steps::before {
+            content: '';
+            position: absolute; left: 27px; top: 56px; bottom: 56px;
+            width: 1px; background: linear-gradient(180deg, var(--orange-light), transparent);
+        }
+        .step { display: flex; align-items: flex-start; gap: 28px; padding: 36px 0; border-bottom: 1px solid var(--border); }
+        .step:last-child { border-bottom: none; }
+        .step-num {
+            width: 56px; height: 56px; border-radius: 50%; flex-shrink: 0;
+            border: 1.5px solid #f1f0ef; background: #fff;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 14px; font-weight: 800; color: var(--orange-deep);
+            position: relative; z-index: 1;
+            transition: background 0.3s, border-color 0.3s, box-shadow 0.3s;
+        }
+        .step:hover .step-num { background: var(--orange-xlight); border-color: rgba(249,115,22,0.2); box-shadow: 0 4px 16px rgba(249,115,22,0.1); }
+        .step-body { flex: 1; padding-top: 12px; }
+        .step-title { font-size: 20px; font-weight: 800; color: var(--ink); letter-spacing: -0.02em; margin-bottom: 8px; }
+        .step-desc { font-size: 15px; font-weight: 500; color: var(--slate); line-height: 1.65; }
+        .step-tag {
+            display: inline-flex; align-items: center; gap: 6px;
+            background: var(--orange-xlight); color: var(--orange-deep);
+            font-size: 11px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase;
+            border-radius: 100px; padding: 4px 12px; margin-top: 14px;
+            border: 1px solid rgba(249,115,22,0.15);
+        }
+        .pricing-section { padding: 120px 24px; background: var(--ink-2); }
+        .pricing-section .section-h2 { color: #fff; }
+        .pricing-section .section-sub { color: #94a3b8; }
+        .pricing-section .section-label { color: #fb923c; }
+        .pricing-grid { max-width: 980px; margin: 0 auto; display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; align-items: start; }
+        @media (max-width: 760px) { .pricing-grid { grid-template-columns: 1fr; max-width: 400px; } }
+        .price-card {
+            background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 28px; padding: 36px 32px; position: relative; overflow: hidden;
+            transition: border-color 0.3s, box-shadow 0.3s;
+        }
+        .price-card:hover { border-color: rgba(255,255,255,0.18); box-shadow: 0 12px 40px rgba(0,0,0,0.2); }
+        .price-card.featured {
+            background: #fff; border: 2px solid var(--orange);
+            box-shadow: 0 0 0 4px rgba(249,115,22,0.12), 0 24px 60px rgba(0,0,0,0.3);
+        }
+        .price-card.featured:hover { box-shadow: 0 0 0 4px rgba(249,115,22,0.2), 0 32px 80px rgba(0,0,0,0.35); }
+        .price-card.featured .plan-name { color: var(--orange-deep); }
+        .price-card.featured .plan-desc { color: var(--slate); }
+        .price-card.featured .price-amount { color: var(--ink); }
+        .price-card.featured .price-period { color: var(--muted); }
+        .price-card.featured .feat-item { color: var(--ink-2); }
+        .price-card.featured .feat-icon { color: var(--orange); }
+        .price-card.featured .plan-divider { background: #f1f5f9; }
+        .popular-tag { position: absolute; top: 0; right: 0; background: var(--orange); color: #fff; font-size: 9px; font-weight: 900; letter-spacing: 0.1em; text-transform: uppercase; padding: 7px 20px; border-radius: 0 28px 0 14px; }
+        .plan-name { font-size: 22px; font-weight: 800; color: #fff; margin-bottom: 4px; letter-spacing: -0.02em; }
+        .plan-desc { font-size: 13px; font-weight: 500; color: rgba(255,255,255,0.4); margin-bottom: 28px; }
+        .price-amount { font-size: 44px; font-weight: 800; color: #fff; letter-spacing: -0.04em; }
+        .price-period { font-size: 14px; font-weight: 600; color: rgba(255,255,255,0.3); margin-left: 4px; }
+        .plan-divider { height: 1px; background: rgba(255,255,255,0.08); margin: 24px 0; }
+        .feat-list { list-style: none; display: flex; flex-direction: column; gap: 13px; margin-bottom: 32px; }
+        .feat-item { display: flex; align-items: center; gap: 10px; font-size: 14px; font-weight: 600; color: rgba(255,255,255,0.7); }
+        .feat-icon { width: 16px; height: 16px; color: rgba(255,255,255,0.3); flex-shrink: 0; }
+        .feat-icon.ok { color: var(--orange); }
+        .plan-btn { width: 100%; padding: 14px; border-radius: 14px; border: none; cursor: pointer; font-family: 'Plus Jakarta Sans', sans-serif; font-size: 14px; font-weight: 800; transition: all 0.2s; }
+        .plan-btn-ghost { background: rgba(255,255,255,0.06); color: rgba(255,255,255,0.7); border: 1px solid rgba(255,255,255,0.1); }
+        .plan-btn-ghost:hover { background: rgba(255,255,255,0.1); color: #fff; }
+        .plan-btn-primary { background: var(--orange-deep); color: #fff; box-shadow: 0 8px 24px rgba(234,88,12,0.4); }
+        .plan-btn-primary:hover { background: #c2410c; box-shadow: 0 12px 32px rgba(234,88,12,0.5); }
+        .footer { background: var(--ink); padding: 72px 24px 40px; }
+        .footer-inner { max-width: 1100px; margin: 0 auto; }
+        .footer-top { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; gap: 48px; margin-bottom: 60px; }
+        @media (max-width: 760px) { .footer-top { grid-template-columns: 1fr 1fr; } }
+        .footer-brand-logo { display: flex; align-items: center; gap: 8px; margin-bottom: 16px; }
+        .footer-brand-logo svg { width: 26px; height: 26px; }
+        .footer-brand-name { font-size: 17px; font-weight: 800; color: #fff; letter-spacing: -0.03em; }
+        .footer-brand-desc { font-size: 14px; font-weight: 500; color: rgba(255,255,255,0.32); line-height: 1.65; max-width: 260px; }
+        .footer-col h6 { font-size: 11px; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase; color: rgba(255,255,255,0.3); margin-bottom: 20px; }
+        .footer-links { list-style: none; display: flex; flex-direction: column; gap: 12px; }
+        .footer-links a { font-size: 14px; font-weight: 600; color: rgba(255,255,255,0.5); text-decoration: none; transition: color 0.2s; }
+        .footer-links a:hover { color: var(--orange); }
+        .footer-bottom { 
+            border-top: 1px solid rgba(255,255,255,0.06); 
+            padding-top: 28px; 
+            display: grid; 
+            grid-template-columns: 1fr 1fr 1fr; 
+            gap: 32px; 
             align-items: center;
-            gap: 16px;
         }
-
-        .virality-score {
-            width: 48px;
-            height: 48px;
-            border-radius: 9999px;
-            background: #fed7aa;
+        .footer-bottom-left { display: flex; align-items: center; justify-content: flex-start; }
+        .footer-bottom-center { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; }
+        .footer-bottom-right { display: flex; align-items: center; justify-content: flex-end; }
+        .footer-copy { font-size: 13px; font-weight: 500; color: rgba(255,255,255,0.2); }
+        @media (max-width: 760px) { 
+            .footer-bottom { grid-template-columns: 1fr; gap: 16px; text-align: center; }
+            .footer-bottom-left, .footer-bottom-right { justify-content: center; }
+        }
+        .logo-word-container {
             display: flex;
             align-items: center;
             justify-content: center;
-            color: #ea580c;
-            font-weight: 900;
-            font-size: 20px;
-            flex-shrink: 0;
-        }
-
-        .virality-text {
-            text-align: left;
-        }
-
-        .virality-label {
-            font-size: 10px;
-            text-transform: uppercase;
-            letter-spacing: 0.1em;
-            font-weight: bold;
-            color: #94a3b8;
-        }
-
-        .virality-value {
-            font-size: 14px;
-            font-weight: bold;
-            color: #0f172a;
-        }
-
-        .caption-card {
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-        }
-
-        .caption-badge {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .caption-badge-dot {
-            width: 8px;
-            height: 8px;
-            background: #f97316;
-            border-radius: 50%;
-        }
-
-        .caption-badge-text {
-            font-size: 10px;
-            text-transform: uppercase;
-            font-weight: bold;
-            color: #ea580c;
-        }
-
-        .caption-text {
-            font-size: 14px;
-            font-weight: 900;
-            color: white;
-            background: #ea580c;
-            padding: 4px 8px;
-            display: inline-block;
-            width: fit-content;
-        }
-
-        .tracking-card {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            padding: 12px;
-            border-radius: 12px;
-        }
-
-        .tracking-card svg {
-            width: 20px;
-            height: 20px;
-            color: #ea580c;
-            flex-shrink: 0;
-        }
-
-        .tracking-card span {
-            font-size: 12px;
-            font-weight: bold;
-            color: #334155;
-        }
-
-        .hero-image {
-            border-radius: 24px;
-            border: 8px solid #f8fafc;
-            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
-            width: 100%;
-            height: auto;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .hero-image::after {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: linear-gradient(to top, rgba(120, 53, 15, 0.1), transparent);
-            pointer-events: none;
-        }
-        section {
-            padding: 128px 24px;
-            background-color: white;
-        }
-
-        .pricing-title {
-            font-size: 36px;
-            font-weight: 800;
-            margin-bottom: 16px;
-        }
-
-        @media (min-width: 768px) {
-            .pricing-title {
-                font-size: 48px;
-            }
-        }
-
-        .pricing-subtitle {
-            color: #64748b;
-            font-weight: 500;
-            font-size: 18px;
-        }
-
-        .pricing-header {
-            text-align: center;
-            margin-bottom: 64px;
-        }
-
-        .pricing-grid {
-            display: grid;
-            grid-template-columns: 1fr;
-            gap: 32px;
-        }
-
-        @media (min-width: 768px) {
-            .pricing-grid {
-                grid-template-columns: repeat(3, 1fr);
-            }
-        }
-
-        .plan-header {
-            margin-bottom: 24px;
-        }
-
-        .plan-name {
-            font-size: 24px;
-            font-weight: 800;
-            margin-bottom: 4px;
-        }
-
-        .plan-description {
-            color: #64748b;
-            font-size: 14px;
-            font-weight: 500;
-        }
-
-        .plan-price {
-            display: flex;
-            align-items: baseline;
-            gap: 4px;
-            margin-bottom: 32px;
-        }
-
-        .plan-price-amount {
-            font-size: 48px;
-            font-weight: 800;
-        }
-
-        .plan-price-period {
-            color: #94a3b8;
-            font-weight: bold;
-            font-size: 14px;
-        }
-
-        .plan-divider {
-            height: 1px;
-            background: #e2e8f0;
-            width: 100%;
-            margin-bottom: 32px;
-        }
-
-        .pricing-card-highlight .plan-divider {
-            background: #fef3c7;
-        }
-
-        .plan-features {
-            list-style: none;
-            margin-bottom: 40px;
-            display: flex;
-            flex-direction: column;
-            gap: 16px;
-        }
-
-        .plan-features li {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            font-size: 15px;
-            font-weight: 600;
-            color: #475569;
-        }
-
-        .plan-features svg {
-            width: 20px;
-            height: 20px;
-            flex-shrink: 0;
-            color: #f97316;
-            stroke: #f97316;
-        }
-
-        .plan-features li.disabled {
-            color: #cbd5e1;
-        }
-
-        .plan-features li.disabled svg {
-            color: #cbd5e1;
-            stroke: #cbd5e1;
-        }
-
-        .plan-features li.bold-feature {
-            font-weight: bold;
-            color: #0f172a;
-        }
-
-        .plan-features li.bold-orange {
-            font-weight: bold;
-            color: #ea580c;
-        }
-
-        .plan-button {
-            width: 100%;
-            padding: 16px 24px;
-            border-radius: 16px;
-            font-weight: bold;
-            margin-bottom: 12px;
-            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
-        }
-
-        .pricing-card-highlight .plan-button {
-            font-weight: 900;
-            padding: 20px 24px;
-            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
-        }
-
-        .pricing-card-highlight .plan-name {
-            color: #ea580c;
-        }
-
-        footer {
-            padding: 80px 24px;
-            border-top: 1px solid #e2e8f0;
-            background-color: white;
-        }
-
-        .footer-container {
-            max-width: 80rem;
-            margin: 0 auto;
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 48px;
-        }
-
-        @media (min-width: 768px) {
-            .footer-container {
-                grid-template-columns: repeat(4, 1fr);
-            }
-        }
-
-        .footer-brand {
-            grid-column: span 2;
-        }
-
-        @media (min-width: 768px) {
-            .footer-brand {
-                grid-column: span 1;
-            }
-        }
-
-        .footer-logo {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            margin-bottom: 24px;
-        }
-
-        .footer-logo-icon {
-            width: 24px;
-            height: 24px;
-            background: #ea580c;
-            border-radius: 4px;
-        }
-
-        .footer-logo-text {
-            font-size: 20px;
-            font-weight: 800;
-            letter-spacing: -0.025em;
-            color: #0f172a;
-        }
-
-        .footer-description {
-            color: #64748b;
-            font-size: 14px;
-            font-weight: 500;
-            line-height: 1.6;
-        }
-
-        .footer-section h6 {
-            font-weight: bold;
-            color: #0f172a;
-            margin-bottom: 24px;
-        }
-
-        .footer-links {
-            list-style: none;
-        }
-
-        .footer-links li {
-            margin-bottom: 16px;
-        }
-
-        .footer-links a {
-            font-size: 14px;
-            font-weight: 600;
-            color: #64748b;
-            text-decoration: none;
-            transition: color 0.3s ease;
-        }
-
-        .footer-links a:hover {
-            color: #ea580c;
-        }
-        @media (max-width: 640px) {
-            .nav-login {
-                display: none;
-            }
+            gap: 6px;
+            color: rgba(255,255,255,0.3);
         }
     </style>
-
-
-
-<style>
-    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;700;800&display=swap');
-
-.features-section {
-  padding: 120px 24px;
-  background-color: #fcfdfe;
-  font-family: 'Plus Jakarta Sans', sans-serif;
-}
-
-.features-container {
-  max-width: 1600px; 
-  margin: 0 auto;
-}
-
-.features-top {
-  text-align: center;
-  margin-bottom: 70px;
-}
-
-.badge {
-  background: #fff7ed;
-  color: #ea580c;
-  padding: 6px 14px;
-  border-radius: 100px;
-  font-weight: 700;
-  font-size: 13px;
-  text-transform: uppercase;
-  border: 1px solid #ffedd5;
-}
-
-.features-top h2 {
-  font-size: 44px;
-  font-weight: 800;
-  color: #0f172a;
-  margin-top: 15px;
-  letter-spacing: -0.04em;
-}
-
-.features-stack {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr); 
-  gap: 32px;
-}
-
-.bento-card {
-  background: white;
-  border: 1px solid #f1f5f9;
-  border-radius: 32px;
-  overflow: hidden;
-  display: flex;
-  flex-direction: column;
-  min-height: 480px; 
-  transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.02), 0 2px 4px -1px rgba(0, 0, 0, 0.01);
-}
-
-@media (max-width: 850px) {
-  .features-stack {
-    grid-template-columns: 1fr;
-  }
-  
-  .features-container {
-    max-width: 500px;
-  }
-}
-
-.bento-card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.04);
-  border-color: #fdba74;
-}
-
-.bento-content {
-  padding: 50px 50px 20px 50px;
-}
-
-.bento-content h3 {
-  font-size: 28px;
-  font-weight: 800;
-  color: #1e293b;
-  margin-bottom: 12px;
-  letter-spacing: -0.02em;
-}
-
-.bento-content p {
-  font-size: 17px;
-  color: #64748b;
-  max-width: 550px;
-  line-height: 1.6;
-}
-
-.visual {
-  flex-grow: 1;
-  background: #f8fafc;
-  margin: 0 30px 30px 30px;
-  border-radius: 20px;
-  border: 1px solid #f1f5f9;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-
-.platform-icons {
-  display: flex;
-  gap: 20px;
-}
-
-.p-icon {
-  background: white;
-  padding: 12px 20px;
-  border-radius: 12px;
-  font-weight: 700;
-  color: #ea580c;
-  border: 1px solid #ffedd5;
-}
-
-@media (max-width: 768px) {
-  .bento-content { padding: 30px; }
-  .features-top h2 { font-size: 32px; }
-  .bento-card { min-height: 450px; }
-}
-</style>
 </head>
 <body>
 
-    <nav class="header">
-        <div class="nav-container">
-            <div class="nav-left">
-                <div class="nav-brand">
-                    <svg viewBox="0 0 100 100" fill="none" stroke="currentColor">
-                        <circle cx="50" cy="50" r="12" fill="currentColor" style="color: #ea580c;"></circle>
-                        <ellipse rx="44" ry="18" cx="50" cy="50" stroke-width="6" transform="rotate(45 50 50)" style="color: #ea580c;"></ellipse>
-                        <ellipse rx="44" ry="18" cx="50" cy="50" stroke-width="6" transform="rotate(-45 50 50)" style="color: #ea580c;"></ellipse>
-                    </svg>
-                    <span>Solis AI</span>
-                </div>
-                <div class="nav-links">
-                    <a href="#how-it-works">Features</a>
-                    <a href="premium.html">Pricing</a>
-                    <a href="#faqs">FAQs</a>
-                </div>
-            </div>
-            <div class="nav-right">
-                <a href="login.html" class="nav-login">Login</a>
-                <a class="btn-primary" href="login.html">Start Clipping</a>
-            </div>
+<nav class="nav">
+    <a href="index.html" class="nav-brand">
+        <svg viewBox="0 0 100 100" fill="none">
+            <circle cx="50" cy="50" r="12" fill="#ea580c"/>
+            <ellipse rx="44" ry="18" cx="50" cy="50" stroke="#ea580c" stroke-width="6" transform="rotate(45 50 50)"/>
+            <ellipse rx="44" ry="18" cx="50" cy="50" stroke="#ea580c" stroke-width="6" transform="rotate(-45 50 50)"/>
+        </svg>
+        <span class="nav-brand-name">Solis AI</span>
+    </a>
+    <div class="nav-center">
+        <a href="#features">Features</a>
+        <a href="#how-it-works">How it works</a>
+        <a href="#pricing">Pricing</a>
+    </div>
+    <div class="nav-right">
+        <a href="login.html" class="nav-login">Login</a>
+        <a href="login.html" class="btn-pill">
+            Start Clipping
+            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M3 8h10M9 4l4 4-4 4"/>
+            </svg>
+        </a>
+    </div>
+</nav>
+<section class="hero">
+    <div class="hero-glow"></div>
+    <div class="hero-grid"></div>
+    <div class="hero-inner">
+        <div class="hero-badge">
+            <div class="hero-badge-dot"></div>
+            AI-powered short-form creation
         </div>
-    </nav>
-
-    <header>
-        <div class="max-w-5xl hero-content">
-            <div class="badge-orange">Built for speed. Tuned for virality.</div>
-            <h1>Go viral without <br><span class="gradient-text">editing</span></h1>
-            <p class="hero-subtitle">Top creators don't edit randomly. They build videos from what already works.</p>
-            
-            <div class="max-w-3xl" style="margin: 0 auto 64px;">
-                <div class="input-container">
-                    <div class="input-container-icon">
-                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <h1 class="hero-h1">Go viral without<br><em>editing</em></h1>
+       <p class="hero-sub">
+        The best way to grow is to start.<br>
+        with Solis AI creating and exploring is easier <br> <span class="tyt">than you think.</span>
+        </p>
+        <style>
+            .tyt{
+                font-weight: 900;
+                 background: linear-gradient(90deg, #f97316, #ef4444, #fb923c, #f97316);
+                 -webkit-background-clip: text;
+                 -webkit-text-fill-color: transparent;
+            }
+        </style>
+        <div class="hero-input-wrap">
+            <div class="hero-input-icon">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                    <path d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+            </div>
+            <input class="hero-input" type="text" placeholder="Paste your YouTube link here...">
+            <button class="hero-submit">
+                Clip it
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                    <path d="M13 7l5 5m0 0l-5 5m5-5H6" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+            </button>
+        </div>
+        <div class="hero-chips">
+            <span><div class="chip-dot"></div>No editing skills needed</span>
+            <span><div class="chip-dot"></div>start free</span>
+            <span><div class="chip-dot"></div>Every platform supported</span>
+        </div>
+        <div class="hero-mockup-wrap">
+            <div class="mock-float mock-float-1">
+                <div class="mock-float-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 7l5 5-5 5M6 12h12" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                </div>
+                <div>
+                    <div class="mock-float-label">Clips generated</div>
+                    <div class="mock-float-val">24 clips</div>
+                </div>
+            </div>
+            <div class="mock-float mock-float-2">
+                <div class="mock-float-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                </div>
+                <div>
+                    <div class="mock-float-label">Viral score</div>
+                    <div class="mock-float-val">94 / 100</div>
+                </div>
+            </div>
+            <div class="hero-mockup">
+                <div class="mockup-bar">
+                    <div class="mockup-dots">
+                        <div class="mockup-dot"></div><div class="mockup-dot"></div><div class="mockup-dot"></div>
                     </div>
-                    <input href="login.html" type="text" placeholder="Paste Your YouTube link">
-                    <button>
-                        <span onclick="window.location.href='login.html'">WE ARE HERE</span>
-                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M13 7l5 5m0 0l-5 5m5-5H6" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                    </button>
+                    <div class="mockup-url">app.solisai.video/dashboard</div>
                 </div>
-                <div class="hero-features">
-                    <span><div class="dot"></div>Unlock More with Solis</span>
-                    <span><div class="dot"></div>Be <span class="gradient-text">#1</span> with Solis AI</span>
-                    <span><div class="dot"></div>The most comfortable, powerful video clipping AI</span>
+                <div class="mockup-app">
+                    <div class="mock-sidebar">
+                        <div class="mock-sidebar-logo">
+                            <svg class="mock-sidebar-logo-icon" viewBox="0 0 100 100" fill="none">
+                                <circle cx="50" cy="50" r="12" fill="#ea580c"/>
+                                <ellipse rx="44" ry="18" cx="50" cy="50" stroke="#ea580c" stroke-width="6" transform="rotate(45 50 50)"/>
+                                <ellipse rx="44" ry="18" cx="50" cy="50" stroke="#ea580c" stroke-width="6" transform="rotate(-45 50 50)"/>
+                            </svg>
+                            <span class="mock-sidebar-logo-text">Solis AI</span>
+                        </div>
+                        <div class="mock-nav-item active">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>
+                            Dashboard
+                        </div>
+                        <div class="mock-nav-item">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 10l4.553-2.069A1 1 0 0121 8.82v6.36a1 1 0 01-1.447.894L15 14M3 8a2 2 0 012-2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V8z" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                            My Clips
+                        </div>
+                        <div class="mock-nav-item">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 4v16m8-8H4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                            New Project
+                        </div>
+                        <div class="mock-nav-item">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                            Analytics
+                        </div>
+                    </div>
+                    <div class="mock-main">
+                        <div class="mock-topbar">
+                            <div class="mock-title">Recent Clips</div>
+                            <div class="mock-btn-sm">+ New Clip</div>
+                        </div>
+                        <div class="mock-clips">
+                            <div class="mock-clip">
+                                <div class="mock-clip-thumb" style="background:linear-gradient(135deg,#fde68a,#f97316)">
+                                </div>
+                                <div class="mock-clip-meta"><div class="mock-clip-title">Ranking Compilation</div><div class="mock-clip-row"></div></div>
+                            </div>
+                            <div class="mock-clip">
+                                <div class="mock-clip-thumb" style="background:linear-gradient(135deg,#bfdbfe,#6366f1)">
+                                </div>
+                                <div class="mock-clip-meta"><div class="mock-clip-title">Split Screen</div><div class="mock-clip-row"></div></div>
+                            </div>
+                            <div class="mock-clip">
+                                <div class="mock-clip-thumb" style="background:linear-gradient(135deg,#d1fae5,#10b981)">
+                                </div>
+                                <div class="mock-clip-meta"><div class="mock-clip-title">Overpurpose</div><div class="mock-clip-row"></div></div>
+                            </div>
+                        </div>
+                        <div class="mock-stats-row">
+                            <div class="mock-stat-chip">
+                                <div class="mock-stat-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 4v16M17 4v16M3 8h4m10 0h4M3 16h4m10 0h4" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+                                <div><div class="mock-stat-label">Clips this month</div><div class="mock-stat-val">24</div></div>
+                            </div>
+                            <div class="mock-stat-chip">
+                                <div class="mock-stat-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 7l5 5-5 5M6 12h12" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+                                <div><div class="mock-stat-label">Avg. viral score</div><div class="mock-stat-val">91.4</div></div>
+                            </div>
+                            <div class="mock-stat-chip">
+                                <div class="mock-stat-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+                                <div><div class="mock-stat-label">Time saved</div><div class="mock-stat-val">14h</div></div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
-
-            <div class="hero-image-wrapper">
-            </div>
         </div>
-    </header>
-
-    <section id="Features" class="features-section">
-        <div class="features-container">
-        <div class="features-top">
-      <h2>Everything you need to go viral</h2>
     </div>
-
-    <div class="features-stack">
-      <div class="bento-card">
-        <div class="bento-content">
-          <h3>Video Clipping</h3>
-          <p>The fastest way to turn long-form content into high-impact, viral shorts. Just upload and let the AI find the gold.</p>
-        </div>
-        <div class="visual">
-        </div>
-      </div>
-
-      <div class="bento-card">
-        <div class="bento-content">
-          <h3>Automated Overpurpose</h3>
-          <p>Take one video and dominate every platform. Automatically resize, re-style, and optimize for TikTok, Reels, and Shorts.</p>
-        </div>
-        <div class="visual">
-        </div>
-      </div>
-      </div>
-
-    </div>
-  </div>
 </section>
 
-    <section id="pricing">
-        <div class="max-w-7xl">
-            <div class="pricing-header">
-                <h2 class="pricing-title">Pricing Plans</h2>
-                <p class="pricing-subtitle">Choose the plan that fits your creator journey.</p>
+<div class="proof-strip">
+    <div class="proof-label">Trusted by creators worldwide</div>
+    <div class="proof-logos">
+        <div class="proof-logo">YouTube</div>
+        <div class="proof-logo">TikTok</div>
+        <div class="proof-logo">Instagram</div>
+        <div class="proof-logo">X</div>
+        <div class="proof-logo">LinkedIn</div>
+        <div class="proof-logo">Shorts</div>
+    </div>
+</div>
+
+<section id="features" class="section">
+    <div class="mw-1100">
+        <div class="section-header reveal">
+            <div class="section-label"><div class="section-label-dot"></div>Features</div>
+            <h2 class="section-h2">Everything you need<br>to go viral</h2>
+            <p class="section-sub">One tool that does the job of an entire content team. Just paste a link.</p>
+        </div>
+
+        <div class="bento">
+            <!-- Card A: AI Clipping -->
+        <div class="bento-card bc-a reveal">
+            <div class="bento-body">
+            <div class="title-row">
+                <h3>AI Video Clipping</h3>
+                <div class="atlas-badge">
+                <span>Atlas 1</span>
+                </div>
             </div>
-
-            <div class="pricing-grid">
-                
-                <div class="feature-card">
-                    <div>
-                        <div class="plan-header">
-                            <h4 class="plan-name">Basic</h4>
-                            <p class="plan-description">Perfect for getting started</p>
-                        </div>
-                        <div class="plan-price">
-                            <span class="plan-price-amount">$18.99</span>
-                            <span class="plan-price-period">/month</span>
-                        </div>
-                        <div class="plan-divider"></div>
-                        <ul class="plan-features">
-                            <li><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M5 13l4 4L19 7" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg> Supports videos up to 45 min</li>
-                            <li><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M5 13l4 4L19 7" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg> 5 video generations</li>
-                            <li><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M5 13l4 4L19 7" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg> Fast Generation</li>
-                            <li><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M5 13l4 4L19 7" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg> No Watermark</li>
-                            <li><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M5 13l4 4L19 7" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg> Up to 10 saved videos</li>
-                        </ul>
-                    </div>
-                    <div>
-                        <button class="plan-button paddle-btn">Unlock with Basic Plan</button>
+            <p>The fastest way to turn long-form content into high-impact viral shorts. Upload and let the AI find the gold.</p>
+            </div>
+                <div class="bento-visual">
+                    <div class="vis-waveform">
+                        <div class="wv"></div><div class="wv"></div><div class="wv"></div>
+                        <div class="wv"></div><div class="wv"></div><div class="wv"></div>
+                        <div class="wv"></div><div class="wv"></div><div class="wv"></div>
+                        <div class="wv"></div><div class="wv"></div><div class="wv"></div>
+                        <div class="wv"></div><div class="wv"></div><div class="wv"></div>
+                        <div class="wv"></div><div class="wv"></div><div class="wv"></div>
                     </div>
                 </div>
-
-                <!-- Prime Plan -->
-                <div class="feature-card pricing-card-highlight">
-                    <div>
-                        <div class="plan-header">
-                            <h4 class="plan-name">Prime</h4>
-                            <p class="plan-description">Most popular</p>
+            </div>
+            <div class="bento-card bc-b reveal reveal-delay-1">
+                <div class="bento-body">
+                    <h3>Templates</h3>
+                    <p>Pick a clip format and let the AI handle the rest, from ranking compilations to split-screen and more coming soon.</p>
+                </div>
+                <div class="bento-visual" style="background:#f5f4f2;">
+                    <div class="vis-templates">
+                        <div class="tpl-card">
+                            <div class="tpl-thumb">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                                    <path d="M15 10l4.553-2.069A1 1 0 0121 8.82v6.36a1 1 0 01-1.447.894L15 14M3 8a2 2 0 012-2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V8z" stroke-linecap="round" stroke-linejoin="round"/>
+                                </svg>
+                            </div>
+                            <div class="tpl-name">Ranking Compilation</div>
+                            <div class="tpl-desc">Top 5 moments ranked</div>
                         </div>
-                        <div class="plan-price">
-                            <span class="plan-price-amount">$29.99</span>
-                            <span class="plan-price-period">/month</span>
+                        <div class="tpl-card">
+                            <div class="tpl-thumb">
+                                <div class="tpl-pro-badge">PRO</div>
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                                    <rect x="3" y="3" width="8" height="18" rx="2"/>
+                                    <rect x="13" y="3" width="8" height="18" rx="2"/>
+                                </svg>
+                            </div>
+                            <div class="tpl-name">Split Screen</div>
+                            <div class="tpl-desc">Video + Gameplay stacked</div>
                         </div>
-                        <div class="plan-divider"></div>
-                        <ul class="plan-features">
-                            <li><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M5 13l4 4L19 7" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg> Supports videos up to 120 min</li>
-                            <li><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M5 13l4 4L19 7" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg> 12 video generations</li>
-                            <li><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M5 13l4 4L19 7" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg> Faster Generation</li>
-                            <li><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M5 13l4 4L19 7" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg> No Watermark</li>
-                            <li><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M5 13l4 4L19 7" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg> Overpainting</li>
-                            <li><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M5 13l4 4L19 7" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg> Up to 20 saved videos</li>
-                        </ul>
-                    </div>
-                    <div>
-                        <button class="plan-button btn-primary">Unlock with Prime Plan</button>
                     </div>
                 </div>
-
-                <!-- Elite Plan -->
-                <div class="feature-card">
-                    <div>
-                        <div class="plan-header">
-                            <h4 class="plan-name">Elite</h4>
-                            <p class="plan-description">Unlock all features</p>
+            </div>
+            <div class="bento-card bc-c reveal">
+                <div class="bento-body">
+                    <h3>Style Customizer</h3>
+                    <p>Fonts, colors, sizes, styles — make every clip yours in seconds.</p>
+                </div>
+                <div class="bento-visual">
+                    <div class="vis-customizer">
+                        <div class="cust-row">
+                            <div class="cust-label">Font</div>
+                            <div class="cust-font-pills">
+                                <div class="cust-font-pill active">Bold</div>
+                                <div class="cust-font-pill">Serif</div>
+                                <div class="cust-font-pill">Mono</div>
+                                <div class="cust-font-pill">Round</div>
+                            </div>
                         </div>
-                        <div class="plan-price">
-                            <span class="plan-price-amount">$49.99</span>
-                            <span class="plan-price-period">/month</span>
+                        <div class="cust-row">
+                            <div class="cust-label">Color</div>
+                            <div class="cust-swatches">
+                                <div class="cust-swatch active" style="background:#ea580c; border-color: #0c0a09;"></div>
+                                <div class="cust-swatch" style="background:#3b82f6;"></div>
+                                <div class="cust-swatch" style="background:#22c55e;"></div>
+                                <div class="cust-swatch" style="background:#ec4899;"></div>
+                                <div class="cust-swatch" style="background:#eab308;"></div>
+                            </div>
                         </div>
-                        <div class="plan-divider"></div>
-                        <ul class="plan-features">
-                            <li><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M5 13l4 4L19 7" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg> Supports videos up to 240 min</li>
-                            <li><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M5 13l4 4L19 7" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg> 40 video generations</li>
-                            <li><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M5 13l4 4L19 7" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg> Fastest Generation</li>
-                            <li><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M5 13l4 4L19 7" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg> No Watermark</li>
-                            <li><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M5 13l4 4L19 7" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg> Overpainting</li>
-                            <li><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M5 13l4 4L19 7" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg> Priority queue</li>
-                            <li><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M5 13l4 4L19 7" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg> Up to 100 saved videos</li>
-                        </ul>
+                        <div class="cust-row">
+                            <div class="cust-label">Size</div>
+                            <div class="cust-slider-wrap">
+                                <div class="cust-slider">
+                                    <div class="cust-slider-fill"></div>
+                                    <div class="cust-slider-thumb"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="cust-row">
+                            <div class="cust-label">Style</div>
+                            <div class="cust-style-pills">
+                                <div class="cust-style-pill active">Highlight</div>
+                                <div class="cust-style-pill">Shadow</div>
+                                <div class="cust-style-pill">Outline</div>
+                                <div class="cust-style-pill">Glow</div>
+                            </div>
+                        </div>
+                        <div class="cust-preview" id="custPreview">
+                            <div class="cust-prev-line" style="background:#ea580c; color:#fff; font-family:'Plus Jakarta Sans',sans-serif; font-weight:900;">The hook is</div>
+                            <div class="cust-prev-line" style="background:#ea580c; color:#fff; font-family:'Plus Jakarta Sans',sans-serif; font-weight:900;">everything.</div>
+                        </div>
                     </div>
-                    <div>
-                        <button class="plan-button paddle-btn">Unlock with Elite Plan</button>
+                </div>
+            </div>
+            <div class="bento-card bc-d reveal reveal-delay-1">
+                <div class="bento-body">
+                    <h3>Overpurpose</h3>
+                    <p>Automatically removes watermarks, logos &amp; overlays from short-form videos and builds a new refined style. It lets you add your own text, style and branding so the clip feels 100% yours.</p>
+                </div>
+                <div class="bento-visual">
+                    <div class="vis-overpurpose">
+                        <div class="op-phone-wrap">
+                            <div style="display:flex;flex-direction:column;align-items:center;gap:6px;">
+                                <div class="op-phone">
+                                    <div class="op-phone-screen">
+                                        <div class="op-before-bg">
+                                            <div class="op-wm">
+                                                <div class="op-wm-text">@creator</div>
+                                            </div>
+                                        </div>
+                                        <div class="op-before-bar">
+                                            <div class="op-before-bar-text">Original watermark</div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="op-label">Before</div>
+                            </div>
+                            <div class="op-arrow">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                                    <path d="M13 7l5 5-5 5M6 12h12" stroke-linecap="round" stroke-linejoin="round"/>
+                                </svg>
+                            </div>
+                            <div style="display:flex;flex-direction:column;align-items:center;gap:6px;">
+                                <div class="op-phone">
+                                    <div class="op-phone-screen">
+                                        <div class="op-after-bg">
+                                            <div class="op-logo-badge"></div>
+                                            <div class="op-caption-lines">
+                                                <div class="op-cap-line">YOUR</div>
+                                                <div class="op-cap-line">BRAND</div>
+                                            </div>
+                                        </div>
+                                        <div class="op-after-bar">
+                                            <div class="op-after-bar-dot"></div>
+                                            <div class="op-after-bar-dot"></div>
+                                            <div class="op-after-bar-dot"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="op-label">After</div>
+                            </div>
+                        </div>
+                        <div class="vis-platforms" style="padding: 0;">
+                            <div class="platform-row">
+                                <div class="platform-name">
+                                    <div class="platform-dot" style="background:#ff0050"></div>TikTok
+                                </div>
+                                <div class="platform-status">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="2.5"><path d="M5 13l4 4L19 7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                                    Ready
+                                </div>
+                            </div>
+                            <div class="platform-row">
+                                <div class="platform-name">
+                                    <div class="platform-dot" style="background:#e1306c"></div>Reels
+                                </div>
+                                <div class="platform-status">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="2.5"><path d="M5 13l4 4L19 7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                                    Ready
+                                </div>
+                            </div>
+                            <div class="platform-row">
+                                <div class="platform-name">
+                                    <div class="platform-dot" style="background:#ff0000"></div>Shorts
+                                </div>
+                                <div class="platform-status">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="2.5"><path d="M5 13l4 4L19 7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                                    Ready
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
-    </section>
-    <footer>
-        <div class="footer-container">
-            <div class="footer-brand">
-                <div class="footer-logo">
-                    <span class="footer-logo-text">Solis AI</span>
+    </div>
+</section>
+<section id="how-it-works" class="section section-white">
+    <div class="mw-1100">
+        <div class="section-header section-header-center text-center reveal">
+            <div class="section-label" style="justify-content:center"><div class="section-label-dot"></div>How it works</div>
+            <h2 class="section-h2">Three steps to viral</h2>
+            <p class="section-sub">No learning curve. No setup. Just results in minutes.</p>
+        </div>
+        <div class="steps">
+            <div class="step reveal">
+                <div class="step-num">01</div>
+                <div class="step-body">
+                    <div class="step-title">Paste your video link</div>
+                    <div class="step-desc">Drop any YouTube URL: podcast, interview, tutorial or stream. Solis handles the rest. No upload required, no waiting around.</div>
+                    <div class="step-tag">⚡ Instantly</div>
                 </div>
-                <p class="footer-description">Transform your content strategy with the power of AI.</p>
             </div>
-            <div class="footer-section">
+            <div class="step reveal reveal-delay-1">
+                <div class="step-num">02</div>
+                <div class="step-body">
+                    <div class="step-title">AI finds the best moments for you</div>
+                    <div class="step-desc">Our model scans for the best moments in the video requiring you to do nothing.</div>
+                    <div class="step-tag">✦ Atlas 1</div>
+                </div>
+            </div>
+            <div class="step reveal reveal-delay-2">
+                <div class="step-num">03</div>
+                <div class="step-body">
+                    <div class="step-title">Download and post</div>
+                    <div class="step-desc">Choose your platform to upload or download. Captions, aspect ratios, and optimizations are already applied and can be changed any time.</div>
+                    <div class="step-tag">✦ Post to any platform</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+<section class="section" style="padding-top:0; padding-bottom:80px;">
+    <div class="mw-1100">
+        <div class="bento" style="grid-template-columns:1fr 1fr; max-width: 900px;">
+            <div class="bento-card reveal" style="grid-column:span 1; min-height:280px;">
+                <div class="bento-body">
+                    <h3>Virality Score</h3>
+                    <p>Every clip gets scored before you post. Know what wins before it goes live.</p>
+                </div>
+                <div class="bento-visual" id="scoreVis">
+                    <div class="vis-score-wrap">
+                        <div class="score-ring">
+                            <svg viewBox="0 0 80 80">
+                                <circle class="score-ring-bg" cx="40" cy="40" r="35"/>
+                                <circle class="score-ring-fill" id="scoreRingFill" cx="40" cy="40" r="35"/>
+                            </svg>
+                            <div class="score-ring-label">
+                                <div class="score-ring-num">94</div>
+                                <div class="score-ring-sub">Score</div>
+                            </div>
+                        </div>
+                        <div class="score-metrics">
+                            <div class="score-metric-row">
+                                <div class="score-metric-label"><span class="score-metric-name">Hook Strength</span><span class="score-metric-pct">91%</span></div>
+                                <div class="score-metric-bar"><div class="score-metric-fill" data-w="91%"></div></div>
+                            </div>
+                            <div class="score-metric-row">
+                                <div class="score-metric-label"><span class="score-metric-name">Retention</span><span class="score-metric-pct">87%</span></div>
+                                <div class="score-metric-bar"><div class="score-metric-fill" data-w="87%"></div></div>
+                            </div>
+                            <div class="score-metric-row">
+                                <div class="score-metric-label"><span class="score-metric-name">Pacing</span><span class="score-metric-pct">82%</span></div>
+                                <div class="score-metric-bar"><div class="score-metric-fill" data-w="82%"></div></div>
+                            </div>
+                            <div class="score-metric-row">
+                                <div class="score-metric-label"><span class="score-metric-name">Emotion</span><span class="score-metric-pct">78%</span></div>
+                                <div class="score-metric-bar"><div class="score-metric-fill" data-w="78%"></div></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="bento-card reveal reveal-delay-1" style="grid-column:span 1; min-height:280px;">
+                <div class="bento-body">
+                    <h3>Time Saved</h3>
+                    <p>Skip the edit suite. Every video you process saves hours of manual clipping work.</p>
+                </div>
+                <div class="bento-visual">
+                    <div class="vis-stats">
+                        <div class="vis-stat">
+                            <div class="vis-stat-label">Clips / month</div>
+                            <div class="vis-stat-val">24</div>
+                            <div class="vis-stat-change">↑ +8 this week</div>
+                        </div>
+                        <div class="vis-stat">
+                            <div class="vis-stat-label">Avg score</div>
+                            <div class="vis-stat-val">91.4</div>
+                            <div class="vis-stat-change">↑ Top 5%</div>
+                        </div>
+                        <div class="vis-stat">
+                            <div class="vis-stat-label">Hours saved</div>
+                            <div class="vis-stat-val">14h</div>
+                            <div class="vis-stat-change">this week</div>
+                        </div>
+                        <div class="vis-stat">
+                            <div class="vis-stat-label">Platforms</div>
+                            <div class="vis-stat-val">5</div>
+                            <div class="vis-stat-change">↑ All ready</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+<section id="pricing" class="pricing-section">
+    <div class="mw-1100">
+        <div class="section-header section-header-center text-center reveal" style="margin-bottom:56px">
+            <div class="section-label" style="justify-content:center;color:#fb923c"><div class="section-label-dot"></div>Pricing</div>
+            <h2 class="section-h2">Simple. Honest. No tricks.</h2>
+            <p class="section-sub" style="color:#64748b;margin:0 auto">No hidden fees. Start with your first clip today.</p>
+        </div>
+        <div class="pricing-grid">
+            <div class="price-card reveal">
+                <div class="plan-name">Basic</div>
+                <div class="plan-desc">Perfect for getting started</div>
+                <div><span class="price-amount">$12</span><span class="price-period">.99/mo</span></div>
+                <div class="plan-divider"></div>
+                <ul class="feat-list">
+                    <li class="feat-item"><svg class="feat-icon ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 13l4 4L19 7" stroke-linecap="round" stroke-linejoin="round"/></svg>Videos up to 45 min</li>
+                    <li class="feat-item"><svg class="feat-icon ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 13l4 4L19 7" stroke-linecap="round" stroke-linejoin="round"/></svg>5 video generations/mo</li>
+                    <li class="feat-item"><svg class="feat-icon ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 13l4 4L19 7" stroke-linecap="round" stroke-linejoin="round"/></svg>Fast generation</li>
+                    <li class="feat-item"><svg class="feat-icon ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 13l4 4L19 7" stroke-linecap="round" stroke-linejoin="round"/></svg>No watermark</li>
+                    <li class="feat-item"><svg class="feat-icon ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 13l4 4L19 7" stroke-linecap="round" stroke-linejoin="round"/></svg>10 saved videos</li>
+                </ul>
+                <button class="plan-btn plan-btn-ghost">Get Basic</button>
+            </div>
+            <div class="price-card featured reveal reveal-delay-1">
+                <div class="popular-tag">Most Popular</div>
+                <div class="plan-name">Prime</div>
+                <div class="plan-desc">Built for serious creators</div>
+                <div><span class="price-amount">$29</span><span class="price-period" style="color:#94a3b8">.99/mo</span></div>
+                <div class="plan-divider"></div>
+                <ul class="feat-list">
+                    <li class="feat-item"><svg class="feat-icon ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 13l4 4L19 7" stroke-linecap="round" stroke-linejoin="round"/></svg>Videos up to 120 min</li>
+                    <li class="feat-item"><svg class="feat-icon ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 13l4 4L19 7" stroke-linecap="round" stroke-linejoin="round"/></svg>12 video generations/mo</li>
+                    <li class="feat-item"><svg class="feat-icon ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 13l4 4L19 7" stroke-linecap="round" stroke-linejoin="round"/></svg>Faster generation</li>
+                    <li class="feat-item"><svg class="feat-icon ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 13l4 4L19 7" stroke-linecap="round" stroke-linejoin="round"/></svg>No watermark</li>
+                    <li class="feat-item"><svg class="feat-icon ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 13l4 4L19 7" stroke-linecap="round" stroke-linejoin="round"/></svg>Overpurpose</li>
+                    <li class="feat-item"><svg class="feat-icon ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 13l4 4L19 7" stroke-linecap="round" stroke-linejoin="round"/></svg>20 saved videos</li>
+                </ul>
+                <button class="plan-btn plan-btn-primary">Get Prime Plan</button>
+            </div>
+            <div class="price-card reveal reveal-delay-2">
+                <div class="plan-name">Elite</div>
+                <div class="plan-desc">Unlock everything</div>
+                <div><span class="price-amount">$49</span><span class="price-period">.99/mo</span></div>
+                <div class="plan-divider"></div>
+                <ul class="feat-list">
+                    <li class="feat-item"><svg class="feat-icon ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 13l4 4L19 7" stroke-linecap="round" stroke-linejoin="round"/></svg>Videos up to 240 min</li>
+                    <li class="feat-item"><svg class="feat-icon ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 13l4 4L19 7" stroke-linecap="round" stroke-linejoin="round"/></svg>40 video generations/mo</li>
+                    <li class="feat-item"><svg class="feat-icon ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 13l4 4L19 7" stroke-linecap="round" stroke-linejoin="round"/></svg>Fastest generation</li>
+                    <li class="feat-item"><svg class="feat-icon ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 13l4 4L19 7" stroke-linecap="round" stroke-linejoin="round"/></svg>No watermark</li>
+                    <li class="feat-item"><svg class="feat-icon ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 13l4 4L19 7" stroke-linecap="round" stroke-linejoin="round"/></svg>Overpurpose + Priority queue</li>
+                    <li class="feat-item"><svg class="feat-icon ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 13l4 4L19 7" stroke-linecap="round" stroke-linejoin="round"/></svg>100 saved videos</li>
+                </ul>
+                <button class="plan-btn plan-btn-ghost">Get Elite</button>
+            </div>
+        </div>
+    </div>
+</section>
+<footer class="footer">
+    <div class="footer-inner">
+        <div class="footer-top">
+            <div>
+                <div class="footer-brand-logo">
+                    <svg viewBox="0 0 100 100" fill="none">
+                        <circle cx="50" cy="50" r="12" fill="#ea580c"/>
+                        <ellipse rx="44" ry="18" cx="50" cy="50" stroke="#ea580c" stroke-width="6" transform="rotate(45 50 50)"/>
+                        <ellipse rx="44" ry="18" cx="50" cy="50" stroke="#ea580c" stroke-width="6" transform="rotate(-45 50 50)"/>
+                    </svg>
+                    <span class="footer-brand-name">Solis AI</span>
+                </div>
+                <p class="footer-brand-desc">Transform your content strategy with the power of AI. Built for creators who want to grow faster.</p>
+            </div>
+            <div class="footer-col">
                 <h6>Product</h6>
                 <ul class="footer-links">
                     <li><a href="#">AI Clipping</a></li>
+                    <li><a href="#">Overpurpose</a></li>
+                    <li><a href="#">Templates</a></li>
                 </ul>
             </div>
-            <div class="footer-section">
-                <h6>ABOUT US</h6>
+            <div class="footer-col">
+                <h6>Community</h6>
                 <ul class="footer-links">
-                    <li><a href="https://www.youtube.com/@SolisAI-Official" target="_blank" rel="noopener noreferrer">Youtube</a></li>
-                    <li><a href="https://www.tiktok.com/@solisai" target="_blank" rel="noopener noreferrer">Tiktok</a></li>
-                    <li><a href="https://discord.gg/79mF8wSgWz" target="_blank" rel="noopener noreferrer">Discord</a></li>
+                    <li><a href="https://www.youtube.com/@SolisAI-Official" target="_blank">YouTube</a></li>
+                    <li><a href="https://www.tiktok.com/@solisai" target="_blank">TikTok</a></li>
+                    <li><a href="https://discord.gg/79mF8wSgWz" target="_blank">Discord</a></li>
                 </ul>
             </div>
-            <div class="footer-section">
+            <div class="footer-col">
                 <h6>Legal</h6>
                 <ul class="footer-links">
-                    <li><a href="#">Privacy</a></li>
-                    <li><a href="#">Terms</a></li>
+                    <li><a href="privacy.html">Privacy</a></li>
+                    <li><a href="terms.html">Terms</a></li>
                 </ul>
             </div>
         </div>
-    </footer>
+        <div class="footer-bottom">
+            <div class="footer-bottom-left">
+                <div class="footer-copy">© 2026 Solis AI. All rights reserved.</div>
+            </div>
+            <div class="footer-bottom-center">
+                <div class="footer-copy">Made with ❤️ from Georgia 🇬🇪 & Ukraine 🇺🇦</div>
+                <div class="footer-copy">Built for creators who move fast.</div>
+            </div>
+            <div class="footer-bottom-right">
+                <div class="logo-word-container">
+                    <div class="inline-v-logo">
+                        <div class="v-main"></div>
+                        <div class="v-slash"></div>
+                    </div>
+                    <div class="logo-text">ision</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</footer>
+<style>
+    .inline-v-logo {
+        position: relative;
+        width: 45px; 
+        height: 45px;
+        display: inline-block;
+        /* Negative margin pulls 'ision' closer to the icon */
+        margin-right: -10px; 
+    }
 
-    <script src="https://unpkg.com/lucide@latest"></script>
+    .v-main {
+        position: absolute;
+        width: 70%;
+        height: 80%;
+        background-color: currentColor;
+        clip-path: polygon(
+            0% 0%, 
+            40% 80%, 
+            60% 80%, 
+            100% 0%, 
+            75% 0%, 
+            50% 55%, 
+            25% 0%
+        );
+        left: 50%;
+        top: 54%;
+        transform: translate(-50%, -50%);
+    }
+
+    .v-slash {
+        position: absolute;
+        width: 7%; 
+        height: 60%;
+        background-color: currentColor;
+        clip-path: polygon(0% 0%, 100% 0%, 100% 80%, 0% 80%);
+        left: 72%;
+        top: 60%;
+        transform: translate(-50%, -50%) skewX(-24.5deg);
+    }
+
+    .logo-text {
+        font-size: 2rem;
+        font-weight: 900;
+        letter-spacing: -2px;
+        color: currentColor;
+        text-transform: uppercase;
+        line-height: 0.8;
+    }
+
+    .footer-copy {
+        margin-bottom: 8px;
+        font-family: sans-serif;
+    }
+</style>
+
 <script>
-  lucide.createIcons();
+    const reveals = document.querySelectorAll('.reveal');
+    const revealObserver = new IntersectionObserver((entries) => {
+        entries.forEach(e => {
+            if (e.isIntersecting) {
+                e.target.classList.add('visible');
+                revealObserver.unobserve(e.target);
+            }
+        });
+    }, { threshold: 0.12 });
+    reveals.forEach(el => revealObserver.observe(el));
+    const scoreVis = document.getElementById('scoreVis');
+    const ringFill = document.getElementById('scoreRingFill');
+    const metricFills = document.querySelectorAll('.score-metric-fill');
+    let scoreAnimated = false;
+    const scoreObs = new IntersectionObserver((entries) => {
+        if (entries[0].isIntersecting && !scoreAnimated) {
+            scoreAnimated = true;
+            ringFill.classList.add('animated');
+            metricFills.forEach((el, i) => {
+                setTimeout(() => {
+                    el.style.width = el.dataset.w;
+                }, 200 + i * 100);
+            });
+        }
+    }, { threshold: 0.3 });
+    if (scoreVis) scoreObs.observe(scoreVis);
+    const fontPills = document.querySelectorAll('.cust-font-pill');
+    const stylePills = document.querySelectorAll('.cust-style-pill');
+    const swatches = document.querySelectorAll('.cust-swatch');
+    const preview = document.getElementById('custPreview');
+
+    const fontMap = {
+        'Bold':  { family: "'Plus Jakarta Sans',sans-serif", weight: '900' },
+        'Serif': { family: "'Playfair Display',Georgia,serif", weight: '800' },
+        'Mono':  { family: "'Courier New',monospace", weight: '700' },
+        'Round': { family: "'Plus Jakarta Sans',sans-serif", weight: '700' },
+    };
+    const swatchColors = ['#ea580c','#3b82f6','#22c55e','#ec4899','#eab308'];
+    const styleMap = {
+        'Highlight': (c) => ({ background: c, color: '#fff', textShadow: 'none', WebkitTextStroke: 'none' }),
+        'Shadow':    (c) => ({ background: 'transparent', color: '#fff', textShadow: `3px 3px 0 ${c}`, WebkitTextStroke: 'none' }),
+        'Outline':   (c) => ({ background: 'transparent', color: c, textShadow: 'none', WebkitTextStroke: `2px ${c}` }),
+        'Glow':      (c) => ({ background: 'transparent', color: '#fff', textShadow: `0 0 16px ${c}, 0 0 32px ${c}`, WebkitTextStroke: 'none' }),
+    };
+
+    let currentFont = fontMap['Bold'];
+    let currentColor = swatchColors[0];
+    let currentStyle = styleMap['Highlight'];
+
+    function updatePreview() {
+        const lines = preview.querySelectorAll('.cust-prev-line');
+        const styles = currentStyle(currentColor);
+        lines.forEach(l => {
+            l.style.fontFamily = currentFont.family;
+            l.style.fontWeight = currentFont.weight;
+            Object.assign(l.style, styles);
+        });
+    }
+
+    fontPills.forEach(p => {
+        p.addEventListener('click', () => {
+            fontPills.forEach(x => x.classList.remove('active'));
+            p.classList.add('active');
+            currentFont = fontMap[p.textContent.trim()];
+            updatePreview();
+        });
+    });
+    stylePills.forEach(p => {
+        p.addEventListener('click', () => {
+            stylePills.forEach(x => x.classList.remove('active'));
+            p.classList.add('active');
+            currentStyle = styleMap[p.textContent.trim()];
+            updatePreview();
+        });
+    });
+    swatches.forEach((s, i) => {
+        s.addEventListener('click', () => {
+            swatches.forEach(x => x.style.borderColor = 'transparent');
+            s.style.borderColor = '#0c0a09';
+            currentColor = swatchColors[i];
+            updatePreview();
+        });
+    });
+
+    const waveVis = document.querySelector('.vis-waveform');
+    if (waveVis) {
+        const wvEls = waveVis.querySelectorAll('.wv');
+        setInterval(() => {
+            wvEls.forEach((el, i) => {
+                const h = 18 + Math.random() * 48;
+                el.style.height = h + 'px';
+                el.style.transition = `height ${0.3 + Math.random() * 0.4}s ease`;
+            });
+        }, 800);
+    }
 </script>
 </body>
 </html>
