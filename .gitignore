@@ -9,3 +9,10 @@ package.json
 *.backup
 **/*.backup
 obfuscate-html.js
+welcome.html/
+dashboard.html/
+js/
+style/
+auth.html/
+premium.html
+
