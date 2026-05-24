@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self' /assets/; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://cdn.socket.io; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdnjs.cloudflare.com; font-src https://fonts.gstatic.com https://cdnjs.cloudflare.com https://cdn.jsdelivr.net; img-src 'self' data: https: /assets/; connect-src 'self' https://cdn.jsdelivr.net https://cdn.socket.io https://cdnjs.cloudflare.com https://cdn.paddle.com https://checkout.paddle.com https://api.paddle.com https://api.solisai.video https://solisai.video https://powq21-solisai-backend.hf.space; media-src 'self' /assets/; object-src 'none';">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://cdn.socket.io; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdnjs.cloudflare.com; font-src https://fonts.gstatic.com https://cdnjs.cloudflare.com https://cdn.jsdelivr.net; img-src 'self' data: https:; connect-src 'self' ws: http://localhost:5500 ws://localhost:5500 http://127.0.0.1:5500 ws://127.0.0.1:5500 https://cdn.jsdelivr.net https://cdn.socket.io https://cdnjs.cloudflare.com https://cdn.paddle.com https://checkout.paddle.com https://api.paddle.com https://api.solisai.video;">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta http-equiv="X-Content-Type-Options" content="nosniff">
     <meta http-equiv="X-XSS-Protection" content="1; mode=block">
@@ -21,6 +21,24 @@
             background-clip: content-box;
         }
 
+                :root {
+            --solis: #f97316;
+            --solis-deep: #c2410c;
+            --solis-gradient: linear-gradient(135deg, #f97316, #d65a31, #ff8c42, #b84d1a);
+            --solis-light: #fed7aa;
+            --solis-xlight: #fff7ed;
+            --ink: #18120e;
+            --ink-soft: #2d1f17;
+            --text-primary: #18120e;
+            --text-secondary: #5c5048;
+            --text-muted: #9e8878;
+            --border: rgba(200,185,170,0.3);
+            --border-strong: rgba(200,185,170,0.55);
+            --glass-bg: linear-gradient(150deg, rgba(255,255,255,0.78) 0%, rgba(255,255,255,0.48) 50%, rgba(255,248,240,0.42) 100%);
+            --glass-shadow: 0 4px 24px rgba(120,80,40,0.08), 0 1px 4px rgba(120,80,40,0.05), inset 0 1px 0 rgba(255,255,255,0.95), inset 0 -1px 0 rgba(180,140,110,0.10);
+            --surface: rgba(255,255,255,0.6);
+        }
+
         * { margin: 0; padding: 0; box-sizing: border-box; }
         html { scroll-behavior: smooth; }
 
@@ -32,75 +50,37 @@
 
         ::selection { background-color: #fed7aa; }
 
-        .header {
-            background: rgba(255,255,255,0.85);
-            backdrop-filter: blur(12px);
-            border-bottom: 1px solid #f1f5f9;
-            position: fixed;
-            top: 0;
-            width: 100%;
-            z-index: 100;
-        }
-
-        nav {
-            height: 80px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 0 32px;
-            max-width: 80rem;
-            margin: 0 auto;
-        }
-
-        .nav-brand {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            text-decoration: none;
-        }
-
-        .nav-brand svg { width: 32px; height: 32px; }
-
-        .nav-brand span {
-            font-size: 20px;
-            font-weight: 800;
-            letter-spacing: -0.025em;
-            color: #0f172a;
-        }
-
-        .nav-links {
-            display: flex;
-            align-items: center;
-            gap: 32px;
-        }
-
-        .nav-links a {
-            font-size: 15px;
-            font-weight: 600;
-            color: #475569;
-            text-decoration: none;
-            transition: color 0.2s;
-        }
-
-        .nav-links a:hover { color: #ea580c; }
-
-        .btn-primary {
-            background: #000;
-            color: white;
-            border: none;
-            cursor: pointer;
-            padding: 10px 24px;
+       /* ── NAV ── */
+        .nav-container {
+            position: fixed; top: 22px; left: 50%; transform: translateX(-50%);
+            width: calc(100% - 56px); max-width: 1120px; z-index: 1000;
+            background: var(--glass-bg);
+            backdrop-filter: blur(24px) saturate(160%);
+            -webkit-backdrop-filter: blur(24px) saturate(160%);
+            border: 1px solid rgba(255,255,255,0.85);
+            border-bottom-color: rgba(200,185,170,0.3);
             border-radius: 9999px;
-            font-size: 14px;
-            font-weight: bold;
-            text-decoration: none;
-            transition: all 0.3s;
+            padding: 10px 26px;
+            box-shadow: var(--glass-shadow);
+            display: flex; justify-content: space-between; align-items: center;
         }
-
-        .btn-primary:hover {
-            background: #f97316;
-            box-shadow: 0 10px 25px -5px rgba(249,115,22,0.4);
+        .nav-brand { display: flex; align-items: center; gap: 9px; text-decoration: none; color: var(--text-primary); }
+        .nav-brand svg { width: 28px; height: 28px; }
+        .nav-brand-name { font-family: 'Plus Jakarta Sans', sans-serif; font-size: 1.15rem; font-weight: 800; letter-spacing: -0.02em; }
+        .nav-center { display: flex; gap: 28px; }
+        .nav-center a { text-decoration: none; color: var(--text-muted); font-size: 0.85rem; font-weight: 500; transition: color 0.2s; }
+        .nav-center a:hover { color: var(--text-primary); }
+        .nav-right { display: flex; align-items: center; gap: 16px; }
+        .nav-login { text-decoration: none; color: var(--text-muted); font-size: 0.85rem; font-weight: 600; transition: color 0.2s; }
+        .nav-login:hover { color: var(--text-primary); }
+        .btn-nav {
+            background: var(--ink); color: #fff;
+            font-family: 'Plus Jakarta Sans', sans-serif; font-size: 13px; font-weight: 600;
+            padding: 8px 18px; border-radius: 100px; border: none; cursor: pointer;
+            text-decoration: none; display: inline-flex; align-items: center; gap: 6px;
+            transition: background 0.22s, box-shadow 0.22s;
         }
+        .btn-nav:hover { background: var(--solis-deep); box-shadow: 0 6px 20px rgba(194,65,12,0.28); }
 
         .policy-hero {
             padding-top: 160px;
@@ -491,22 +471,24 @@
     </style>
 </head>
 <body>
-
-<nav class="header">
-    <a class="nav-brand" href="index.html">
-        <svg viewBox="0 0 100 100" fill="none" stroke="currentColor">
+<nav class="nav-container">
+    <a href="index.html" class="nav-brand">
+        <svg viewBox="0 0 100 100" fill="none">
             <circle cx="50" cy="50" r="12" fill="#ea580c"/>
-            <ellipse rx="44" ry="18" cx="50" cy="50" stroke-width="6" stroke="#ea580c" transform="rotate(45 50 50)"/>
-            <ellipse rx="44" ry="18" cx="50" cy="50" stroke-width="6" stroke="#ea580c" transform="rotate(-45 50 50)"/>
+            <ellipse rx="44" ry="18" cx="50" cy="50" stroke="#ea580c" stroke-width="6" transform="rotate(45 50 50)"/>
+            <ellipse rx="44" ry="18" cx="50" cy="50" stroke="#ea580c" stroke-width="6" transform="rotate(-45 50 50)"/>
         </svg>
-        <span>Solis AI</span>
+        <span class="nav-brand-name">Solis AI</span>
     </a>
-    <div class="nav-links">
-        <a href="index.html#Features">Features</a>
-        <a href="premium.html">Pricing</a>
-        <a href="index.html#faqs">FAQs</a>
+    <div class="nav-center">
+        <a href="#features">Features</a>
+        <a href="#how-it-works">How it works</a>
+        <a href="#pricing">Pricing</a>
     </div>
-    <a class="btn-primary" href="login.html">Get Started</a>
+    <div class="nav-right">
+        <a href="login.html" class="nav-login">Login</a>
+        <a href="#" class="btn-nav">Start Clipping</a>
+    </div>
 </nav>
 
 <div class="policy-hero">
@@ -515,7 +497,7 @@
         Legal
     </div>
     <h1>Privacy <span class="gradient-text">Policy</span></h1>
-    <p class="subtitle">We take your privacy seriously. Here's exactly what we do — and don't do — with your data.</p>
+    <p class="subtitle">We take your privacy seriously. Here's exactly what we do and don't do with your data.</p>
 </div>
 
 <div class="policy-wrapper">
@@ -540,7 +522,7 @@
     </div>
 
     <div class="policy-section" id="intro">
-        <p>This Privacy Policy explains what information we collect, how we use it, and how we protect it when you use <strong>Solis AI</strong> (the "Service"). We only collect the minimum data needed to run the Service — nothing more.</p>
+        <p>This Privacy Policy explains what information we collect, how we use it and how we protect it when you use <strong>Solis AI</strong> (the "Service"). We only collect the minimum data needed to run the Service - nothing more.</p>
     </div>
 
     <div class="section-divider"></div>
@@ -569,10 +551,10 @@
         </div>
         <p>We use the data we collect only for legitimate purposes directly related to running Solis AI:</p>
         <ul class="policy-list">
-            <li>To provide the Service — generating videos, enforcing tier limits, and showing previews.</li>
-            <li>To improve Solis — fixing bugs and understanding usage patterns to make the product better.</li>
-            <li>To prevent abuse — rate limiting, spam detection, and fraud prevention.</li>
-            <li>To comply with legal requirements — if we receive a valid legal request, we may be required to share certain information.</li>
+            <li>To provide the Service - generating videos, enforcing tier limits, and showing previews.</li>
+            <li>To improve Solis - fixing bugs and understanding usage patterns to make the product better.</li>
+            <li>To prevent abuse - rate limiting, spam detection, and fraud prevention.</li>
+            <li>To comply with legal requirements - if we receive a valid legal request, we may be required to share certain information.</li>
         </ul>
     </div>
 
