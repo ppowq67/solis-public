@@ -9,56 +9,61 @@
 <h1 align="center">Solis AI</h1>
 
 <p align="center">
-Video repurposing system that transforms long-form content into structured, reusable video outputs using template-based generation.
+Video repurposing system for transforming long-form content into structured, reusable video outputs using template-based generation.
 </p>
 
 <p align="center">
-Upload a YouTube video. Solis AI extracts structure, segments content, and generates new formats through customizable templates.
+Upload a YouTube video. Solis AI extracts structure, segments content, and generates new formats using customizable templates.
 </p>
 
 ---
 
-## System Overview
+## Overview
 
-Solis AI is built to convert unstructured video content into structured media assets.
+Solis AI converts unstructured video content into structured media assets through automated analysis and template-driven rendering.
 
-It focuses on deterministic transformation rather than manual editing.
+The system focuses on scalability, consistency, and reusability of generated content.
 
 ---
 
 ## Pipeline
 
-Input → Ingestion → Content Analysis → Segmentation → Template Mapping → Render Output
+Input → Ingestion → Analysis → Segmentation → Structuring → Template Mapping → Output Generation
 
 ---
 
-## Capabilities
+## Core Capabilities
 
-- Video structure extraction from YouTube sources  
-- Segment-based content reconstruction  
-- Template-driven rendering system  
+- YouTube video ingestion and processing  
+- Automated content segmentation  
+- Structural extraction of topics and scenes  
+- Template-based video reconstruction  
 - Multi-format output generation  
-- Fully customizable visual system  
 
 ---
 
 ## Design System
 
-The visual layer is driven by a token-based system:
+Solis AI uses a consistent visual token system across all outputs:
 
-- Primary: `#f97316`
-- Deep: `#c2410c`
-- Surface: translucent layered UI
-- Ink: deep neutral contrast system
+- Primary color: `#f97316`
+- Accent: `#c2410c`
+- Surface: soft translucent layers
+- Text: high-contrast neutral ink system
 - Gradients: warm orange spectrum
 
 ---
 
-## Output Philosophy
+## Philosophy
 
-Solis AI prioritizes:
-- structured transformation over manual editing  
-- reusable content systems over one-off outputs  
-- scalable templates over static video creation  
+Solis AI is built on three principles:
+
+- Structure over randomness  
+- Templates over manual editing  
+- Reusable systems over one-off outputs  
 
 ---
+
+## Status
+
+Active development
