@@ -1,1 +1,64 @@
-Solis AI is meant to repurpose your video content, create new videos simply by using templates. All you need to do is upload your youtube video and let the magic do itself! Customize the fonts, styles for free however you feel like
+<p align="center">
+<svg viewBox="0 0 100 100" width="72">
+    <circle cx="50" cy="50" r="12" fill="#ea580c"/>
+    <ellipse rx="44" ry="18" cx="50" cy="50" stroke="#ea580c" stroke-width="6" transform="rotate(45 50 50)"/>
+    <ellipse rx="44" ry="18" cx="50" cy="50" stroke="#ea580c" stroke-width="6" transform="rotate(-45 50 50)"/>
+</svg>
+</p>
+
+<h1 align="center">Solis AI</h1>
+
+<p align="center">
+Video repurposing system that transforms long-form content into structured, reusable video outputs using template-based generation.
+</p>
+
+<p align="center">
+Upload a YouTube video. Solis AI extracts structure, segments content, and generates new formats through customizable templates.
+</p>
+
+---
+
+## System Overview
+
+Solis AI is built to convert unstructured video content into structured media assets.
+
+It focuses on deterministic transformation rather than manual editing.
+
+---
+
+## Pipeline
+
+Input → Ingestion → Content Analysis → Segmentation → Template Mapping → Render Output
+
+---
+
+## Capabilities
+
+- Video structure extraction from YouTube sources  
+- Segment-based content reconstruction  
+- Template-driven rendering system  
+- Multi-format output generation  
+- Fully customizable visual system  
+
+---
+
+## Design System
+
+The visual layer is driven by a token-based system:
+
+- Primary: `#f97316`
+- Deep: `#c2410c`
+- Surface: translucent layered UI
+- Ink: deep neutral contrast system
+- Gradients: warm orange spectrum
+
+---
+
+## Output Philosophy
+
+Solis AI prioritizes:
+- structured transformation over manual editing  
+- reusable content systems over one-off outputs  
+- scalable templates over static video creation  
+
+---
